@@ -34,31 +34,32 @@ def scan(output_dir: str, on_and_off: bool = True):
     file_paths = []
     length = len(config.LEDS_UUIDS) + (2 if on_and_off else 0)
 
+    gpio_leds = leds.get()
+
     with camera.get() as cam:
-        with leds.get() as gpio_leds:
-            for count, led in enumerate(gpio_leds.leds):
-                print(f'Turn on {led}')
+        for count, led in enumerate(gpio_leds.leds):
+            print(f'Turn on {led}')
 
-                led.on()
-                file_paths.append((str(led), delay_capture(cam)))
-                led.off()
+            led.on()
+            file_paths.append((str(led), delay_capture(cam)))
+            led.off()
 
-                print(f'Turn off {led}')
+            print(f'Turn off {led}')
 
-                ratio = (count + 1) / (2 * length)
-                yield f'{{ "status": "captured", "id": "{led}", "ratio": {ratio:.3} }}\n'
+            ratio = (count + 1) / (2 * length)
+            yield f'{{ "status": "captured", "id": "{led}", "ratio": {ratio:.3} }}\n'
 
-            # capture with all leds ON OFF
-            if on_and_off:
-                gpio_leds.on()
-                file_paths.append(('all_on', delay_capture(cam)))
-                ratio = (length - 1) / (2 * length)
-                yield f'{{ "status": "captured", "id": "all_on", "ratio": {ratio:.3} }}\n'
+        # capture with all leds ON OFF
+        if on_and_off:
+            gpio_leds.on()
+            file_paths.append(('all_on', delay_capture(cam)))
+            ratio = (length - 1) / (2 * length)
+            yield f'{{ "status": "captured", "id": "all_on", "ratio": {ratio:.3} }}\n'
 
-                gpio_leds.off()
-                file_paths.append(('all_off', delay_capture(cam)))
-                ratio = 0.5
-                yield f'{{ "status": "captured", "id": "all_off", "ratio": {ratio:.3} }}\n'
+            gpio_leds.off()
+            file_paths.append(('all_off', delay_capture(cam)))
+            ratio = 0.5
+            yield f'{{ "status": "captured", "id": "all_off", "ratio": {ratio:.3} }}\n'
 
     with camera.get() as cam:
         for count, (target, source) in enumerate(file_paths):
