@@ -26,10 +26,10 @@ class GpioLed:
         self.led.value = 1.0 - GPIO_LED_MAX_PWM_VALUE * value
 
     def on(self):
-        self.set_value(0)
+        self.set_value(1)
 
     def off(self):
-        self.set_value(1)
+        self.set_value(0)
 
     def __str__(self):
         return f'LED{self.gpio_pin:02}'
