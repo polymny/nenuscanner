@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="section">
+    <div class="container">
+	<h1 class="title is-1">Redémarrage en cours</h1>
+	<p>Merci de patienter</p>
+    </div>
+</div>
+{% endblock content %}
+
+{% block extrajs %}
+<script>setTimeout(function(){ window.location.href = "/"; }, 2000);</script>
+{% endblock extrajs %}

@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+
+{% block extracss %}
+<style>
+    .project {
+        display: none;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="section">
+    <div class="container">
+        <h1 class="title">Bienvenue sur NenuScanner</h1>
+        {% if projects %}
+            <div class="content">
+                <p>Voici les projets existants dans la base de données :
+                <div class="fixed-grid has-6-cols">
+                    <div class="grid">
+                    {% for project in projects %}
+                    <a href="#" id="project-{{ loop.index0 }}" class="cell p-2 has-text-centered has-text-white-dark" style="border: solid; border-width: 1px; border-radius: 5px;">
+                        <div>
+                            <strong>{{ project.name }}</strong>
+                        </div>
+                        <div>
+                            <em>({{ project.objects | length }} objets)</em>
+                        </div>
+                    </a>
+                    {% endfor %}
+                    </div>
+                </div>
+                {% for project in projects %}
+                    <div class="project project-{{ loop.index0 }}">
+                        <h2>{{ project.name }} <em>({{ project.objects | length }} objets)</em></h2>
+                        <div class="fixed-grid has-6-cols mb-5">
+                            <div class="grid">
+                                {% for object in project.objects %}
+                                <a href="/object/{{ object.id }}" class="cell p-2 has-text-centered has-text-white-dark" style="border: solid; border-width: 1px; border-radius: 5px;">
+                                        <div>
+                                            <strong>{{ object.name }}</strong>
+                                        </div>
+                                        <div>
+                                            {% if object.acquisitions %}
+                                            <img src="/data/objects/{{ object.id }}/{{ object.acquisitions[0].id }}/{{ leds[0] }}.jpg">
+
+                                            {% else %}
+                                                <em>Pas d'acquisitions</em>
+                                            {% endif %}
+                                        </div>
+                                    </a>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p>Il n'y a aucun projet pour le moment...</p>
+        {% endif %}
+        <div class="field">
+            <div class="control">
+                <button id="add-object" class="button is-link">Ajouter un nouvel objet</button>
+            </div>
+        </div>
+        <div id="add-object-modal" class="modal">
+            <div class="modal-background"></div>
+            <form action="/object/create" method="POST">
+                <div class="modal-content">
+                    <div class="field">
+                        <label class="label has-text-white-dark">Nom du projet</label>
+                        <div class="control">
+                            <input class="input" type="text" name="project" placeholder="Nom du projet" required>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label class="label has-text-white-dark">Nom de l'objet</label>
+                        <div class="control">
+                            <input class="input" type="text" name="name" placeholder="Nom de l'objet" required>
+                        </div>
+                    </div>
+
+                    <div class="field is-grouped is-grouped-centered">
+                        <div class="control">
+                            <button class="button is-link">Créer un objet</button>
+                        </div>
+                    </div>
+                </div>
+                <button class="modal-close is-large" aria-label="close"></button>
+            </form>
+        </div>
+    </div>
+</section>
+{% endblock content %}
+
+{% block extrajs %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    let addObjectButton = document.getElementById('add-object');
+    let addObjectModal = document.getElementById('add-object-modal');
+
+    // Modal button show the modal
+    addObjectButton.addEventListener('click', () => {
+        addObjectModal.classList.add('is-active');
+    });
+
+    (document.querySelectorAll('.modal-background, .modal-close, .modal-card-head .delete, .modal-card-foot .button') || []).forEach((close) => {
+        close.addEventListener('click', () => {
+            addObjectModal.classList.remove('is-active');
+        });
+    });
+});
+
+let projects = document.getElementsByClassName('project');
+for (let i = 0; i < {{ projects | length }}; i++) {
+    let clickedProject = document.getElementById('project-' + i);
+   clickedProject.addEventListener('click', () => {
+
+       let same = clickedProject.classList.contains('has-text-link');
+
+       if (same) {
+           clickedProject.classList.remove('has-text-link');
+           clickedProject.classList.add('has-text-white-dark');
+       } else {
+           clickedProject.classList.remove('has-text-white-dark');
+           clickedProject.classList.add('has-text-link');
+       }
+
+       for (let j = 0; j < {{ projects | length }}; j++) {
+            if (j !== i) {
+                let otherProject = document.getElementById('project-' + j);
+                otherProject.classList.remove('has-text-link');
+                otherProject.classList.add('has-text-white-dark');
+            }
+       }
+
+       for (let p of projects) {
+           if (p.classList.contains('project-' + i) && !same) {
+               p.style.display = "block";
+           } else {
+               p.style.display = "none";
+           }
+       }
+   });
+}
+</script>
+{% endblock extrajs %}

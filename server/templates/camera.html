@@ -1,0 +1,170 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="section">
+    <div class="container">
+        <h1 class="title">Configurer la camera</h1>
+        <form id="camera-config-form">
+            <div class="columns">
+                <div class="column is-half">
+                    <div class="cameraSettings" id="camera-config-container"></div>
+                </div>
+                <div class="column is-half has-text-centered">
+                    <figure class="image is-4by3" style="max-width: 480px; margin: auto;">
+                        <img  class="preview" id="camera-preview" alt="Camera Preview"
+                            style="border: 1px solid #ccc;">
+                    </figure>
+                    <button class="button is-small is-info mt-2" type="button" onclick="refreshPreview()">Rafraîchir
+                        l’aperçu
+                    </button>
+                    <button class="button is-small is-info mt-2" type="button" onclick="CapturePreview()">Acquistion camera
+                    
+                    </button>
+                    
+                    <nav class="level">
+                        <div class="level-item has-text-centered">
+                            <div>
+                                <p class="heading">Speed</p>
+                                <p id="display-camera-shutterspeed" class="title is-5">Updating ...</p>
+                            </div>
+                        </div>
+                        <div class="level-item has-text-centered">
+                            <div>
+                                <p class="heading">f/</p>
+                                <p id="display-camera-aperture" class="title  is-5"> Updating ...</p>
+                            </div>
+                        </div>
+                        <div class="level-item has-text-centered">
+                            <div>
+                                <p class="heading">ISO</p>
+                                <p id="display-camera-iso" class="title is-5">Updating ...</p>
+                            </div>
+                        </div>
+                        <div class="level-item has-text-centered">
+                            <div>
+                                <p class="heading">°K</p>
+                                <p id="display-camera-color-temperature" class="title is-5">Updating ...</p>
+                            </div>
+                        </div>
+                    </nav>
+                </div>
+            </div>
+        </form>
+    </div>
+</section>
+{% endblock content %}
+
+{% block extrajs %}
+<script>
+    function setConfig(paramName) {
+        const value = document.getElementById(paramName).value;
+        fetch('/camera/set', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ [paramName]: value })
+        }).then(() => location.reload());
+    }
+    
+    const img = document.getElementById('camera-preview');
+    img.onload = function() {
+        requestAnimationFrame(refreshPreview);
+    }
+
+    function refreshPreview() {
+        const url = '/camera/feed.jpg?' + new Date().getTime();
+        img.src = url;
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        fetch('/camera/config')
+            .then(response => response.json())
+            .then(data => {
+                console.log(data);
+                // data is grouped_params
+                const container = document.getElementById('camera-config-container');
+                container.innerHTML = '';
+                const captureSection = data.find(group => group.section === 'capturesettings');
+                if (captureSection) {
+                    // Find the shutterspeed param
+                    const shutterParam = captureSection.params.find(param => param.name === 'shutterspeed');
+                    if (shutterParam) {
+                        document.getElementById('display-camera-shutterspeed').textContent = shutterParam.current;
+                    }
+                    // find the aperture param
+                    const apertureParam = captureSection.params.find(param => param.name === 'aperture');
+                    if (apertureParam) {
+                        document.getElementById('display-camera-aperture').textContent = apertureParam.current;
+                    }
+                }
+
+                const imgSection = data.find(group => group.section === 'imgsettings');
+                if (imgSection) {
+                    // Find the iso param
+                    const isoParam = imgSection.params.find(param => param.name === 'iso');
+                    if (isoParam) {
+                        document.getElementById('display-camera-iso').textContent = isoParam.current;
+                    }
+                    // find the whitebalance param
+                    const wbParam = imgSection.params.find(param => param.name === 'colortemperature');
+                    if (wbParam) {
+                        document.getElementById('display-camera-color-temperature').textContent = wbParam.current;
+                    }
+
+                }
+
+                data.forEach(group => {
+                    const box = document.createElement('div');
+                    box.className = 'box';
+                    box.innerHTML = `<h2 class="subtitle has-text-weight-bold">${group.section.replace('settings', ' Settings')}</h2>`;
+                    group.params.forEach(param => {
+                        let field = document.createElement('div');
+                        if (param.type == 'TEXT') {
+                            field.className = 'text';
+                             field.innerHTML = `
+                             <p> ${param.name} </p>
+                             `;
+
+                        }else {
+                        field.className = 'field';
+                        field.innerHTML = `
+                    <label class="label" for="${param.name}">${param.label}:</label>
+                    <div class="control">
+                        <div class="select is-fullwidth">
+                            <select id="${param.name}" name="${param.name}">
+                                ${param.choices.map(choice =>
+                            `<option value="${choice.value}" ${choice.label === param.current ? 'selected' : ''}>
+                                        ${choice.label} (${choice.value})
+                                    </option>`
+                        ).join('')}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="control mt-2">
+                        <button class="button is-small is-primary" type="button" onclick="setConfig('${param.name}')">Set</button>
+                    </div>
+                `;
+                        }
+                        box.appendChild(field);
+                
+                    });
+                    container.appendChild(box);
+                });
+        
+		    // When ready, load preview
+		    refreshPreview();
+	    });
+
+    });
+    function CapturePreview() {
+        fetch('/camera/capture_preview', {method: 'POST'})
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'ok') {
+                    refreshPreview(); // Rafraîchir l'image après la capture
+                } else {
+                    alert('Erreur lors de la capture : ' + (data.error || 'inconnue'));
+                }
+            });
+    }
+</script>
+{% endblock extrajs %}

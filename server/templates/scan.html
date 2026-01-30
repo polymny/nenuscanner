@@ -1,0 +1,189 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="section">
+    <div class="container">
+        <h1 class="title">Faire une acquisition</h1>
+        <div class="mb-2">
+            <p>Placez l'objet devant le scanner puis appuyez sur le bouton pour lancer l'acquisition.</p>
+        </div>
+        <div class="field is-grouped is-grouped-multiline">
+            <div class="control">
+                <button {% if not calibrated or (acquisition and acquisition.validated) %}disabled{% endif %} id="scan-button" class="button is-link" {% if acquisition and acquisition.validated %}title="Vous ne pouvez pas refaire cette acquisition car elle a été validée"{% elif not calibrated %}title="Étalonnez le scanner pour pouvoir lancer l'acquisition"{% endif %}>Lancer l'acquisition</button>
+            </div>
+        </div>
+        <article id="error-container" class="message is-danger" style="display: none;">
+            <div id="error-content" class="message-body">
+            </div>
+        </article>
+        <div class="fixed-grid has-8-cols">
+            <div id="grid" class="grid">
+
+            </div>
+        </div>
+        <progress id="progress-bar" class="progress is-link" style="display: none;" value="0" max="1000"></progress>
+        <div id="calibrate" {% if not acquisition %}style="display: none;"{% endif %}>
+            <p>Si les données acquises conviennent, appuyez sur le bouton ci-dessous pour valider l'acquisition.</p>
+            <div class="field is-grouped">
+            {% if acquisition %}
+                {% if acquisition.validated %}
+                    <div class="control">
+                        <button disabled id="calibrate-button" class="button is-link">Cette acquisition a déjà été validée</button>
+                    </div>
+                {% else %}
+                    <div class="control">
+                        <a href="/acquisition/validate/{{ acquisition.id }}" id="calibrate-button" class="button is-link">Valider l'acquisition</a>
+                    </div>
+                {% endif %}
+            {% else %}
+                <div class="control">
+                    <a id="validate-button" class="button is-link">Valider l'acquisition</a>
+                </div>
+            {% endif %}
+            <div class="control">
+                <button id="delete-button" class="button is-danger">Supprimer l'acquisition</button>
+            </div>
+        </div>
+        <div id="delete-modal" class="modal">
+            <div class="modal-background"></div>
+                <div class="modal-content">
+                    <div class="has-text-centered mb-3">Voulez-vous vraiment supprimer l'acquisition ?</div>
+                    <div class="field is-grouped is-grouped-centered">
+                        <div class="control">
+                            <button class="button custom-modal-close">Annuler</button>
+                        </div>
+                        <div class="control">
+                            <a id="delete-link" {% if acquisition %} href="/acquisition/delete/{{ acquisition.id }}"{% endif %} class="button is-danger">Supprimer cette acquisition</a>
+                        </div>
+                    </div>
+            </div>
+            <button class="modal-close is-large" aria-label="close"></button>
+        </div>
+    </div>
+</section>
+{% endblock content %}
+
+{% block extrajs %}
+<script>
+    let acquisitionId = {% if acquisition %}{{ acquisition.id }}{% else %}null{% endif %};
+    let scanIndex = 1;
+    let progress = 0;
+    let scanButton = document.getElementById('scan-button');
+    let progressBar = document.getElementById('progress-bar');
+    let grid = document.getElementById('grid');
+    let buttons = [scanButton];
+    let errorContainer = document.getElementById('error-container');
+    let errorContent = document.getElementById('error-content');
+    let calibrateDiv = document.getElementById('calibrate');
+    let validateButton = document.getElementById('validate-button');
+    let deleteButton = document.getElementById('delete-button');
+    let deleteLink = document.getElementById('delete-link');
+
+    let modal = document.getElementById('delete-modal');
+    document.getElementById('delete-button').addEventListener('click', () => {
+        modal.classList.add('is-active');
+    });
+
+    (document.querySelectorAll('.modal-background, .modal-close, .custom-modal-close, .modal-card-head .delete, .modal-card-foot .button') || []).forEach((close) => {
+        close.addEventListener('click', () => {
+            modal.classList.remove('is-active');
+        });
+    });
+
+    // If we already have calibration images, we show them right now
+    if (acquisitionId !== null) {
+        let cell, img;
+        {% for led in leds %}
+        cell = document.createElement('div');
+        cell.classList.add('cell');
+        img = document.createElement('img');
+        img.classList.add('is-loading');
+        img.src = '/data/objects/{{ object.id }}/' + acquisitionId + '/{{ led }}.jpg?v=0';
+        cell.appendChild(img);
+        grid.appendChild(cell);
+        {% endfor %}
+
+        cell = document.createElement('div');
+        cell.classList.add('cell');
+        img = document.createElement('img');
+        img.classList.add('is-loading');
+        img.src = '/data/objects/{{ object.id }}/' + acquisitionId + '/all_on.jpg?v=0';
+        cell.appendChild(img);
+        grid.appendChild(cell);
+
+        cell = document.createElement('div');
+        cell.classList.add('cell');
+        img = document.createElement('img');
+        img.classList.add('is-loading');
+        img.src = '/data/objects/{{ object.id }}/' + acquisitionId + '/all_off.jpg?v=0';
+        cell.appendChild(img);
+        grid.appendChild(cell);
+    }
+
+    scanButton.addEventListener('click', async () => {
+        scanIndex++;
+        progress = 0;
+        progressBar.value = 0;
+        buttons.forEach(x => x.setAttribute('disabled', 'disabled'));
+        scanButton.classList.add('is-loading');
+        progressBar.style.display = "block";
+        grid.innerHTML = '';
+
+        let response;
+        if (acquisitionId === null) {
+            response = await fetch('/acquisition/run/{{ object.id }}');
+        } else {
+            response = await fetch('/acquisition/rerun/' + acquisitionId);
+        }
+
+        let reader = response.body.pipeThrough(new TextDecoderStream()).getReader();
+
+        while (true) {
+            let { value, done } = await reader.read();
+
+            if (done) {
+                buttons.forEach(x => x.removeAttribute('disabled'));
+                scanButton.classList.remove('is-loading');
+                calibrateDiv.style.display = "block";
+                break;
+            }
+
+            if (acquisitionId === null) {
+                acquisitionId = parseInt(value, 10);
+                validateButton.setAttribute('href', '/acquisition/validate/' + acquisitionId);
+                deleteLink.setAttribute('href', '/acquisition/delete/' + acquisitionId);
+                window.history.pushState('', '', '/acquisition/rescan/' + acquisitionId);
+                continue;
+            }
+
+            for (let line of value.split('\n')) {
+                if (line === "") {
+                    continue;
+                }
+
+                let { status, id, ratio } = JSON.parse(line);
+                progress = Math.ceil(1000 * parseFloat(ratio));
+
+                if (status === "ready") {
+                    let cell = document.createElement('div');
+                    cell.classList.add('cell');
+                    let img = document.createElement('img');
+                    img.classList.add('is-loading');
+                    img.src = '/data/objects/{{ object.id }}/' + acquisitionId + '/' + id + '.jpg?v=' + scanIndex;
+                    cell.appendChild(img);
+                    grid.appendChild(cell);
+                }
+            }
+        }
+    });
+
+    function refreshProgressBar() {
+        if (progress !== progressBar.value) {
+            progressBar.value = Math.min(progressBar.value + 5, progress);
+        }
+        requestAnimationFrame(refreshProgressBar);
+    }
+
+    refreshProgressBar();
+</script>
+{% endblock extrajs %}

@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="section">
+    <div class="container content">
+        <h1 class="title">{{ object.name }}</h1>
+        <div class="field is-grouped">
+            <div class="control">
+                <a class="button is-link" href="/object/download/tar/{{ object.id }}">Télécharger les données de l'objet (archive TAR)</a>
+            </div>
+            <div class="control">
+                <a class="button is-link" href="/object/download/zip/{{ object.id }}">Télécharger les données de l'objet (archive ZIP)</a>
+            </div>
+        </div>
+        {% if object.acquisitions %}
+            <div class="fixed-grid has-6-cols">
+                <div class="grid">
+                    {% for acquisition in object.acquisitions %}
+                    <a class="cell" href="/acquisition/rescan/{{ acquisition.id }}">
+                        <div class="has-text-centered p-3" style="border-radius: 15px; border-width: 1px; border-color: {% if acquisition.validated %}green{% else %}red{% endif %}; border-style: solid;">
+                            <div>
+                                <img src="/data/objects/{{ object.id }}/{{ acquisition.id }}/{{ leds[0] }}.jpg">
+                            </div>
+                            <p>
+                                {{ acquisition.get_pretty_date() }}
+                            </p>
+                        </div>
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+        {% endif %}
+
+        <div class="field is-grouped">
+            {% if calibration.state == CalibrationState.IsValidated %}
+                <div class="control">
+                    <a href="/acquisition/scan/{{ object.id }}" class="button is-link">Faire un scan</a>
+                </div>
+            {% else %}
+            <div class="control">
+                <button class="button is-link" id="scan">Faire un scan</button>
+            </div>
+            {% endif %}
+            <div class="control">
+                <button id="delete-object" class="button is-danger">Supprimer cet objet</button>
+            </div>
+            <div class="control">
+                <button id="upload-object" class="button is-success">Envoyer cet objet vers le serveur pour reconstruction</button>
+            </div>
+        </div>
+
+        {% if calibration.state != CalibrationState.IsValidated %}
+            <div id="calibration-modal" class="modal">
+                <div class="modal-background"></div>
+                    <div class="modal-content">
+                        <div class="has-text-centered mb-3">Le scanner n'est pas étalonné.</div>
+
+                        <div class="field is-grouped is-grouped-centered">
+                            <div class="control">
+                                <a href="/calibration/calibrate" class="button is-link">Étalonner le scanner</a>
+                            </div>
+                            <div class="control">
+                                <button id="use-last-calibration-button" href="/calibration/use-last" class="button is-link">Réutiliser le dernier étalonnage</button>
+                            </div>
+                        </div>
+                </div>
+                <button class="modal-close is-large" aria-label="close"></button>
+            </div>
+        {% endif %}
+        <div id="delete-modal" class="modal">
+            <div class="modal-background"></div>
+                <div class="modal-content">
+                    <div class="has-text-centered mb-3">Voulez-vous vraiment supprimer l'objet ?</div>
+                    <div class="field is-grouped is-grouped-centered">
+                        <div class="control">
+                            <button class="button custom-modal-close">Annuler</button>
+                        </div>
+                        <div class="control">
+                            <a href="/object/delete/{{ object.id }}" class="button is-danger">Supprimer cet objet</a>
+                        </div>
+                    </div>
+            </div>
+            <button class="modal-close is-large" aria-label="close"></button>
+        </div>
+    </div>
+</section>
+{% endblock content %}
+
+{% block extrajs %}
+<script>
+    document.getElementById('delete-object').addEventListener('click', () => {
+        let modal = document.getElementById('delete-modal');
+        modal.classList.add('is-active');
+    });
+
+    {% if calibration.state < CalibrationState.IsValidated %}
+        document.getElementById('scan').addEventListener('click', () => {
+            let modal = document.getElementById('calibration-modal');
+            modal.classList.add('is-active');
+        });
+
+        document.getElementById('use-last-calibration-button').addEventListener('click', async () => {
+            let resp = await fetch('/api/use-last-calibration');
+            await resp.text();
+            window.location.href = '/scan/{{ object.id }}';
+        });
+    {% endif %}
+
+    (document.querySelectorAll('.modal-background, .modal-close, .custom-modal-close, .modal-card-head .delete, .modal-card-foot .button') || []).forEach((close) => {
+        close.addEventListener('click', () => {
+            for (let modal of document.querySelectorAll('#calibration-modal, #delete-modal')) {
+                modal.classList.remove('is-active');
+            }
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>NenuScanner</title>
+
+        <link rel="stylesheet" href="/static/bulma.min.css">
+        <link rel="stylesheet" href="/static/custom.css">
+        {% block extracss %}{% endblock extracss %}
+    </head>
+    <body>
+        <nav class="navbar has-shadow is-link is-boxed" role="navigation" aria-label="dropdown navigation">
+            <div class="container">
+                <div class="navbar-brand">
+                    <a class="navbar-item" href="/"><strong class="is-size-4">NenuScanner</strong></a>
+
+                    <a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false" data-target="navbarBasicExample">
+                        <span aria-hidden="true"></span>
+                        <span aria-hidden="true"></span>
+                        <span aria-hidden="true"></span>
+                        <span aria-hidden="true"></span>
+                    </a>
+                </div>
+                <div id="navbarBasicExample" class="navbar-menu">
+		    <div class="navbar-start">
+			    <a class="navbar-item" href="/camera">Caméra</a>
+			    <a class="navbar-item" href="/leds">Leds</a>
+		    </div>
+                    <div class="navbar-end">
+			    <a class="navbar-item" href="/restart">Redémarrer le serveur</a>
+                        <a id="calibration-tag-0" class="calibration-tag navbar-item" href="/calibration/calibrate" {% if calibration.state != 0 %}style="display: none;"{% endif %}>
+                            <span id="calibration-tag-0" class="tags has-addons">
+                                <span class="tag is-dark">étalonnage</span>
+                                <span class="tag is-danger">aucune donnée</span>
+                            </span>
+                        </a>
+                        <a id="calibration-tag-1" class="calibration-tag navbar-item" href="/calibration/calibrate" {% if calibration.state != 1 %}style="display: none;"{% endif %}>
+                            <span class="tags has-addons" >
+                                <span class="tag is-dark">étalonnage</span>
+                                <span class="tag is-warning">non calculé</span>
+                            </span>
+                        </a>
+                        <a id="calibration-tag-2" class="calibration-tag navbar-item" href="/calibration/calibrate" {% if calibration.state != 2 %}style="display: none;"{% endif %}>
+                            <span class="tags has-addons">
+                                <span class="tag is-dark">étalonnage</span>
+                                <span class="tag is-warning">non validé</span>
+                            </span>
+                        </a>
+                        <a id="calibration-tag-3" class="calibration-tag navbar-item" href="/calibration/calibrate" {% if calibration.state != 3 %}style="display: none;"{% endif %}>
+                            <span class="tags has-addons">
+                                <span class="tag is-dark">étalonnage</span>
+                                <span class="tag is-success">validé le {{ calibration.get_pretty_short_date() }}</span>
+                            </span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </nav>
+        {% block content %}{% endblock content %}
+        {% block extrajs %}{% endblock extrajs %}
+    </body>
+</html>

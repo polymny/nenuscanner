@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="section">
+    <div class="container">
+        <h1 class="title">Étalonnage</h1>
+        <div class="mb-2">
+            <p>Placez la mire devant le scanner puis appuyez sur le bouton étalonner le scanner.</p>
+        </div>
+        <div class="field is-grouped is-grouped-multiline">
+            <div class="control">
+                <button id="scan-button" class="button is-link">Acquérir les données d'étalonnage</button>
+            </div>
+            <div class="control">
+                <a href="/calibration/use-last" class="button is-link">Réutiliser le dernier étalonnage</a>
+            </div>
+        </div>
+        <article id="error-container" class="message is-danger" style="display: none;">
+            <div id="error-content" class="message-body">
+            </div>
+        </article>
+        <div class="fixed-grid has-8-cols">
+            <div id="grid" class="grid">
+
+            </div>
+        </div>
+        <progress id="progress-bar" class="progress is-link" style="display: none;" value="0" max="1000"></progress>
+        <div id="calibrate" {% if calibration.state == 0 %}style="display: none;" {% endif %}>
+            <p>Si les données d'étalonnage conviennent, appuyez sur le bouton ci-dessous pour procéder à l'étalonnage du scanner.</p>
+            <button id="calibrate-button" class="button is-link">Étalonner le scanner</button>
+        </div>
+    </div>
+</section>
+{% endblock content %}
+
+{% block extrajs %}
+<script>
+    let scanIndex = 1;
+    let progress = 0;
+    let scanButton = document.getElementById('scan-button');
+    let progressBar = document.getElementById('progress-bar');
+    let grid = document.getElementById('grid');
+    let errorContainer = document.getElementById('error-container');
+    let errorContent = document.getElementById('error-content');
+    let calibrateDiv = document.getElementById('calibrate');
+    let calibrateButton = document.getElementById('calibrate-button');
+
+    // If we already have calibration images, we show them right now
+    if ({% if calibration.state > 0 %}true{% else %}false{% endif %}) {
+        let cell, img;
+        {% for led in leds %}
+            cell = document.createElement('div');
+            cell.classList.add('cell');
+            img = document.createElement('img');
+            img.classList.add('is-loading');
+            img.src = '/data/calibrations/{{ calibration.id }}/{{ led }}.jpg?v=0';
+            cell.appendChild(img);
+            grid.appendChild(cell);
+        {% endfor %}
+    }
+
+    scanButton.addEventListener('click', async () => {
+        scanIndex++;
+        progress = 0;
+        progressBar.value = 0;
+        scanButton.setAttribute('disabled', 'disabled');
+        scanButton.classList.add('is-loading');
+        progressBar.style.display = "block";
+        grid.innerHTML = '';
+
+        let response = await fetch('/calibration/scan');
+        let reader = response.body.pipeThrough(new TextDecoderStream()).getReader();
+
+        while (true) {
+            let { value, done } = await reader.read();
+
+            if (done) {
+                scanButton.removeAttribute('disabled');
+                scanButton.classList.remove('is-loading');
+                calibrateDiv.style.display = "block";
+
+                for (let elt of document.getElementsByClassName('calibration-tag')) {
+                    elt.style.display = "none";
+                }
+                document.getElementById('calibration-tag-1').style.display = null;
+                break;
+            }
+
+            for (let line of value.split('\n')) {
+                if (line === "") {
+                    continue;
+                }
+
+                let { status, id, ratio } = JSON.parse(line);
+                progress = Math.ceil(1000 * parseFloat(ratio));
+
+                if (status === "ready") {
+                    let cell = document.createElement('div');
+                    cell.classList.add('cell');
+                    let img = document.createElement('img');
+                    img.classList.add('is-loading');
+                    img.src = '/data/calibrations/{{ calibration.id }}/' + id + '.jpg?v=' + scanIndex;
+                    cell.appendChild(img);
+                    grid.appendChild(cell);
+                }
+            }
+        }
+    });
+
+    calibrateButton.addEventListener('click', async () => {
+        calibrateButton.classList.add('is-loading');
+
+        await fetch('/calibration/compute');
+        window.location.reload();
+
+    });
+
+    function refreshProgressBar() {
+        if (progress !== progressBar.value) {
+            progressBar.value = Math.min(progressBar.value + 5, progress);
+        }
+        requestAnimationFrame(refreshProgressBar);
+    }
+
+    refreshProgressBar();
+</script>
+{% endblock extrajs %}

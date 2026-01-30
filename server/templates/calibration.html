@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="section">
+    <div class="container">
+        <h1 class="title is-2">Visualisation de l'étalonnage {{ calibration.id }}</h1>
+        {% if calibration.validated_date %}
+        <h2 class="title is-5 is-italic">Validé le {{ calibration.get_pretty_date() }}</h2>{% endif %}
+        <div class="columns">
+            <div class="column">
+                <h2 class="title is-3">Positions 3D des LEDs</h2>
+                <div id="visualiser-container">
+                    <div id="visualiser">
+                        <div id="info">
+                            LED sélectionnée : <span id="selected-object">aucune</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="column">
+                <h2 class="title is-3">Vue de la LED selectionnée</h2>
+                <div>
+                    <img id="led-view" style="width: 100%">
+                </div>
+            </div>
+        </div>
+        <div>
+            <div>
+                <label class="checkbox">
+                    <input type="checkbox" id="show-lines">
+                    Afficher les directions de la lumière pour chaque sphère
+                </label>
+            </div>
+            <div>
+                <label class="checkbox">
+                    <input type="checkbox" id="show-plane">
+                    Afficher le plan contenant les sphères
+                </label>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section>
+    <div class="container">
+        <div class="field is-horizontal is-grouped is-grouped-right">
+            {% if calibration.state == CalibrationState.IsValidated %}
+                <div class="control">
+                    <button disabled class="button">
+                        Cet étalonnage a déjà été validé
+                    </button>
+                </div>
+                <div class="control">
+                    <a href="/calibration/create" class="button is-link">Créer un nouvel étalonnage</a>
+                </div>
+            {% else %}
+                <div class="control">
+                    <a href="/calibration/cancel" class="button">Retourner à la page d'acquisition</a>
+                </div>
+                <div class="control">
+                    <a href="/calibration/validate" class="button is-link">Valider l'étalonnage</a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</section>
+{% endblock content %}
+
+{% block extracss %}
+<style>
+    #visualiser-container {
+        height: 50vh;
+        border-color: var(--bulma-title-color);
+        border-width: 1px;
+        border-style: solid;
+    }
+
+    #visualiser {
+        height: 100%;
+    }
+
+    #info {
+        position: absolute;
+        width: 100%;
+        z-index: 100;
+        display:block;
+        padding: 1em;
+    }
+</style>
+{% endblock extracss %}
+
+{% block extrajs %}
+<script>window.CALIBRATION_ID = {{ calibration.id }};</script>
+<script src="/static/calibration-visualiser.js"></script>
+{% endblock extrajs %}

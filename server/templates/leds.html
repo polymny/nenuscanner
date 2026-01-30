@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="section">
+  <div class="container">
+    <h1 class="title">Contrôler les LEDS</h1>
+
+    <div id="leds-container" class="columns is-multiline">
+      <!-- Les switches seront créés à la volée par JS à partir de la variable `leds` -->
+    </div>
+  </div>
+</section>
+{% endblock content %}
+
+{% block extrajs %}
+<style>
+/* switch simple */
+.switch-slice {
+  display:flex;
+  align-items:center;
+  gap:0.5rem;
+}
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 46px;
+  height: 24px;
+}
+.switch input { display: none; }
+.slider {
+  position:absolute; inset:0; cursor:pointer;
+  background:#ddd; border-radius:24px; transition:.2s;
+}
+.slider:before {
+  content:""; position:absolute; height:18px; width:18px; left:3px; top:3px;
+  background:#fff; border-radius:50%; transition:.2s;
+}
+.switch input:checked + .slider { background:#48c774; }
+.switch input:checked + .slider:before { transform: translateX(22px); }
+/* remove fixed width so Bulma columns control layout */
+.led-box { padding:0.75rem; max-width: 100%; }
+.led-name { font-weight:600; margin-bottom:.35rem; }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  // leds list injected by Jinja
+  const leds = {{ leds | tojson | safe }};
+
+  const container = document.getElementById('leds-container');
+
+  // helper: send state to server
+  async function setLedState(ledName, state, checkbox) {
+    try {
+      const res = await fetch('/leds/set', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ led: ledName, state: state })
+      });
+      const json = await res.json();
+      if (res.ok && json.status === 'ok') {
+        checkbox.classList.remove('has-text-danger');
+        checkbox.classList.add('has-text-success');
+        setTimeout(()=>{ checkbox.classList.remove('has-text-success'); }, 500);
+      } else {
+        console.error('LED set error', json);
+        alert('Erreur commande LED: ' + (json.error || res.status));
+      }
+    } catch (e) {
+      console.error(e);
+      alert('Erreur réseau lors de la commande LED');
+    }
+  }
+
+  // create a switch card for each led name/uuid
+  leds.forEach(function(ledName, idx) {
+    // Use Bulma column classes to get max 3 per row on desktop
+    const col = document.createElement('div');
+    col.className = 'column is-one-third-desktop is-half-tablet is-full-mobile led-box';
+
+    const box = document.createElement('div');
+
+    const label = document.createElement('div');
+    label.className = 'led-name';
+    label.textContent = ledName;
+    box.appendChild(label);
+
+    const switchRow = document.createElement('div');
+    switchRow.className = 'switch-slice';
+
+    const offLabel = document.createElement('span');
+    offLabel.textContent = 'OFF';
+    offLabel.style.fontSize = '0.9rem';
+
+    const switchLabel = document.createElement('label');
+    switchLabel.className = 'switch';
+
+    const input = document.createElement('input');
+    input.type = 'checkbox';
+    input.id = 'led-switch-' + idx;
+    input.dataset.led = ledName;
+
+    const slider = document.createElement('span');
+    slider.className = 'slider';
+
+    switchLabel.appendChild(input);
+    switchLabel.appendChild(slider);
+
+    const onLabel = document.createElement('span');
+    onLabel.textContent = 'ON';
+    onLabel.style.fontSize = '0.9rem';
+
+    switchRow.appendChild(offLabel);
+    switchRow.appendChild(switchLabel);
+    switchRow.appendChild(onLabel);
+
+    box.appendChild(switchRow);
+
+    // Optional small status text
+    const status = document.createElement('div');
+    status.style.marginTop = '0.5rem';
+    status.style.fontSize = '0.85rem';
+    status.textContent = 'état: inconnu';
+    box.appendChild(status);
+
+    col.appendChild(box);
+    container.appendChild(col);
+
+    // event
+    input.addEventListener('change', function (ev) {
+      const led = ev.target.dataset.led;
+      const state = ev.target.checked ? 'on' : 'off';
+      status.textContent = 'état: ' + state;
+      setLedState(led, state, status);
+    });
+  });
+});
+</script>
+{% endblock extrajs %}
