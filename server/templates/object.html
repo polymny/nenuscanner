@@ -34,11 +34,11 @@
         <div class="field is-grouped">
             {% if calibration.state == CalibrationState.IsValidated %}
                 <div class="control">
-                    <a href="/acquisition/scan/{{ object.id }}" class="button is-link">Faire un scan</a>
+                    <a href="/acquisition/scan/{{ object.id }}" class="button is-link">Faire une acquisition</a>
                 </div>
             {% else %}
             <div class="control">
-                <button class="button is-link" id="scan">Faire un scan</button>
+                <button class="button is-link" id="scan">Faire une acquisition</button>
             </div>
             {% endif %}
             <div class="control">
