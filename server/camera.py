@@ -83,7 +83,7 @@ class RealCamera(Camera):
         except Exception as e:
             print('An error occured when capturing photo', e)
             return None
-        
+
     def capture_preview(self):
         capture = gp.check_result(gp.gp_camera_capture_preview(self.inner))
         file_data = gp.check_result(gp.gp_file_get_data_and_size(capture))
@@ -140,12 +140,6 @@ class DummyCamera(Camera):
         # Find which leds are turned on
         found = None
         all_on = False
-        for led in self.leds.leds:
-            if led.is_on:
-                if found is None:
-                    found = led
-                else:
-                    all_on = True
 
         if all_on:
             return 'data-keep/small/all_on.jpg'
