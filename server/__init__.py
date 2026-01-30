@@ -2,8 +2,6 @@ from flask import Flask, send_from_directory, session
 import os
 from . import db, config, routes, utils, leds
 
-leds.get().enter()
-
 app = Flask(__name__)
 
 # Manage secret key
