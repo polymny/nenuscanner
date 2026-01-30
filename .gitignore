@@ -178,3 +178,4 @@ pyrightconfig.json
 # Don't commit data dir, or config.py
 config.py
 data
+node_modules

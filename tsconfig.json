@@ -1,0 +1,14 @@
+{
+    "compilerOptions": {
+        "strict": true,
+        "strictNullChecks": true,
+        "strictPropertyInitialization": false,
+        "module": "amd",
+        "lib": ["dom", "ESnext"],
+        "removeComments": true,
+        "noUnusedLocals": true,
+        "noUnusedParameters": true,
+        "noEmit": true
+    }
+}
+

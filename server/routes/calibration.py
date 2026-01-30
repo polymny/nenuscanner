@@ -77,7 +77,14 @@ def compute():
     if calib is None:
         return 'oops', 404
 
-    calibration_json = calibration.calibrate(join(config.CALIBRATION_DIR, str(id)))
+    try:
+        if config.SKIP_LOCAL_CALIBRATION:
+            calibration_json = 'skipped'
+        else:
+            calibration_json = calibration.calibrate(join(config.CALIBRATION_DIR, str(id)))
+    except:
+        calibration_json = 'failure'
+
     with open(join(config.CALIBRATION_DIR, str(id), 'calibration.json'), 'w') as f:
         json.dump(calibration_json, f, indent=4)
     with conn:

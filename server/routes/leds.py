@@ -2,8 +2,6 @@ from flask import Blueprint, render_template, request, send_file, jsonify, sessi
 import json
 import subprocess
 
-import gpiod
-
 from .. import camera as C
 from .. import leds,config
 
@@ -16,7 +14,7 @@ def get():
     """
     Returns the pages showing all leds.
     """
-    
+
     return render_template(
         'leds.html', leds= config.LEDS_UUIDS)
 
@@ -47,7 +45,7 @@ def set_led():
         raise
         print(f'{e}')
         return jsonify({'status': 'error', 'error': 'error'}), 400
-    
+
 
     print(f"Commande reçue pour {led} : {state}")
 

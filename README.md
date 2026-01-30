@@ -6,7 +6,7 @@
 dépendances.*
 
 ```bash
-sudo apt install python3-flask python3-gphoto2 python3-pil python3-numpy
+sudo apt install python3-flask python3-gphoto2 python3-pil python3-numpy python-scipy
 ```
 
 ## Configuration de la db

@@ -6,36 +6,48 @@
         <h1 class="title is-2">Visualisation de l'étalonnage {{ calibration.id }}</h1>
         {% if calibration.validated_date %}
         <h2 class="title is-5 is-italic">Validé le {{ calibration.get_pretty_date() }}</h2>{% endif %}
-        <div class="columns">
-            <div class="column">
-                <h2 class="title is-3">Positions 3D des LEDs</h2>
-                <div id="visualiser-container">
-                    <div id="visualiser">
-                        <div id="info">
-                            LED sélectionnée : <span id="selected-object">aucune</span>
+        <div id="visualizer" style="display: none;">
+            <div class="columns">
+                <div class="column">
+                    <h2 class="title is-3">Positions 3D des LEDs</h2>
+                    <div id="visualiser-container">
+                        <div id="visualiser">
+                            <div id="info">
+                                LED sélectionnée : <span id="selected-object">aucune</span>
+                            </div>
                         </div>
                     </div>
                 </div>
+                <div class="column">
+                    <h2 class="title is-3">Vue de la LED selectionnée</h2>
+                    <div>
+                        <img id="led-view" style="width: 100%">
+                    </div>
+                </div>
             </div>
-            <div class="column">
-                <h2 class="title is-3">Vue de la LED selectionnée</h2>
+            <div>
                 <div>
-                    <img id="led-view" style="width: 100%">
+                    <label class="checkbox">
+                        <input type="checkbox" id="show-lines">
+                        Afficher les directions de la lumière pour chaque sphère
+                    </label>
+                </div>
+                <div>
+                    <label class="checkbox">
+                        <input type="checkbox" id="show-plane">
+                        Afficher le plan contenant les sphères
+                    </label>
                 </div>
             </div>
         </div>
-        <div>
-            <div>
-                <label class="checkbox">
-                    <input type="checkbox" id="show-lines">
-                    Afficher les directions de la lumière pour chaque sphère
-                </label>
+        <div id="calibration-failed" style="display: none;">
+            <div class="notification is-danger is-light">
+                Le calcul de l'étalonnage a échoué.
             </div>
-            <div>
-                <label class="checkbox">
-                    <input type="checkbox" id="show-plane">
-                    Afficher le plan contenant les sphères
-                </label>
+        </div>
+        <div id="calibration-skipped" style="display: none;">
+            <div class="notification is-danger is-light">
+                Le calcul de l'étalonnage n'a pas été fait.
             </div>
         </div>
     </div>
