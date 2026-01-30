@@ -19,7 +19,6 @@ class GpioLed:
             initial_value=1.0,
             frequency=200,
         )
-        self.off()
 
     def set_value(self, value: float):
         value = min(1.0, max(0.0, value))
