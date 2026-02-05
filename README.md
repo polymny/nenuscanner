@@ -1,5 +1,13 @@
 # NenuScanner
 
+## Quick install
+
+Sur une raspberry pi 5 fraîchement installée :
+```
+curl -sSf https://raw.githubusercontent.com/polymny/nenuscanner/refs/heads/main/installer.sh | bash
+```
+
+
 ## Installation des dépedances
 
 *Note : on veut utiliser le `gpiozero` de Raspberry Pi OS, donc on va éviter de faire un virtual env pour installer nos

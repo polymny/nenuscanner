@@ -3,14 +3,15 @@
 cd $HOME
 
 # Install deps
-sudo apt upgrade
 sudo apt update
+sudo apt upgrade
 sudo apt install \
     python3-flask \
     python3-gphoto2 \
     python3-pil \
     python3-numpy \
-    python-scipy
+    python-scipy \
+    git
 
 # Setup code
 git clone https://github.com/polymny/nenuscanner
