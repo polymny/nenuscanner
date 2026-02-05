@@ -10,7 +10,7 @@ yes | sudo apt-get install \
     python3-gphoto2 \
     python3-pil \
     python3-numpy \
-    python-scipy \
+    python3-scipy \
     git
 
 # Setup code
