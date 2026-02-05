@@ -3,9 +3,9 @@
 cd $HOME
 
 # Install deps
-sudo apt-get update -y
-sudo apt-get upgrade -y
-sudo apt-get install -y \
+yes | sudo apt-get update
+yes | sudo apt-get upgrade
+yes | sudo apt-get install \
     python3-flask \
     python3-gphoto2 \
     python3-pil \
