@@ -89,14 +89,12 @@ class RealCamera(Camera):
         file_data = gp.check_result(gp.gp_file_get_data_and_size(capture))
         data = memoryview(file_data)
         image = Image.open(io.BytesIO(file_data))
-        image.save("src/nenuscanner/static/feed.jpg")
+        image.save("static/feed.jpg")
 
     def save(self, capture, output_file):
-        preview = self.inner.file_get(capture.folder, capture.name[:-3] + 'JPG', gp.GP_FILE_TYPE_NORMAL)
+        preview = self.inner.file_get(capture.folder, capture.name, gp.GP_FILE_TYPE_PREVIEW)
         raw = self.inner.file_get(capture.folder, capture.name, gp.GP_FILE_TYPE_RAW)
         preview.save(output_file + '.jpg')
-        # Resize preview
-        subprocess.run(['convert', output_file + '.jpg', '-resize', '10%', output_file + '.jpg'])
         raw.save(output_file + '.cr2')
 
     def config(self):
