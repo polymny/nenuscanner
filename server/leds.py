@@ -2,7 +2,7 @@ from gpiozero import PWMLED
 
 from . import config
 
-GPIO_LED_MAX_PWM_VALUE = 0.8
+GPIO_LED_MAX_PWM_VALUE = 1
 
 class Leds:
     def on(self):
@@ -48,8 +48,7 @@ class GpioLeds(Leds):
 
     def on(self):
         for led in self.leds:
-            # When all leds are turned on at the same time, we make them darker so there's not too much light
-            led.set_value(1 / len(self.leds))
+            led.on()
 
     def get_by_uuid(self, uuid: int) -> GpioLed:
         for led in self.leds:
