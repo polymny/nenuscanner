@@ -96,6 +96,7 @@ class RealCamera(Camera):
         raw = self.inner.file_get(capture.folder, capture.name, gp.GP_FILE_TYPE_RAW)
         preview.save(output_file + '.jpg')
         raw.save(output_file + '.cr2')
+        self.inner.file_delete(capture.folder, capture.name)
 
     def config(self):
 
