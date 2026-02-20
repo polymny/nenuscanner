@@ -71,3 +71,10 @@ def save(self, capture, output_file):
     preview.save(output_file + '.jpg')
     raw.save(output_file + '.cr2')
 ```
+
+## Exposition auto
+
+Bon, ben maintenant on a des soucis d'exposition automatique. Je vois ces paramètres dans `gphoto2` qui peuvent jouer :
+- `autoexposuremode`, mais ça a l'air d'être sur `Manual`
+- `shutterspeed`, mais ca a l'air d'être a 1/1600
+- `iso`, celui-la était sur auto, il faut le régler

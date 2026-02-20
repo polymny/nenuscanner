@@ -1,6 +1,6 @@
 from flask import Flask, send_from_directory, session
 import os
-from . import db, config, routes, utils, leds
+from . import db, config, routes, utils, leds, fan
 
 app = Flask(__name__)
 
