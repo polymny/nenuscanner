@@ -23,7 +23,7 @@ class DummyFan:
         pass
 
 
-_fan = Fan(config.FAN_UUID) if config.FAN_UUID is not None else DummyFan()
+_fan = Fan(config.FAN_UUID) if config.FAN_UUID is not None else DummyFan(0)
 
 
 def get() -> Fan:

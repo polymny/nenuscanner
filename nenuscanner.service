@@ -5,8 +5,8 @@ After=network.target
 [Service]
 RestartSec=2s
 Type=simple
-WorkingDirectory=/home/pi/nenuscanner/server
-ExecStart=flask --app . run --host 0.0.0.0
+WorkingDirectory=/home/pi/nenuscanner
+ExecStart=python -m server
 Restart=always
 
 [Install]
