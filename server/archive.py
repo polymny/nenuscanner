@@ -163,7 +163,10 @@ class TarSender(ArchiveSender):
 
                     # Because tar use records of 512 bytes, we need to pad the
                     # file with zeroes to fill the last chunk
-                    yield b'\x00' * (512 - bytes_sent % 512)
+                    yield b'\x00' * ((512 - bytes_sent % 512) % 512)
+
+            # We need to generate two empty records at the end
+            yield b'\x00' * 1024
         return generate()
 
     def mime_type(self) -> str:
@@ -179,7 +182,7 @@ class TarSender(ArchiveSender):
             stat = os.stat(file)
 
             # Add size of header, and size of content ceiled to 512 bytes
-            length += 512 + stat.st_size + (512 - stat.st_size % 512)
+            length += 512 + stat.st_size + ((512 - stat.st_size % 512) % 512)
 
         return length
 
