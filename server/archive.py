@@ -184,7 +184,7 @@ class TarSender(ArchiveSender):
             # Add size of header, and size of content ceiled to 512 bytes
             length += 512 + stat.st_size + ((512 - stat.st_size % 512) % 512)
 
-        return length
+        return length + 1024
 
 
 def crc32(filename) -> int:
