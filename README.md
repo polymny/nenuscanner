@@ -24,3 +24,12 @@ Depuis `/home/pi/nenuscanner/server`
 ```
 flask -app . run --debug
 ```
+
+## Setup Python avec Poetry (recommandé)
+
+Depuis la racine du repo :
+
+```bash
+poetry install
+poetry run nenuscanner
+```
