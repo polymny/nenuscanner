@@ -3,7 +3,7 @@ from os.path import join
 
 from flask import Blueprint, Response, redirect, render_template, session
 
-from .. import calibration, config, db, scanner, utils
+from .. import config, db, scanner, utils
 
 blueprint = Blueprint('calibration', __name__)
 
@@ -32,7 +32,7 @@ def calibrate():
             calibration = db.Calibration.create(conn)
             session['calibration_id'] = calibration.id
     else:
-        calibration = db.Calibration.get_from_id(session['calibration_id'], conn)
+        calibration = utils.get_calibration(conn)
 
     if calibration.state in [db.CalibrationState.Empty, db.CalibrationState.HasData]:
         return render_template('calibrate.html')
@@ -78,13 +78,8 @@ def compute():
     if calib is None:
         return 'oops', 404
 
-    try:
-        if config.SKIP_LOCAL_CALIBRATION:
-            calibration_json = 'skipped'
-        else:
-            calibration_json = calibration.calibrate(join(config.CALIBRATION_DIR, str(id)))
-    except Exception:
-        calibration_json = 'failure'
+    # Calibration is now skipped, we just save a dummy file
+    calibration_json = 'skipped'
 
     with open(join(config.CALIBRATION_DIR, str(id), 'calibration.json'), 'w') as f:
         json.dump(calibration_json, f, indent=4)
@@ -101,7 +96,7 @@ def cancel():
     Cancels a calibration.
     """
     conn = db.get()
-    calibration = db.Calibration.get_from_id(session['calibration_id'], conn)
+    calibration = utils.get_calibration(conn)
     calibration.state = db.CalibrationState.HasData
     with conn:
         calibration.save(conn)
@@ -131,5 +126,10 @@ def use_last():
     """
     conn = db.get()
     calib = db.Calibration.get_last(conn)
-    session['calibration_id'] = calib.id
+    if calib is None:
+        with conn:
+            calib = db.Calibration.create(conn)
+        session['calibration_id'] = calib.id
+    else:
+        session['calibration_id'] = calib.id
     return redirect('/calibration/calibrate')
