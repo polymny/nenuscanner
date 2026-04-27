@@ -179,6 +179,7 @@ pyrightconfig.json
 config.py
 data
 data-keep
+data-backups
 node_modules
 configCamera.json
 

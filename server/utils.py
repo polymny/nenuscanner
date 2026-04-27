@@ -15,4 +15,11 @@ def get_calibration(conn: sqlite3.Connection) -> db.Calibration:
     if calibration_id is None:
         return db.Calibration.Dummy
 
-    return db.Calibration.get_from_id(calibration_id, conn)
+    calib = db.Calibration.get_from_id(calibration_id, conn)
+    if calib is None:
+        # Session can point to a deleted/invalid calibration id.
+        # Falling back to a dummy calibration keeps templates/routes safe.
+        session.pop('calibration_id', None)
+        return db.Calibration.Dummy
+
+    return calib
