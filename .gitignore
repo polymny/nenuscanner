@@ -178,5 +178,9 @@ pyrightconfig.json
 # Don't commit data dir, or config.py
 config.py
 data
+data-keep
 node_modules
 configCamera.json
+
+# VSCode
+.vscode/
