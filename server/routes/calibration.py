@@ -3,7 +3,7 @@ from os.path import join
 
 from flask import Blueprint, Response, redirect, render_template, session
 
-from .. import calibration, config, db, scanner, utils
+from .. import config, db, scanner, utils
 
 blueprint = Blueprint('calibration', __name__)
 
@@ -78,13 +78,8 @@ def compute():
     if calib is None:
         return 'oops', 404
 
-    try:
-        if config.SKIP_LOCAL_CALIBRATION:
-            calibration_json = 'skipped'
-        else:
-            calibration_json = calibration.calibrate(join(config.CALIBRATION_DIR, str(id)))
-    except Exception:
-        calibration_json = 'failure'
+    # Calibration is now skipped, we just save a dummy file
+    calibration_json = 'skipped'
 
     with open(join(config.CALIBRATION_DIR, str(id), 'calibration.json'), 'w') as f:
         json.dump(calibration_json, f, indent=4)
