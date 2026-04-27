@@ -31,7 +31,7 @@ def get() -> sqlite3.Connection:
 
 
 def init(db):
-    with open('schema.sql', 'r') as f:
+    with open(join(os.path.dirname(__file__), "schema.sql"), 'r') as f:
         db.executescript(f.read())
 
 
@@ -70,11 +70,12 @@ class Calibration:
     @staticmethod
     def create(db: sqlite3.Connection) -> 'Calibration':
         cur = db.cursor()
-        response = cur.execute(
-            'INSERT INTO calibration(state, validated_date) VALUES (?, NULL) RETURNING ' + Calibration.select_args() + ';',
+        cur.execute(
+            'INSERT INTO calibration(state, validated_date) VALUES (?, NULL);',
             [int(CalibrationState.Empty)]
         )
-        calibration = Calibration.from_row(response.fetchone())
+        calibration_id = cur.lastrowid
+        calibration = Calibration.get_from_id(calibration_id, db)
         if calibration is None:
             return None
         os.makedirs(join(config.CALIBRATION_DIR, str(calibration.id)))
@@ -175,11 +176,9 @@ class Acquisition:
     @staticmethod
     def delete_from_id(acquisition_id: int, db: sqlite3.Connection) -> 'Acquisition':
         cur = db.cursor()
-        response = cur.execute(
-            'DELETE FROM acquisition WHERE id = ? RETURNING ' + Acquisition.select_args() + ';',
-            [acquisition_id]
-        )
-        return Acquisition.from_row(response.fetchone())
+        acquisition = Acquisition.get_from_id(acquisition_id, db)
+        cur.execute('DELETE FROM acquisition WHERE id = ?;', [acquisition_id])
+        return acquisition
 
 
 class Project:
@@ -214,11 +213,12 @@ class Object:
     @staticmethod
     def create(name: str, project: str, db: sqlite3.Connection) -> 'Object':
         cur = db.cursor()
-        response = cur.execute(
-            'INSERT INTO object(name, project) VALUES (?, ?) RETURNING ' + Object.select_args() + ';',
+        cur.execute(
+            'INSERT INTO object(name, project) VALUES (?, ?);',
             [name, project]
         )
-        object = Object.from_row(response.fetchone())
+        object_id = cur.lastrowid
+        object = Object.get_from_id(object_id, db)
         os.makedirs(join(config.OBJECT_DIR, str(object.id)))
         return object
 
@@ -248,20 +248,19 @@ class Object:
 
     def add_acquisition(self, calibration_id: int, db: sqlite3.Connection) -> Acquisition:
         cur = db.cursor()
-        response = cur.execute(
-            'INSERT INTO acquisition(calibration_id, object_id, date, validated) VALUES (?, ?, ?, ?) RETURNING ' + Acquisition.select_args() + ';',
+        cur.execute(
+            'INSERT INTO acquisition(calibration_id, object_id, date, validated) VALUES (?, ?, ?, ?);',
             [calibration_id, self.id, datetime.now().timestamp(), 0]
         )
-        return Acquisition.from_row(response.fetchone())
+        acquisition_id = cur.lastrowid
+        return Acquisition.get_from_id(acquisition_id, db)
 
     @staticmethod
     def delete_from_id(object_id: int, db: sqlite3.Connection) -> 'Object':
         cur = db.cursor()
-        response = cur.execute(
-            'DELETE FROM object WHERE id = ? RETURNING ' + Object.select_args() + ';',
-            [object_id]
-        )
-        return Object.from_row(response.fetchone())
+        object = Object.get_from_id(object_id, db)
+        cur.execute('DELETE FROM object WHERE id = ?;', [object_id])
+        return object
 
     def full(self, db: sqlite3.Connection) -> 'FullObject':
         cur = db.cursor()

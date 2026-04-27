@@ -1,0 +1,27 @@
+[tool.poetry]
+name = "nenuscanner"
+version = "0.1.0"
+description = "NeNuScanner Flask server"
+authors = ["NeNuScanner team"]
+readme = "README.md"
+packages = [{ include = "server" }]
+
+[tool.poetry.dependencies]
+python = "^3.12"
+flask = "^3.0.0"
+waitress = "^3.0.0"
+pillow = "^10.0.0"
+numpy = "^2.0.0"
+scipy = "^1.13.0"
+
+gpiozero = "^2.0.1"
+gphoto2 = "^2.6.0"
+
+[tool.poetry.scripts]
+nenuscanner = "server.__main__:main"
+dev = "server.dev:main"
+
+[build-system]
+requires = ["poetry-core>=1.8.0"]
+build-backend = "poetry.core.masonry.api"
+
