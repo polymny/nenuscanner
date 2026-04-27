@@ -1,14 +1,15 @@
 #!/usr/bin/env python
 
-from enum import IntEnum
-from datetime import datetime
-from flask import g
 import itertools
 import os
-from os.path import join
 import shutil
 import sqlite3
+from datetime import datetime
+from enum import IntEnum
+from os.path import join
 from typing import Optional
+
+from flask import g
 
 if __name__ != '__main__':
     from . import config, dateutils
@@ -31,7 +32,7 @@ def get() -> sqlite3.Connection:
 
 
 def init(db):
-    with open(join(os.path.dirname(__file__), "schema.sql"), 'r') as f:
+    with open(join(os.path.dirname(__file__), 'schema.sql'), 'r') as f:
         db.executescript(f.read())
 
 
@@ -70,10 +71,7 @@ class Calibration:
     @staticmethod
     def create(db: sqlite3.Connection) -> 'Calibration':
         cur = db.cursor()
-        cur.execute(
-            'INSERT INTO calibration(state, validated_date) VALUES (?, NULL);',
-            [int(CalibrationState.Empty)]
-        )
+        cur.execute('INSERT INTO calibration(state, validated_date) VALUES (?, NULL);', [int(CalibrationState.Empty)])
         calibration_id = cur.lastrowid
         calibration = Calibration.get_from_id(calibration_id, db)
         if calibration is None:
@@ -91,15 +89,18 @@ class Calibration:
         cur = db.cursor()
         cur.execute(
             'UPDATE calibration SET state = ?, validated_date = ? WHERE id = ?',
-            [int(self.state), int(self.validated_date.timestamp()) if self.validated_date is not None else None, self.id]
+            [
+                int(self.state),
+                int(self.validated_date.timestamp()) if self.validated_date is not None else None,
+                self.id,
+            ],
         )
 
     @staticmethod
     def get_from_id(calibration_id: int, db: sqlite3.Connection) -> Optional['Calibration']:
         cur = db.cursor()
         response = cur.execute(
-            'SELECT ' + Calibration.select_args() + ' FROM calibration WHERE id = ?;',
-            [calibration_id]
+            'SELECT ' + Calibration.select_args() + ' FROM calibration WHERE id = ?;', [calibration_id]
         )
         return Calibration.from_row(response.fetchone())
 
@@ -107,8 +108,10 @@ class Calibration:
     def get_last(db: sqlite3.Connection) -> Optional['Calibration']:
         cur = db.cursor()
         response = cur.execute(
-            'SELECT ' + Calibration.select_args() + ' FROM calibration WHERE state = 3 ORDER BY validated_date DESC LIMIT 1;',
-            []
+            'SELECT '
+            + Calibration.select_args()
+            + ' FROM calibration WHERE state = 3 ORDER BY validated_date DESC LIMIT 1;',
+            [],
         )
         return Calibration.from_row(response.fetchone())
 
@@ -143,7 +146,7 @@ class Acquisition:
         cur = db.cursor()
         cur.execute(
             'UPDATE acquisition SET calibration_id = ?, object_id = ?, date = ?, validated = ? WHERE id = ?',
-            [self.calibration_id, self.object_id, self.date.timestamp(), 1 if self.validated else 0, self.id]
+            [self.calibration_id, self.object_id, self.date.timestamp(), 1 if self.validated else 0, self.id],
         )
 
     @staticmethod
@@ -156,8 +159,7 @@ class Acquisition:
     def get_from_id(acquisition_id: int, db: sqlite3.Connection) -> Optional['Acquisition']:
         cur = db.cursor()
         response = cur.execute(
-            'SELECT ' + Acquisition.select_args() + ' FROM acquisition WHERE id = ?;',
-            [acquisition_id]
+            'SELECT ' + Acquisition.select_args() + ' FROM acquisition WHERE id = ?;', [acquisition_id]
         )
         return Acquisition.from_row(response.fetchone())
 
@@ -199,10 +201,7 @@ class Object:
 
     def save(self, db: sqlite3.Connection):
         cur = db.cursor()
-        cur.execute(
-            'UPDATE object SET name = ?, project = ? WHERE id = ?',
-            [self.name, self.project, self.id]
-        )
+        cur.execute('UPDATE object SET name = ?, project = ? WHERE id = ?', [self.name, self.project, self.id])
 
     @staticmethod
     def from_row(row: Optional[sqlite3.Row]) -> Optional['Object']:
@@ -213,10 +212,7 @@ class Object:
     @staticmethod
     def create(name: str, project: str, db: sqlite3.Connection) -> 'Object':
         cur = db.cursor()
-        cur.execute(
-            'INSERT INTO object(name, project) VALUES (?, ?);',
-            [name, project]
-        )
+        cur.execute('INSERT INTO object(name, project) VALUES (?, ?);', [name, project])
         object_id = cur.lastrowid
         object = Object.get_from_id(object_id, db)
         os.makedirs(join(config.OBJECT_DIR, str(object.id)))
@@ -225,32 +221,26 @@ class Object:
     @staticmethod
     def get_from_id(object_id: int, db: sqlite3.Connection) -> Optional['Object']:
         cur = db.cursor()
-        response = cur.execute(
-            'SELECT ' + Object.select_args() + ' FROM object WHERE id = ?;',
-            [object_id]
-        )
+        response = cur.execute('SELECT ' + Object.select_args() + ' FROM object WHERE id = ?;', [object_id])
         return Object.from_row(response.fetchone())
 
     @staticmethod
     def all(db: sqlite3.Connection) -> list['Object']:
         cur = db.cursor()
-        response = cur.execute(
-            'SELECT ' + Object.select_args() + ' FROM object;',
-            []
-        )
+        response = cur.execute('SELECT ' + Object.select_args() + ' FROM object;', [])
         return list(map(Object.from_row, response.fetchall()))
 
     @staticmethod
     def all_by_project(db: sqlite3.Connection) -> list[Project]:
         objects = [x.full(db) for x in Object.all(db)]
         objects_by_projects = itertools.groupby(objects, lambda x: x.project)
-        return list(map(lambda x: Project(x[0], list(x[1])), objects_by_projects))
+        return [Project(x[0], list(x[1])) for x in objects_by_projects]
 
     def add_acquisition(self, calibration_id: int, db: sqlite3.Connection) -> Acquisition:
         cur = db.cursor()
         cur.execute(
             'INSERT INTO acquisition(calibration_id, object_id, date, validated) VALUES (?, ?, ?, ?);',
-            [calibration_id, self.id, datetime.now().timestamp(), 0]
+            [calibration_id, self.id, datetime.now().timestamp(), 0],
         )
         acquisition_id = cur.lastrowid
         return Acquisition.get_from_id(acquisition_id, db)
@@ -266,9 +256,9 @@ class Object:
         cur = db.cursor()
         response = cur.execute(
             'SELECT ' + Acquisition.select_args() + ' FROM acquisition WHERE object_id = ? ORDER BY date DESC;',
-            [self.id]
+            [self.id],
         )
-        acquisitions = list(map(lambda x: Acquisition.from_row(x), response.fetchall()))
+        acquisitions = [Acquisition.from_row(x) for x in response.fetchall()]
         return FullObject(self.id, self.name, self.project, acquisitions)
 
 
@@ -288,7 +278,9 @@ def main():
         os.makedirs(config.BACKUPS_DIR, exist_ok=True)
 
         now = datetime.now()
-        dest = join(config.BACKUPS_DIR, f'{now.year}-{now.month:02}-{now.day:02}--{now.hour:02}-{now.minute:02}-{now.second:02}')
+        dest = join(
+            config.BACKUPS_DIR, f'{now.year}-{now.month:02}-{now.day:02}--{now.hour:02}-{now.minute:02}-{now.second:02}'
+        )
         shutil.move(config.DATA_DIR, dest)
 
     # Create new empty data dir

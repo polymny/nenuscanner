@@ -1,8 +1,10 @@
 #!/usr/bin/env python
 
 import os
-from . import app
+
 from waitress import serve
+
+from . import app
 
 
 def main():

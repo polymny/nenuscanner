@@ -27,7 +27,7 @@ def norm_vector(v):
         Array ..., dim: unit direction vectors
     """
     norm = np.linalg.norm(v, axis=-1)
-    direction = v/norm[..., np.newaxis]
+    direction = v / norm[..., np.newaxis]
     return norm, direction
 
 
@@ -72,9 +72,7 @@ def build_K_matrix(focal_length, u0, v0):
     Returns:
     numpy.ndarray: Camera intrinsic matrix (3x3).
     """
-    K = np.asarray([[focal_length, 0, u0],
-                    [0, focal_length, v0],
-                    [0, 0, 1]])
+    K = np.asarray([[focal_length, 0, u0], [0, focal_length, v0], [0, 0, 1]])
     return K
 
 
@@ -151,7 +149,7 @@ def merge_quadratic_to_homogeneous(Q, b, c):
     dim_points = Q.shape[-1]
     stack_shape = np.broadcast_shapes(np.shape(Q)[:-2], np.shape(b)[:-1], np.shape(c))
     Q_b = np.broadcast_to(Q, stack_shape + (dim_points, dim_points))
-    b_b = np.broadcast_to(np.expand_dims(b, -1), stack_shape+(dim_points, 1))
+    b_b = np.broadcast_to(np.expand_dims(b, -1), stack_shape + (dim_points, 1))
     c_b = np.broadcast_to(np.expand_dims(c, (-1, -2)), stack_shape + (1, 1))
     H = np.block([[Q_b, 0.5 * b_b], [0.5 * np.swapaxes(b_b, -1, -2), c_b]])
     return H
@@ -225,9 +223,11 @@ def gaussian_estimation(x, weights):
         Array ...,dim,dim: Estimated covariance matrix.
     """
     weights_sum = np.sum(weights, axis=-1)
-    mu = np.sum(x*np.expand_dims(weights, axis=-1), axis=-2) / np.expand_dims(weights_sum, axis=-1)
+    mu = np.sum(x * np.expand_dims(weights, axis=-1), axis=-2) / np.expand_dims(weights_sum, axis=-1)
     centered_x = x - np.expand_dims(mu, axis=-2)
-    sigma = np.einsum('...s, ...si, ...sj->...ij', weights, centered_x, centered_x)/np.expand_dims(weights_sum, axis=(-1, -2))
+    sigma = np.einsum('...s, ...si, ...sj->...ij', weights, centered_x, centered_x) / np.expand_dims(
+        weights_sum, axis=(-1, -2)
+    )
     return mu, sigma
 
 
@@ -249,12 +249,10 @@ def gaussian_mixture_estimation(x, init_params, it=100):
     pi, sigma, mu = init_params
     for _ in range(it):
         pdf = gaussian_pdf(
-            np.expand_dims(mu, axis=-2),
-            np.expand_dims(sigma, axis=-3),
-            np.expand_dims(x, axis=-3)
+            np.expand_dims(mu, axis=-2), np.expand_dims(sigma, axis=-3), np.expand_dims(x, axis=-3)
         ) * np.expand_dims(pi, axis=-1)
 
-        weights = pdf/np.sum(pdf, axis=-2, keepdims=True)
+        weights = pdf / np.sum(pdf, axis=-2, keepdims=True)
         pi = np.mean(weights, axis=-1)
         mu, sigma = gaussian_estimation(x, weights)
     return pi, sigma, mu
@@ -274,7 +272,7 @@ def maximum_likelihood(x, params):
         Array ...: integer in [0,k-1] giving the maximum likelihood model
     """
     pi, sigma, mu = params
-    pdf = gaussian_pdf(mu, sigma, np.expand_dims(x, axis=-2))*pi
+    pdf = gaussian_pdf(mu, sigma, np.expand_dims(x, axis=-2)) * pi
     result = np.argmax(pdf, axis=-1)
     return result
 
@@ -293,7 +291,9 @@ def get_greatest_components(mask, n):
     labeled, _ = ndimage.label(mask)
     unique, counts = np.unique(labeled, return_counts=True)
     greatest_labels = unique[unique != 0][np.argsort(counts[unique != 0])[-n:]]
-    greatest_components = labeled[np.newaxis, ...] == np.expand_dims(greatest_labels, axis=tuple(range(1, 1 + mask.ndim)))
+    greatest_components = labeled[np.newaxis, ...] == np.expand_dims(
+        greatest_labels, axis=tuple(range(1, 1 + mask.ndim))
+    )
     return greatest_components
 
 
@@ -382,7 +382,7 @@ def iteratively_reweighted_least_squares(A, y, epsilon=1e-5, it=20):
     for _ in range(it):
         result = weighted_least_squares(A, y, weights)
         ychap = np.einsum('...uv, ...v->...u', A, result)
-        delta = np.abs(ychap-y)
+        delta = np.abs(ychap - y)
         weights = np.reciprocal(np.maximum(epsilon, np.sqrt(delta)))
     return result
 
@@ -451,8 +451,8 @@ def line_plane_intersection(normal, alpha, directions):
     Returns:
         Array ..., ndim: Intersection points between the line and the sphere.
     """
-    t = -alpha*np.reciprocal(dot_product(directions, normal))
-    intersection = directions*t[..., np.newaxis]
+    t = -alpha * np.reciprocal(dot_product(directions, normal))
+    intersection = directions * t[..., np.newaxis]
     return intersection
 
 

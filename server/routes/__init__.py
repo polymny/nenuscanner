@@ -1,14 +1,15 @@
 import subprocess
+
 from flask import Blueprint, render_template
 
+from . import acquisition, calibration, camera, leds, object
 from .. import db
-from . import object, calibration, acquisition, camera, leds
 
 blueprint = Blueprint('routes', __name__)
 
 
 # Generic routes
-@blueprint.route("/")
+@blueprint.route('/')
 def index():
     """
     Serves the index of nenuscanner.
@@ -17,20 +18,20 @@ def index():
     projects = db.Object.all_by_project(conn)
     return render_template('index.html', projects=projects)
 
+
 # Route that restarts the server
-@blueprint.route("/restart")
+@blueprint.route('/restart')
 def restart():
     """
     Serves the index of nenuscanner.
     """
     subprocess.Popen(
-        ["bash", "-c", "sleep 1 && systemctl restart nenuscanner --user"],
+        ['bash', '-c', 'sleep 1 && systemctl restart nenuscanner --user'],
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
-        start_new_session=True
+        start_new_session=True,
     )
     return render_template('restart.html')
-
 
 
 blueprint.register_blueprint(object.blueprint, url_prefix='/object')

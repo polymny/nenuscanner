@@ -1,13 +1,11 @@
-from flask import Blueprint, render_template, request, send_file, jsonify, session, current_app
-import json
-import subprocess
+from flask import Blueprint, jsonify, render_template, request
 
-from .. import camera as C
-from .. import leds,config
+from .. import config, leds
 
 blueprint = Blueprint('leds', __name__)
 
 # Routes for object management
+
 
 @blueprint.route('/')
 def get():
@@ -15,8 +13,7 @@ def get():
     Returns the pages showing all leds.
     """
 
-    return render_template(
-        'leds.html', leds= config.LEDS_UUIDS)
+    return render_template('leds.html', leds=config.LEDS_UUIDS)
 
 
 @blueprint.route('/set', methods=['POST'])
@@ -35,8 +32,8 @@ def set_led():
         # parse led id/name according to your naming convention
         print([x.gpio_pin for x in gpio_leds.leds])
         gpio_led = gpio_leds.get_by_uuid(int(led))
-        print(f"Setting {led} / {gpio_led} to {state}")
-        if state == "on":
+        print(f'Setting {led} / {gpio_led} to {state}')
+        if state == 'on':
             gpio_led.on()
         else:
             gpio_led.off()
@@ -46,7 +43,6 @@ def set_led():
         print(f'{e}')
         return jsonify({'status': 'error', 'error': 'error'}), 400
 
-
-    print(f"Commande reçue pour {led} : {state}")
+    print(f'Commande reçue pour {led} : {state}')
 
     return jsonify({'status': 'ok', 'led': led, 'state': state})

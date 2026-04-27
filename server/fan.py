@@ -2,13 +2,10 @@ from gpiozero import PWMLED
 
 from . import config
 
+
 class Fan:
     def __init__(self, uuid):
-        self.inner = PWMLED(
-            uuid,
-            initial_value=1.0,
-            frequency=1000
-        )
+        self.inner = PWMLED(uuid, initial_value=1.0, frequency=1000)
 
     def set_value(self, value: float):
         value = min(1.0, max(0.0, value))

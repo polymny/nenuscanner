@@ -1,6 +1,7 @@
 from datetime import datetime
 from typing import Optional
 
+
 def format_month(month: int) -> str:
     if month == 1:
         return 'janvier'

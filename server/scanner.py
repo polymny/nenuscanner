@@ -1,7 +1,8 @@
 import os
-from os.path import join
 import time
-from . import leds, camera, config
+from os.path import join
+
+from . import camera, config, leds
 
 
 def delay_capture(cam):

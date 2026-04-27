@@ -1,9 +1,10 @@
-from flask import Blueprint, render_template, redirect, request
+import itertools
 import os
 from os.path import join
-import itertools
 
-from .. import db, config, archive
+from flask import Blueprint, redirect, render_template, request
+
+from .. import archive, config, db
 
 blueprint = Blueprint('routes', __name__)
 
@@ -54,8 +55,7 @@ def download_object(id: int, archive: archive.ArchiveSender):
 
     acquisitions_sorted = sorted(object.acquisitions, key=keyfunc)
     acquisitions_grouped = [
-        (db.Calibration.get_from_id(k, conn), list(g))
-        for k, g in itertools.groupby(acquisitions_sorted, key=keyfunc)
+        (db.Calibration.get_from_id(k, conn), list(g)) for k, g in itertools.groupby(acquisitions_sorted, key=keyfunc)
     ]
 
     # Create archive file to send
@@ -64,10 +64,7 @@ def download_object(id: int, archive: archive.ArchiveSender):
 
         # Add calibration images
         for image in os.listdir(calibration_dir):
-            archive.add_file(
-                f'object/{calibration_index}/calibration/{image}',
-                join(calibration_dir, image)
-            )
+            archive.add_file(f'object/{calibration_index}/calibration/{image}', join(calibration_dir, image))
 
         # Add each acquisition
         for acquisition_index, acquisition in enumerate(acquisitions):
@@ -75,8 +72,7 @@ def download_object(id: int, archive: archive.ArchiveSender):
 
             for image in os.listdir(acquisition_dir):
                 archive.add_file(
-                    f'object/{calibration_index}/{acquisition_index}/{image}',
-                    join(acquisition_dir, image)
+                    f'object/{calibration_index}/{acquisition_index}/{image}', join(acquisition_dir, image)
                 )
 
     return archive.response()

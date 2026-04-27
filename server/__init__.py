@@ -1,12 +1,15 @@
-from flask import Flask, send_from_directory, session
 import os
-from . import db, config, routes, utils, leds, fan
+
+from flask import Flask, send_from_directory, session
+
+from . import config, db, leds, routes, utils
 
 app = Flask(__name__)
 
 # Manage secret key
 try:
     from . import secret
+
     app.config['SECRET_KEY'] = secret.SECRET_KEY
 except ImportError:
     # Secret key file does not exist, create it

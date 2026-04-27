@@ -1,13 +1,12 @@
+import io
+import json
+import shutil
 import subprocess
 
-from flask import jsonify
 import gphoto2 as gp
-import shutil
-from . import leds, config
-import subprocess
-import json
 from PIL import Image
-import io
+
+from . import config, leds
 
 
 def parse_config(lines):
@@ -87,9 +86,8 @@ class RealCamera(Camera):
     def capture_preview(self):
         capture = gp.check_result(gp.gp_camera_capture_preview(self.inner))
         file_data = gp.check_result(gp.gp_file_get_data_and_size(capture))
-        data = memoryview(file_data)
         image = Image.open(io.BytesIO(file_data))
-        image.save("static/feed.jpg")
+        image.save('static/feed.jpg')
 
     def save(self, capture, output_file):
         preview = self.inner.file_get(capture.folder, capture.name, gp.GP_FILE_TYPE_PREVIEW)
@@ -105,23 +103,23 @@ class RealCamera(Camera):
             self._entered = False
             self.inner.exit()
 
-        res = subprocess.run(["gphoto2", "--list-all-config"], capture_output=True,  encoding="utf-8")
+        res = subprocess.run(['gphoto2', '--list-all-config'], capture_output=True, encoding='utf-8')
 
         if was_entered:
             self.__enter__()
 
         # print(res.stdout[:200])
 
-        configs = res.stdout.split("\n")
+        configs = res.stdout.split('\n')
         print(configs)
         config_dict = parse_config(configs)
 
         # Sauvegarde en JSON
-        with open("configCamera.json", "w", encoding="utf-8") as f:
+        with open('configCamera.json', 'w', encoding='utf-8') as f:
             json.dump(config_dict, f, indent=2, ensure_ascii=False)
 
     def set_config(self, parameter, value):
-        subprocess.run(["gphoto2", "--set-config", f"{parameter}={value}"])
+        subprocess.run(['gphoto2', '--set-config', f'{parameter}={value}'])
         return 0
 
 
@@ -151,7 +149,7 @@ class DummyCamera(Camera):
         shutil.copyfile(capture, output_file + '.jpg')
 
 
-camera = DummyCamera(leds.get()) if config.CAMERA == "dummy" else RealCamera()
+camera = DummyCamera(leds.get()) if config.CAMERA == 'dummy' else RealCamera()
 
 
 def get():
@@ -161,10 +159,13 @@ def get():
 def config():
     return camera.config()
 
+
 def set_config(parameter, value):
     return camera.set_config(parameter, value)
 
+
 class CameraException(Exception):
     """Exception personnalisée pour les erreurs liées à la caméra."""
+
     def __init__(self, message):
         super().__init__(message)

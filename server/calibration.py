@@ -1,14 +1,14 @@
 #!/usr/bin/env python
 
-import json
 import functools
-import numpy as np
+import json
 import os
 import sys
+
+import numpy as np
 from PIL import Image
 
 from . import math_utils
-
 
 # To extract a few images and resize them at 20% of their size:
 # for file in ALL/led_00[0-9]0*; do; magick $file -resize 20% SMALL/$(basename $file); done
@@ -20,10 +20,13 @@ def print_error(msg: str):
 
 def calibrate(input_dir: str):
     # Load all images
-    image_names = sorted([
-        x for x in os.listdir(input_dir)
-        if x != 'calibration.json' and x != 'all_on.jpg' and x != 'all_off.jpg' and x.endswith('.jpg')
-    ])
+    image_names = sorted(
+        [
+            x
+            for x in os.listdir(input_dir)
+            if x != 'calibration.json' and x != 'all_on.jpg' and x != 'all_off.jpg' and x.endswith('.jpg')
+        ]
+    )
     images = [np.asarray(Image.open(os.path.join(input_dir, x))) for x in image_names]
 
     # Camera parameters
@@ -32,7 +35,7 @@ def calibrate(input_dir: str):
     focal_mm = 35
     matrix_size = 24
     focal_pix = nu * focal_mm / matrix_size
-    K = math_utils.build_K_matrix(focal_pix, nu/2, nv/2)
+    K = math_utils.build_K_matrix(focal_pix, nu / 2, nv / 2)
 
     # Max image: image of brightest pixels, helps spheres segmentation
     max_image = functools.reduce(np.maximum, images)
@@ -72,11 +75,14 @@ def calibrate(input_dir: str):
     rays = math_utils.get_camera_rays(coordinates, K)
 
     # Find the intersections between the camera rays and the spheres
-    sphere_points_map, sphere_geometric_masks = \
-        math_utils.line_sphere_intersection(sphere_centers[:, np.newaxis, np.newaxis, :], 1, rays[np.newaxis, :, :, :])
+    sphere_points_map, sphere_geometric_masks = math_utils.line_sphere_intersection(
+        sphere_centers[:, np.newaxis, np.newaxis, :], 1, rays[np.newaxis, :, :, :]
+    )
 
     sphere_points = np.asarray([sphere_points_map[i, sphere_geometric_masks[i]] for i in range(nspheres)], dtype=object)
-    sphere_normals = np.vectorize(math_utils.sphere_intersection_normal, signature='(v),()->()', otypes=[object])(sphere_centers, sphere_points)
+    sphere_normals = np.vectorize(math_utils.sphere_intersection_normal, signature='(v),()->()', otypes=[object])(
+        sphere_centers, sphere_points
+    )
 
     # Load grey values from images for the identified sphere regions
     def to_grayscale(image):
@@ -85,12 +91,9 @@ def calibrate(input_dir: str):
     grey_values = np.asarray(list(map(to_grayscale, images)), dtype=object)
 
     # Estimate lighting conditions from sphere normals and grey values
-    estimated_lights = np.vectorize(
-        math_utils.estimate_light,
-        excluded=(2,),
-        signature='(),()->(k)',
-        otypes=[float]
-    )(sphere_normals, grey_values, (0.1, 0.9))
+    estimated_lights = np.vectorize(math_utils.estimate_light, excluded=(2,), signature='(),()->(k)', otypes=[float])(
+        sphere_normals, grey_values, (0.1, 0.9)
+    )
 
     # Calculate the positions of the light sources
     light_positions = math_utils.lines_intersections(sphere_centers, estimated_lights)
@@ -100,16 +103,19 @@ def calibrate(input_dir: str):
 
     # Return value as dictionnary
     return {
-        'leds': [{
-            'name': name,
-            'position': position.tolist(),
-            'directions': estimated_lights[i].tolist(),
-        } for i, (name, position) in enumerate(zip(image_names, light_positions))],
+        'leds': [
+            {
+                'name': name,
+                'position': position.tolist(),
+                'directions': estimated_lights[i].tolist(),
+            }
+            for i, (name, position) in enumerate(zip(image_names, light_positions, strict=False))
+        ],
         'spheres': sphere_centers.tolist(),
         'plane': {
             'normal': plane_normal.tolist(),
             'alpha': plane_alpha.tolist(),
-        }
+        },
     }
 
 

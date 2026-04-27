@@ -4,12 +4,14 @@ from . import config
 
 GPIO_LED_MAX_PWM_VALUE = 1
 
+
 class Leds:
     def on(self):
         pass
 
     def off(self):
         pass
+
 
 class GpioLed:
     def __init__(self, gpio_pin: int):
@@ -54,7 +56,8 @@ class GpioLeds(Leds):
         for led in self.leds:
             if led.gpio_pin == uuid:
                 return led
-        raise ValueError(f"No LED with UUID {uuid}")
+        raise ValueError(f'No LED with UUID {uuid}')
+
 
 class DummyLed:
     def __init__(self, gpio_pin: int):
@@ -97,14 +100,14 @@ class DummyLeds(Leds):
     def enter(self):
         return self.__enter__()
 
-    def exit(self,*args):
+    def exit(self, *args):
         self.__exit__(*args)
 
     def get_by_uuid(self, uuid: int) -> DummyLed:
         for led in self.leds:
             if led.gpio_pin == uuid:
                 return led
-        raise ValueError(f"No LED with UUID {uuid}")
+        raise ValueError(f'No LED with UUID {uuid}')
 
 
 _leds = GpioLeds(config.LEDS_UUIDS) if config.GPIO_CHIP is not None else DummyLeds(config.LEDS_UUIDS)

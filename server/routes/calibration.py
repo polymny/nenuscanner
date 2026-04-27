@@ -1,13 +1,14 @@
-from flask import Blueprint, Response, render_template, redirect, session
-from os.path import join
 import json
+from os.path import join
 
-from .. import db, utils, scanner, config, calibration
+from flask import Blueprint, Response, redirect, render_template, session
+
+from .. import calibration, config, db, scanner, utils
 
 blueprint = Blueprint('calibration', __name__)
 
 
-@blueprint.route("/create")
+@blueprint.route('/create')
 def create():
     """
     Creates a new calibration and redirects to the page to calibrate.
@@ -20,7 +21,7 @@ def create():
     return redirect('/calibration/calibrate')
 
 
-@blueprint.route("/calibrate")
+@blueprint.route('/calibrate')
 def calibrate():
     """
     Returns the page to calibrate the system.
@@ -82,7 +83,7 @@ def compute():
             calibration_json = 'skipped'
         else:
             calibration_json = calibration.calibrate(join(config.CALIBRATION_DIR, str(id)))
-    except:
+    except Exception:
         calibration_json = 'failure'
 
     with open(join(config.CALIBRATION_DIR, str(id), 'calibration.json'), 'w') as f:

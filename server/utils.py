@@ -1,5 +1,7 @@
-from flask import session
 import sqlite3
+
+from flask import session
+
 from . import db
 
 

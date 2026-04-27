@@ -1,9 +1,8 @@
-from flask import Blueprint, render_template, request, send_file, jsonify
 import json
-import subprocess
+
+from flask import Blueprint, jsonify, render_template, request, send_file
 
 from .. import camera as C
-
 
 blueprint = Blueprint('camera', __name__)
 
@@ -16,11 +15,8 @@ def get():
     Returns the page showing camera configuration for all parameters in capturesettings and imgsettings,
     grouped by section.
     """
-  
 
-  
-    return render_template(
-        'camera.html')
+    return render_template('camera.html')
 
 
 @blueprint.route('/set', methods=['POST'])
@@ -31,7 +27,7 @@ def set_camera_settings():
     data = request.get_json()
     updated = {}
     for key, value in data.items():
-        print(f"Received {key}: {value}")
+        print(f'Received {key}: {value}')
         C.set_config(key, value)
         updated[key] = value
 
@@ -41,27 +37,29 @@ def set_camera_settings():
         return jsonify({'status': 'ok'})
     except C.CameraException as e:
         return jsonify({'status': 'error', 'error': str(e)}), 500
-    
+
     return {'status': 'ok', **updated}
+
 
 @blueprint.route('/feed.jpg', methods=['GET'])
 def camera_feed():
     capture_preview()
     return send_file('static/feed.jpg', mimetype='image/jpeg')
 
+
 @blueprint.route('/config', methods=['GET'])
 def get_camera_config():
     """
     Returns grouped camera parameters as JSON for frontend JS.
     """
-    
+
     try:
         cam = C.get()
         cam.config()
 
     except C.CameraException as e:
         return jsonify({'status': 'error', 'error': str(e)}), 500
-    
+
     with open('configCamera.json', 'r') as f:
         config = json.load(f)
 
@@ -73,26 +71,25 @@ def get_camera_config():
             for param_name, param in settings.items():
                 if 'Choices' in param and isinstance(param['Choices'], list) and param['Choices']:
                     choices = [
-                        {'value': c.get('id', idx), 'label': c['label']}
-                        for idx, c in enumerate(param['Choices'])
+                        {'value': c.get('id', idx), 'label': c['label']} for idx, c in enumerate(param['Choices'])
                     ]
-                   
-                    section_params.append({
+
+                    section_params.append(
+                        {
                             'name': param_name,
                             'label': param.get('Label', param_name.capitalize()),
                             'choices': choices,
                             'current': param.get('Current', ''),
                             'Type': param.get('Type', 'Text'),
-                            'Readonly': param.get('Readonly', 0)
-                    })
-                    
+                            'Readonly': param.get('Readonly', 0),
+                        }
+                    )
+
         if section_params:
-            grouped_params.append({
-                'section': section,
-                'params': section_params
-            })
+            grouped_params.append({'section': section, 'params': section_params})
 
     return jsonify(grouped_params)
+
 
 # @blueprint.route('/capture_preview', methods=['POST'])
 def capture_preview():

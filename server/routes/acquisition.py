@@ -1,7 +1,8 @@
-from flask import Blueprint, Response, render_template, session, redirect
 from os.path import join
 
-from .. import db, config, scanner
+from flask import Blueprint, Response, redirect, render_template, session
+
+from .. import config, db, scanner
 
 blueprint = Blueprint('acquisition', __name__)
 
@@ -96,7 +97,7 @@ def validate(acquisition_id: int):
     return redirect(f'/object/{object.id}')
 
 
-@blueprint.route("/delete/<acquisition_id>")
+@blueprint.route('/delete/<acquisition_id>')
 def delete(acquisition_id: int):
     conn = db.get()
     with conn:

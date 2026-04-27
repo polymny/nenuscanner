@@ -1,11 +1,11 @@
 import builtins
-from datetime import datetime
-from flask import Response
 import functools
 import os
 import zlib
+from datetime import datetime
 from typing import Optional
-import time
+
+from flask import Response
 
 # Chunks for crc 32 computation
 CRC32_CHUNK_SIZE = 65_536
@@ -37,7 +37,7 @@ def tar_header_chunk(filename: str, filepath: str) -> bytes:
     buffer = bytearray(512)
 
     # Field 1: filename on 100 bytes
-    buffer[0:len(filename)] = filename.encode('ascii')
+    buffer[0 : len(filename)] = filename.encode('ascii')
 
     # Field 2: mode, on 8 bytes, octal, last byte must be \x00, so we set only the first 7 bytes
     buffer[100:107] = oct(stat.st_mode).rjust(7, '0').encode('ascii')
@@ -106,13 +106,13 @@ class ArchiveSender:
         """
         Returns a generator that yields the bytes of the archive.
         """
-        raise NotImplementedError("Abstract method")
+        raise NotImplementedError('Abstract method')
 
     def mime_type(self) -> str:
         """
         Returns the mime type of the archive.
         """
-        raise NotImplementedError("Abstract method")
+        raise NotImplementedError('Abstract method')
 
     def archive_name(self) -> str:
         """
@@ -120,7 +120,7 @@ class ArchiveSender:
 
         This method is useful for web applications where the archive will be downloaded.
         """
-        raise NotImplementedError("Abstract method")
+        raise NotImplementedError('Abstract method')
 
     def response(self) -> Response:
         """
@@ -167,6 +167,7 @@ class TarSender(ArchiveSender):
 
             # We need to generate two empty records at the end
             yield b'\x00' * 1024
+
         return generate()
 
     def mime_type(self) -> str:
@@ -250,7 +251,7 @@ def zip_local_file_header(filename: str, filepath: str, crc: int) -> bytes:
     # Field 10: extra field length (buffer[28:30])
 
     # Field 11: filename (buffer[30:30+len(filename)])
-    buffer[30:30+len(filename)] = filename.encode('ascii')
+    buffer[30 : 30 + len(filename)] = filename.encode('ascii')
 
     return bytes(buffer)
 
@@ -316,7 +317,7 @@ def zip_central_directory_file_header(filename: str, filepath: str, crc: int, of
     buffer[42:46] = offset.to_bytes(4, byteorder='little')
 
     # Field 16: filename (buffer[46:46+len(filename)])
-    buffer[46:46+len(filename)] = filename.encode('ascii')
+    buffer[46 : 46 + len(filename)] = filename.encode('ascii')
 
     return bytes(buffer)
 
@@ -363,8 +364,8 @@ class ZipSender(ArchiveSender):
 
     def generator(self):
         def generate():
-            local_offsets = dict()
-            crcs = dict()
+            local_offsets = {}
+            crcs = {}
             current_byte = 0
 
             for name, file in self.files.items():
@@ -389,7 +390,10 @@ class ZipSender(ArchiveSender):
             central_directory_size = 0
             centra_directory_offset = current_byte
 
-            for name, file, in self.files.items():
+            for (
+                name,
+                file,
+            ) in self.files.items():
                 chunk = zip_central_directory_file_header(name, file, crcs[name], local_offsets[name])
                 central_directory_size += len(chunk)
                 current_byte += len(chunk)
