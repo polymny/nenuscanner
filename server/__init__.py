@@ -1,10 +1,15 @@
 import os
 
 from flask import Flask, send_from_directory, session
+from flask_cors import CORS
 
 from . import config, db, leds, routes, utils
 
 app = Flask(__name__)
+
+# Allow the frontend dev server to call the Flask API during development.
+# (CORS headers are also needed for preflight OPTIONS requests.)
+CORS(app)
 
 # Manage secret key
 try:

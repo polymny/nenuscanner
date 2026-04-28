@@ -39,6 +39,19 @@ Depuis le dossier `server/` du projet
 poetry run flask --app . run --debug
 ```
 
+## Frontend (mode dev)
+
+Pré-requis : le **backend doit tourner sur le port 5000** (ex: `http://localhost:5000`).  
+Ensuite, depuis le dossier `frontend/` :
+
+```bash
+npm install
+```
+
+```bash
+npm run dev
+```
+
 ### En mode production
 
 ```bash

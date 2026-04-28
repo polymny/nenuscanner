@@ -15,6 +15,7 @@ scipy = "^1.13.0"
 
 gpiozero = "^2.0.1"
 gphoto2 = "^2.6.0"
+flask-cors = "^6.0.2"
 
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.15.11"
