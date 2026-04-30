@@ -4,17 +4,13 @@ import { client } from '@/lib/client';
 
 export type GetObject2FirstResponse =
   | {
-      status: 'ok';
-      object2: {
-        id: number;
-        name: string;
-      };
+      id: number;
+      name: string;
     }
   | {
-      status: 'error';
-      error: string;
+      status: string;
+      code: number;
       message?: string;
-      details?: string;
     };
 
 const getTest = async () => {

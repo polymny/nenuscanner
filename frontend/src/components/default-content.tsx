@@ -12,13 +12,14 @@ export const DefaultContent = () => {
       const result = await refetch();
       if (!result.data) throw new Error('Réponse vide');
 
-      if (result.data.status === 'ok') {
-        toast.success(`Object2: ${result.data.object2.id} — ${result.data.object2.name}`, { id: toastId });
+      if (!('status' in result.data)) {
+        toast.success(`Object2: ${result.data.id} — ${result.data.name}`, {
+          id: toastId,
+        });
         return;
       }
 
-      const message = result.data.message ?? result.data.details ?? result.data.error;
-      toast.error(`Erreur: ${message}`, { id: toastId });
+      toast.error(`Erreur: ${result.data.message}`, { id: toastId });
     } catch (e) {
       const message = e instanceof Error ? e.message : 'Erreur inconnue';
       toast.error(`Erreur: ${message}`, { id: toastId });

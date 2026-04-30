@@ -2,8 +2,11 @@ import os
 
 from flask import Flask, send_from_directory, session
 from flask_cors import CORS
+from flask_smorest import Api, abort
+from sqlalchemy.exc import OperationalError, SQLAlchemyError
 
 from . import config, db, leds, routes, utils
+from .routes.object2 import blp as object2_blp
 from .sa_db import db_session
 
 app = Flask(__name__)
@@ -56,7 +59,26 @@ def shutdown_session(exception=None):
     db_session.remove()
 
 
+app.config.setdefault('API_TITLE', 'NeNuScanner API')
+app.config.setdefault('API_VERSION', '0.1.0')
+app.config.setdefault('OPENAPI_VERSION', '3.0.3')
+app.config.setdefault('OPENAPI_URL_PREFIX', '/')
+app.config.setdefault('OPENAPI_SWAGGER_UI_PATH', '/swagger-ui')
+app.config.setdefault('OPENAPI_SWAGGER_UI_URL', 'https://cdn.jsdelivr.net/npm/swagger-ui-dist/')
+
+api = Api(app)
+
+
+@app.errorhandler(SQLAlchemyError)
+def handle_sqlalchemy_error(e):
+    if isinstance(e, OperationalError):
+        abort(503, message='db_not_initialized')
+    abort(500, message='db_error')
+
+
 app.register_blueprint(routes.blueprint)
+
+api.register_blueprint(object2_blp, url_prefix='/object2')
 
 
 @app.route('/static/<path:path>')
