@@ -12,6 +12,9 @@ flask = "^3.0.0"
 waitress = "^3.0.0"
 numpy = "^2.0.0"
 scipy = "^1.13.0"
+sqlalchemy = "^2.0.0"
+marshmallow = "^3.23.0"
+marshmallow-sqlalchemy = "^1.4.2"
 
 gpiozero = "^2.0.1"
 gphoto2 = "^2.6.0"
@@ -23,6 +26,7 @@ ruff = "^0.15.11"
 [tool.poetry.scripts]
 nenuscanner = "server.__main__:main"
 dev = "server.dev:main"
+db_init = "server.sa_db:main"
 
 [build-system]
 requires = ["poetry-core>=1.8.0"]
