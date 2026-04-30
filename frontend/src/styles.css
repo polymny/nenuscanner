@@ -1,0 +1,116 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Space+Grotesk:wght@300..700&display=swap');
+@import 'tailwindcss';
+@import 'tw-animate-css';
+
+body {
+  @apply m-0;
+  font-family: 'Space Grotesk', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+code {
+  font-family:
+    source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-base font-medium text-black;
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+
+@theme {
+  --font-poppins: 'Poppins', sans-serif;
+
+  --color-white: rgba(255, 255, 255, 1);
+  --color-black: rgba(0, 0, 0, 1);
+
+  --color-gray-25: rgba(252, 252, 253, 1);
+  --color-gray-50: rgba(249, 250, 251, 1);
+  --color-gray-100: rgba(242, 244, 247, 1);
+  --color-gray-200: rgba(234, 236, 240, 1);
+  --color-gray-250: rgba(230, 225, 212, 1);
+  --color-gray-300: rgba(208, 213, 221, 1);
+  --color-gray-400: rgba(152, 162, 179, 1);
+  --color-gray-500: rgba(102, 112, 133, 1);
+  --color-gray-600: rgba(71, 84, 103, 1);
+  --color-gray-700: rgba(52, 64, 84, 1);
+  --color-gray-800: rgba(24, 34, 48, 1);
+  --color-gray-900: rgba(16, 24, 40, 1);
+  --color-gray-950: rgba(12, 17, 29, 1);
+
+  --color-sky-50: rgba(219, 236, 243, 1);
+  --color-sky-100: rgba(192, 217, 238, 1);
+  --color-sky-200: rgba(174, 190, 225, 1);
+  --color-sky-300: rgba(153, 191, 231, 1);
+  --color-sky-400: rgba(107, 146, 203, 1);
+  --color-sky-500: rgba(86, 130, 199, 1);
+  --color-sky-600: rgba(95, 114, 191, 1);
+
+  --color-acents-1: rgba(44, 74, 154, 1);
+  --color-acents-2: rgba(52, 117, 104, 1);
+  --color-acents-3: rgba(249, 191, 0, 1);
+  --color-acents-4: rgba(196, 69, 87, 1);
+  --color-acents-5: rgba(239, 121, 20, 1);
+  --color-acents-6: rgba(107, 45, 135, 1);
+
+  --color-skin-25: rgba(250, 249, 247, 1);
+  --color-skin-40: rgba(243, 242, 238, 1);
+  --color-skin-50: rgba(246, 230, 209, 1);
+  --color-skin-100: rgba(234, 202, 177, 1);
+  --color-skin-200: rgba(234, 206, 169, 1);
+  --color-skin-300: rgba(183, 151, 127, 1);
+  --color-skin-400: rgba(173, 133, 109, 1);
+  --color-skin-500: rgba(121, 98, 81, 1);
+  --color-skin-600: rgba(87, 66, 55, 1);
+
+  --color-background: oklch(1 0 0);
+  --color-foreground: oklch(0.141 0.005 285.823);
+  --color-card: oklch(1 0 0);
+  --color-card-foreground: oklch(0.141 0.005 285.823);
+  --color-popover: oklch(1 0 0);
+  --color-popover-foreground: oklch(0.141 0.005 285.823);
+  --color-primary: oklch(0.21 0.006 285.885);
+  --color-primary-foreground: oklch(0.985 0 0);
+  --color-secondary: oklch(0.967 0.001 286.375);
+  --color-secondary-foreground: oklch(0.21 0.006 285.885);
+  --color-muted: oklch(0.967 0.001 286.375);
+  --color-muted-foreground: oklch(0.552 0.016 285.938);
+  --color-accent: oklch(0.967 0.001 286.375);
+  --color-accent-foreground: oklch(0.21 0.006 285.885);
+  --color-destructive: oklch(0.577 0.245 27.325);
+  --color-destructive-foreground: oklch(0.577 0.245 27.325);
+  --color-border: oklch(0.92 0.004 286.32);
+  --color-input: oklch(0.92 0.004 286.32);
+  --color-ring: oklch(0.871 0.006 286.286);
+  --color-chart-1: oklch(0.646 0.222 41.116);
+  --color-chart-2: oklch(0.6 0.118 184.704);
+  --color-chart-3: oklch(0.398 0.07 227.392);
+  --color-chart-4: oklch(0.828 0.189 84.429);
+  --color-chart-5: oklch(0.769 0.188 70.08);
+  --color-sidebar: oklch(0.985 0 0);
+  --color-sidebar-foreground: oklch(0.141 0.005 285.823);
+  --color-sidebar-primary: oklch(0.21 0.006 285.885);
+  --color-sidebar-primary-foreground: oklch(0.985 0 0);
+  --color-sidebar-accent: oklch(0.967 0.001 286.375);
+  --color-sidebar-accent-foreground: oklch(0.21 0.006 285.885);
+  --color-sidebar-border: oklch(0.92 0.004 286.32);
+  --color-sidebar-ring: oklch(0.871 0.006 286.286);
+
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 10px;
+  --radius-xl: 14px;
+}

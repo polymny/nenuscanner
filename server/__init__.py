@@ -1,10 +1,16 @@
 import os
 
 from flask import Flask, send_from_directory, session
+from flask_cors import CORS
 
 from . import config, db, leds, routes, utils
+from .sa_db import db_session
 
 app = Flask(__name__)
+
+# Allow the frontend dev server to call the Flask API during development.
+# (CORS headers are also needed for preflight OPTIONS requests.)
+CORS(app)
 
 # Manage secret key
 try:
@@ -43,6 +49,11 @@ def manage_auto_use_last_calibration():
         last = db.Calibration.get_last(conn)
         if last is not None:
             session['calibration_id'] = last.id
+
+
+@app.teardown_appcontext
+def shutdown_session(exception=None):
+    db_session.remove()
 
 
 app.register_blueprint(routes.blueprint)
