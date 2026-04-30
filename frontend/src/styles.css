@@ -1,25 +1,50 @@
-@import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Space+Grotesk:wght@300..700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Geist:wght@100..900&display=swap');
 @import 'tailwindcss';
 @import 'tw-animate-css';
 
 body {
   @apply m-0;
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: 'Geist';
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
 code {
-  font-family:
-    source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
 }
 
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
-    @apply bg-background text-base font-medium text-black;
+    @apply bg-background text-gray-900;
+  }
+
+  h1 {
+    @apply text-4xl font-semibold text-gray-950;
+  }
+
+  h2 {
+    @apply text-3xl;
+  }
+
+  h3 {
+    @apply text-2xl;
+  }
+
+  h4 {
+    @apply text-xl;
+  }
+
+  button:not(:disabled),
+  [role='button']:not(:disabled) {
+    cursor: pointer;
+  }
+
+  form {
+    @apply flex flex-col gap-3;
   }
 
   .no-scrollbar::-webkit-scrollbar {
@@ -32,49 +57,102 @@ code {
 }
 
 @theme {
-  --font-poppins: 'Poppins', sans-serif;
+  --text-4xl: 48px;
+  --text-4xl--line-height: 62px;
+  --text-3xl: 32px;
+  --text-3xl--line-height: 42px;
+  --text-2xl: 24px;
+  --text-xl--line-height: 31px;
+  --text-xl: 20px;
+  --text-xl--line-height: 26px;
+  --text-lg: 18px;
+  --text-lg--line-height: 23px;
+  --text-md: 16px;
+  --text-md--line-height: 21px;
+  --text-sm: 14px;
+  --text-sm--line-height: 18px;
+  --text-subtle: 12px;
+  --text-subtle--line-height: 16px;
 
-  --color-white: rgba(255, 255, 255, 1);
-  --color-black: rgba(0, 0, 0, 1);
+  --color-brand-25: rgba(252, 250, 255, 1);
+  --color-brand-50: rgba(249, 245, 255, 1);
+  --color-brand-100: rgba(244, 235, 255, 1);
+  --color-brand-200: rgba(233, 215, 254, 1);
+  --color-brand-300: rgba(214, 187, 251, 1);
+  --color-brand-400: rgba(182, 146, 246, 1);
+  --color-brand-500: rgba(158, 119, 237, 1);
+  --color-brand-600: rgba(105, 65, 198, 1);
+  --color-brand-700: rgba(105, 65, 198, 1);
+  --color-brand-800: rgba(83, 56, 158, 1);
+  --color-brand-900: rgba(66, 48, 125, 1);
+  --color-brand-950: rgba(44, 28, 95, 1);
+
+  --color-blue-600: rgba(37, 99, 235, 1);
 
   --color-gray-25: rgba(252, 252, 253, 1);
-  --color-gray-50: rgba(249, 250, 251, 1);
-  --color-gray-100: rgba(242, 244, 247, 1);
-  --color-gray-200: rgba(234, 236, 240, 1);
-  --color-gray-250: rgba(230, 225, 212, 1);
-  --color-gray-300: rgba(208, 213, 221, 1);
-  --color-gray-400: rgba(152, 162, 179, 1);
-  --color-gray-500: rgba(102, 112, 133, 1);
-  --color-gray-600: rgba(71, 84, 103, 1);
-  --color-gray-700: rgba(52, 64, 84, 1);
-  --color-gray-800: rgba(24, 34, 48, 1);
-  --color-gray-900: rgba(16, 24, 40, 1);
+  --color-gray-50: rgba(248, 250, 252, 1);
+  --color-gray-100: rgba(241, 245, 249, 1);
+  --color-gray-200: rgba(226, 232, 240, 1);
+  --color-gray-300: rgba(203, 213, 225, 1);
+  --color-gray-400: rgba(148, 163, 184, 1);
+  --color-gray-500: rgba(100, 116, 139, 1);
+  --color-gray-600: rgba(71, 85, 105, 1);
+  --color-gray-700: rgba(51, 65, 85, 1);
+  --color-gray-800: rgba(30, 41, 59, 1);
+  --color-gray-900: rgba(15, 23, 42, 1);
   --color-gray-950: rgba(12, 17, 29, 1);
 
-  --color-sky-50: rgba(219, 236, 243, 1);
-  --color-sky-100: rgba(192, 217, 238, 1);
-  --color-sky-200: rgba(174, 190, 225, 1);
-  --color-sky-300: rgba(153, 191, 231, 1);
-  --color-sky-400: rgba(107, 146, 203, 1);
-  --color-sky-500: rgba(86, 130, 199, 1);
-  --color-sky-600: rgba(95, 114, 191, 1);
+  --color-gray-o-25: rgba(252, 252, 253, 1);
+  --color-gray-o-50: rgba(248, 250, 252, 1);
+  --color-gray-o-100: rgba(241, 245, 249, 1);
+  --color-gray-o-200: rgba(226, 232, 240, 1);
+  --color-gray-o-300: rgba(203, 213, 225, 1);
+  --color-gray-o-400: rgba(148, 163, 184, 1);
+  --color-gray-o-500: rgba(100, 116, 139, 1);
+  --color-gray-o-600: rgba(71, 85, 105, 1);
+  --color-gray-o-700: rgba(51, 65, 85, 1);
+  --color-gray-o-800: rgba(30, 41, 59, 1);
+  --color-gray-o-900: rgba(15, 23, 42, 1);
+  --color-gray-o-950: rgba(12, 17, 29, 1);
 
-  --color-acents-1: rgba(44, 74, 154, 1);
-  --color-acents-2: rgba(52, 117, 104, 1);
-  --color-acents-3: rgba(249, 191, 0, 1);
-  --color-acents-4: rgba(196, 69, 87, 1);
-  --color-acents-5: rgba(239, 121, 20, 1);
-  --color-acents-6: rgba(107, 45, 135, 1);
+  --color-success-25: rgba(248, 255, 250, 1);
+  --color-success-50: rgba(240, 253, 244, 1);
+  --color-success-100: rgba(220, 252, 231, 1);
+  --color-success-200: rgba(187, 247, 208, 1);
+  --color-success-300: rgba(134, 239, 172, 1);
+  --color-success-400: rgba(74, 222, 128, 1);
+  --color-success-500: rgba(34, 197, 94, 1);
+  --color-success-600: rgba(22, 163, 74, 1);
+  --color-success-700: rgba(21, 128, 61, 1);
+  --color-success-800: rgba(22, 101, 52, 1);
+  --color-success-900: rgba(20, 83, 45, 1);
+  --color-success-950: rgba(25, 44, 26, 1);
 
-  --color-skin-25: rgba(250, 249, 247, 1);
-  --color-skin-40: rgba(243, 242, 238, 1);
-  --color-skin-50: rgba(246, 230, 209, 1);
-  --color-skin-100: rgba(234, 202, 177, 1);
-  --color-skin-200: rgba(234, 206, 169, 1);
-  --color-skin-300: rgba(183, 151, 127, 1);
-  --color-skin-400: rgba(173, 133, 109, 1);
-  --color-skin-500: rgba(121, 98, 81, 1);
-  --color-skin-600: rgba(87, 66, 55, 1);
+  --color-warning-25: rgba(255, 251, 246, 1);
+  --color-warning-50: rgba(255, 247, 237, 1);
+  --color-warning-100: rgba(255, 237, 213, 1);
+  --color-warning-200: rgba(254, 215, 170, 1);
+  --color-warning-300: rgba(253, 186, 116, 1);
+  --color-warning-400: rgba(251, 146, 60, 1);
+  --color-warning-500: rgba(249, 115, 22, 1);
+  --color-warning-600: rgba(234, 88, 12, 1);
+  --color-warning-700: rgba(194, 65, 12, 1);
+  --color-warning-800: rgba(154, 52, 18, 1);
+  --color-warning-900: rgba(124, 45, 18, 1);
+  --color-warning-950: rgba(57, 25, 14, 1);
+
+  --color-error-25: rgba(255, 250, 250, 1);
+  --color-error-50: rgba(254, 242, 242, 1);
+  --color-error-100: rgba(254, 226, 226, 1);
+  --color-error-200: rgba(254, 202, 202, 1);
+  --color-error-300: rgba(252, 165, 165, 1);
+  --color-error-400: rgba(248, 113, 113, 1);
+  --color-error-500: rgba(239, 68, 68, 1);
+  --color-error-600: rgba(220, 38, 38, 1);
+  --color-error-700: rgba(185, 28, 28, 1);
+  --color-error-800: rgba(153, 27, 27, 1);
+  --color-error-900: rgba(127, 29, 29, 1);
+  --color-error-950: rgba(69, 8, 8, 1);
 
   --color-background: oklch(1 0 0);
   --color-foreground: oklch(0.141 0.005 285.823);
@@ -108,9 +186,4 @@ code {
   --color-sidebar-accent-foreground: oklch(0.21 0.006 285.885);
   --color-sidebar-border: oklch(0.92 0.004 286.32);
   --color-sidebar-ring: oklch(0.871 0.006 286.286);
-
-  --radius-sm: 6px;
-  --radius-md: 8px;
-  --radius-lg: 10px;
-  --radius-xl: 14px;
 }

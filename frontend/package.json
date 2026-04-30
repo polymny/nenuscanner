@@ -7,9 +7,9 @@
     "build": "vite build && tsc",
     "preview": "vite preview",
     "test": "vitest run",
-    "lint": "eslint",
-    "format": "prettier",
-    "check": "prettier --write . && eslint --fix"
+    "check-lint": "eslint . --report-unused-disable-directives --max-warnings 0",
+    "check-format": "prettier . --check --ignore-path .prettierignore",
+    "fix-format": "prettier . --write --ignore-path .prettierignore"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",

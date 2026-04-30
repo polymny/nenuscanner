@@ -22,14 +22,9 @@ const getTestQueryKey = ['test'] as const;
 
 export const useGetTestQuery = (
   options?: Omit<
-    UseQueryOptions<
-      GetObject2FirstResponse,
-      Error,
-      GetObject2FirstResponse,
-      typeof getTestQueryKey
-    >,
+    UseQueryOptions<GetObject2FirstResponse, Error, GetObject2FirstResponse, typeof getTestQueryKey>,
     'queryKey' | 'queryFn'
-  >,
+  >
 ) => {
   return useQuery({
     queryKey: getTestQueryKey,
