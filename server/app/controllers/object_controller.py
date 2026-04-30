@@ -4,12 +4,11 @@ from os.path import join
 
 from flask import Blueprint, redirect, render_template, request
 
-from .. import archive, config, db
+from ... import archive, config, db
 
 blueprint = Blueprint('routes', __name__)
 
 
-# Routes for object management
 @blueprint.route('/<id>')
 def get(id: int):
     """
@@ -92,3 +91,4 @@ def download_object_zip(id: int):
     Downloads an object as a zip archive.
     """
     return download_object(id, archive.ZipSender())
+

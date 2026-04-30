@@ -1,6 +1,6 @@
 from marshmallow_sqlalchemy import SQLAlchemySchema
 
-from ..sa_db import db_session
+from ...sa_db import db_session
 
 
 class BaseSchema(SQLAlchemySchema):

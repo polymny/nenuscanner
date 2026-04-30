@@ -2,11 +2,9 @@ import json
 
 from flask import Blueprint, jsonify, render_template, request, send_file
 
-from .. import camera as C
+from ... import camera as C
 
 blueprint = Blueprint('camera', __name__)
-
-# Routes for object management
 
 
 @blueprint.route('/')
@@ -15,7 +13,6 @@ def get():
     Returns the page showing camera configuration for all parameters in capturesettings and imgsettings,
     grouped by section.
     """
-
     return render_template('camera.html')
 
 
@@ -27,7 +24,6 @@ def set_camera_settings():
     data = request.get_json()
     updated = {}
     for key, value in data.items():
-        print(f'Received {key}: {value}')
         C.set_config(key, value)
         updated[key] = value
 
@@ -52,11 +48,9 @@ def get_camera_config():
     """
     Returns grouped camera parameters as JSON for frontend JS.
     """
-
     try:
         cam = C.get()
         cam.config()
-
     except C.CameraException as e:
         return jsonify({'status': 'error', 'error': str(e)}), 500
 
@@ -64,7 +58,6 @@ def get_camera_config():
         config = json.load(f)
 
     grouped_params = []
-    # Iterate over all sections in config['main']
     for section, settings in config['main'].items():
         section_params = []
         if isinstance(settings, dict):
@@ -91,7 +84,6 @@ def get_camera_config():
     return jsonify(grouped_params)
 
 
-# @blueprint.route('/capture_preview', methods=['POST'])
 def capture_preview():
     """
     Capture un aperçu avec gphoto2 et sauvegarde dans static/feed.jpg
@@ -102,3 +94,4 @@ def capture_preview():
             return jsonify({'status': 'ok'})
     except C.CameraException as e:
         return jsonify({'status': 'error', 'error': str(e)}), 500
+

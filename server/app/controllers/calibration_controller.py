@@ -3,7 +3,7 @@ from os.path import join
 
 from flask import Blueprint, Response, redirect, render_template, session
 
-from .. import config, db, scanner, utils
+from ... import config, db, scanner, utils
 
 blueprint = Blueprint('calibration', __name__)
 
@@ -133,3 +133,4 @@ def use_last():
     else:
         session['calibration_id'] = calib.id
     return redirect('/calibration/calibrate')
+

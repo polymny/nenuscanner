@@ -2,7 +2,7 @@ from os.path import join
 
 from flask import Blueprint, Response, redirect, render_template, session
 
-from .. import config, db, scanner
+from ... import config, db, scanner
 
 blueprint = Blueprint('acquisition', __name__)
 
@@ -103,3 +103,4 @@ def delete(acquisition_id: int):
     with conn:
         acqusition = db.Acquisition.delete_from_id(acquisition_id, conn)
         return redirect('/object/' + str(acqusition.object_id))
+

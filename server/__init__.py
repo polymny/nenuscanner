@@ -5,8 +5,9 @@ from flask_cors import CORS
 from flask_smorest import Api, abort
 from sqlalchemy.exc import OperationalError, SQLAlchemyError
 
-from . import config, db, leds, routes, utils
-from .routes.object2 import blp as object2_blp
+from . import config, db, leds, utils
+from .app.controllers.object2_controller import blp as object2_blp
+from .app.controllers.web_controller import blueprint as web_blueprint
 from .sa_db import db_session
 
 app = Flask(__name__)
@@ -76,7 +77,7 @@ def handle_sqlalchemy_error(e):
     abort(500, message='db_error')
 
 
-app.register_blueprint(routes.blueprint)
+app.register_blueprint(web_blueprint)
 
 api.register_blueprint(object2_blp, url_prefix='/object2')
 

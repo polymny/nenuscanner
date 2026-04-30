@@ -1,7 +1,7 @@
 from sqlalchemy import String
 from sqlalchemy.orm import Mapped, mapped_column
 
-from .sa_db import Base
+from ...sa_db import Base
 
 
 class Object2(Base):
@@ -12,3 +12,4 @@ class Object2(Base):
 
     def __repr__(self) -> str:
         return f'Object2(id={self.id!r}, name={self.name!r})'
+

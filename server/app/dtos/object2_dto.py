@@ -2,7 +2,7 @@ from marshmallow import EXCLUDE, Schema, fields
 from marshmallow_sqlalchemy import auto_field
 
 from .base import BaseSchema
-from ..models_sa import Object2
+from ..models.object2 import Object2
 
 
 class Object2ReadSchema(BaseSchema):
@@ -21,3 +21,4 @@ class Object2CreateSchema(Schema):
         ordered = True
 
     name = fields.String(required=True)
+
