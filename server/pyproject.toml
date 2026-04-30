@@ -3,8 +3,7 @@ name = "nenuscanner"
 version = "0.1.0"
 description = "NeNuScanner Flask server"
 authors = ["NeNuScanner team"]
-readme = "README.md"
-packages = [{ include = "server" }]
+packages = [{ include = "server", from = ".." }]
 
 [tool.poetry.dependencies]
 python = "^3.12"
@@ -19,6 +18,7 @@ marshmallow-sqlalchemy = "^1.4.2"
 gpiozero = "^2.0.1"
 gphoto2 = "^2.6.0"
 flask-cors = "^6.0.2"
+pillow = "^12.2.0"
 
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.15.11"
