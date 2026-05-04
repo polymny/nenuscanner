@@ -1,10 +1,9 @@
-import { createFileRoute } from '@tanstack/react-router';
-import { DefaultContent } from '@/components/default-content';
+import { Navigate, createFileRoute } from '@tanstack/react-router';
 
 export const Route = createFileRoute('/')({
   component: App,
 });
 
 function App() {
-  return <DefaultContent />;
+  return <Navigate to="/artifacts" />;
 }

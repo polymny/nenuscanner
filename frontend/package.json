@@ -7,9 +7,9 @@
     "build": "vite build && tsc",
     "preview": "vite preview",
     "test": "vitest run",
-    "lint": "eslint",
-    "format": "prettier",
-    "check": "prettier --write . && eslint --fix"
+    "check-lint": "eslint . --report-unused-disable-directives --max-warnings 0",
+    "check-format": "prettier . --check --ignore-path .prettierignore",
+    "fix-format": "prettier . --write --ignore-path .prettierignore"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
@@ -24,6 +24,7 @@
     "@tanstack/react-router": "^1.132.0",
     "@tanstack/react-router-devtools": "^1.132.0",
     "@tanstack/router-plugin": "^1.132.0",
+    "@vinejs/vine": "^4.4.0",
     "axios": "^1.13.2",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",

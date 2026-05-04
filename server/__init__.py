@@ -6,7 +6,7 @@ from flask_smorest import Api, abort
 from sqlalchemy.exc import OperationalError, SQLAlchemyError
 
 from . import config, db, leds, utils
-from .app.controllers.object2_controller import blp as object2_blp
+from .app.controllers.artifact_controller import blp as artifact_blp
 from .app.controllers.web_controller import blueprint as web_blueprint
 from .sa_db import db_session
 
@@ -73,13 +73,13 @@ api = Api(app)
 @app.errorhandler(SQLAlchemyError)
 def handle_sqlalchemy_error(e):
     if isinstance(e, OperationalError):
-        abort(503, message='db_not_initialized')
-    abort(500, message='db_error')
+        abort(503, message='db-not-initialized')
+    abort(500, message='db-error')
 
 
 app.register_blueprint(web_blueprint)
 
-api.register_blueprint(object2_blp, url_prefix='/object2')
+api.register_blueprint(artifact_blp, url_prefix='/artifact')
 
 
 @app.route('/static/<path:path>')
