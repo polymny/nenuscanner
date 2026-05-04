@@ -36,7 +36,7 @@ Base.query = db_session.query_property()
 
 def init_db() -> None:
     # Import models so they register on Base.metadata before create_all.
-    from .app.models import object2  # noqa: F401
+    from .app.models import artifact  # noqa: F401
 
     Base.metadata.create_all(bind=engine)
 

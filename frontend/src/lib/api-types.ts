@@ -1,8 +1,10 @@
 import type { UseMutationOptions } from '@tanstack/react-query';
 
 export interface ApiError {
-  data?: unknown;
-  error: string;
+  code: number;
+  message: string;
+  status: string;
+  errors?: Record<string, string>;
 }
 
 export type UseMutationOtherOptions<TData = unknown, TError = Error, TVariables = void, TContext = unknown> = Omit<

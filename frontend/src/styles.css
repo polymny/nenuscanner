@@ -1,10 +1,10 @@
-@import url('https://fonts.googleapis.com/css2?family=Geist:wght@100..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&display=swap');
 @import 'tailwindcss';
 @import 'tw-animate-css';
 
 body {
   @apply m-0;
-  font-family: 'Geist';
+  font-family: 'Manrope';
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -43,10 +43,6 @@ code {
     cursor: pointer;
   }
 
-  form {
-    @apply flex flex-col gap-3;
-  }
-
   .no-scrollbar::-webkit-scrollbar {
     display: none;
   }
@@ -74,18 +70,18 @@ code {
   --text-subtle: 12px;
   --text-subtle--line-height: 16px;
 
-  --color-brand-25: rgba(252, 250, 255, 1);
-  --color-brand-50: rgba(249, 245, 255, 1);
-  --color-brand-100: rgba(244, 235, 255, 1);
-  --color-brand-200: rgba(233, 215, 254, 1);
-  --color-brand-300: rgba(214, 187, 251, 1);
-  --color-brand-400: rgba(182, 146, 246, 1);
-  --color-brand-500: rgba(158, 119, 237, 1);
-  --color-brand-600: rgba(105, 65, 198, 1);
-  --color-brand-700: rgba(105, 65, 198, 1);
-  --color-brand-800: rgba(83, 56, 158, 1);
-  --color-brand-900: rgba(66, 48, 125, 1);
-  --color-brand-950: rgba(44, 28, 95, 1);
+  --color-brand-25: rgba(250, 251, 254, 1);
+  --color-brand-50: rgba(245, 248, 254, 1);
+  --color-brand-100: rgba(236, 240, 250, 1);
+  --color-brand-200: rgba(220, 227, 244, 1);
+  --color-brand-300: rgba(196, 205, 232, 1);
+  --color-brand-400: rgba(156, 170, 209, 1);
+  --color-brand-500: rgba(116, 132, 182, 1);
+  --color-brand-600: rgba(66, 88, 255, 1);
+  --color-brand-700: rgba(55, 73, 216, 1);
+  --color-brand-800: rgba(46, 63, 180, 1);
+  --color-brand-900: rgba(38, 54, 143, 1);
+  --color-brand-950: rgba(30, 43, 111, 1);
 
   --color-blue-600: rgba(37, 99, 235, 1);
 
