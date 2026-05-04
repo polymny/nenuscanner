@@ -49,6 +49,7 @@ function RouteComponent() {
             <Button
               onClick={() => {
                 setUpsertMode('create');
+                setSelectedArtifactId(null);
                 setOpenUpsertDialog(true);
               }}
             >
@@ -63,6 +64,7 @@ function RouteComponent() {
             <Button
               onClick={() => {
                 setUpsertMode('create');
+                setSelectedArtifactId(null);
                 setOpenUpsertDialog(true);
               }}
             >
