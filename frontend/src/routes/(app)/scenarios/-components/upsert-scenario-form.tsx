@@ -60,6 +60,7 @@ const UpsertScenarioForm = ({ mode, scenarioId }: UpsertScenarioFormProps) => {
             name="name"
             render={({ field }) => (
               <FormItem className="w-full">
+                <FormLabel>Nom du scénario</FormLabel>
                 <FormControl>
                   <Input value={field.value} onChange={field.onChange} placeholder="Nom du scénario" />
                 </FormControl>
