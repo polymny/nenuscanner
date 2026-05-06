@@ -5,7 +5,7 @@ import { toast } from 'sonner';
 import UpsertArtifactDialog from './-components/upsert-artifact-dialog';
 import { useDeleteArtifact } from '@/api/mutations/artifact.mutations';
 import { useGetArtifacts } from '@/api/queries/artifact.queries';
-import { ArtifactCard, ArtifactCardSkeleton } from '@/components/artifact-card';
+import { ComponentCard, ComponentCardSkeleton } from '@/components/component-card';
 import { Button } from '@/components/ui/button';
 import ConfirmActionDialog from '@/components/confirm-action-dialog';
 
@@ -34,10 +34,10 @@ function RouteComponent() {
       <div className="flex w-full items-center gap-4"></div>
       {isLoading ? (
         <div className="grid w-full grid-cols-3 gap-5">
-          <ArtifactCardSkeleton />
-          <ArtifactCardSkeleton />
-          <ArtifactCardSkeleton />
-          <ArtifactCardSkeleton />
+          <ComponentCardSkeleton />
+          <ComponentCardSkeleton />
+          <ComponentCardSkeleton />
+          <ComponentCardSkeleton />
         </div>
       ) : !artifacts?.length ? (
         <div className="flex h-full justify-center">
@@ -73,7 +73,7 @@ function RouteComponent() {
           </div>
           <div className="grid grid-cols-3 gap-5">
             {artifacts.map((artifact) => (
-              <ArtifactCard
+              <ComponentCard
                 name={artifact.name}
                 key={artifact.id}
                 onDelete={() => {

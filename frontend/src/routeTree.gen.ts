@@ -11,7 +11,10 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as appRouteRouteImport } from './routes/(app)/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as appScenariosIndexRouteImport } from './routes/(app)/scenarios/index'
 import { Route as appArtifactsIndexRouteImport } from './routes/(app)/artifacts/index'
+import { Route as appScenariosCreateRouteImport } from './routes/(app)/scenarios/create'
+import { Route as appScenariosScenarioIdRouteImport } from './routes/(app)/scenarios/$scenario-id'
 
 const appRouteRoute = appRouteRouteImport.update({
   id: '/(app)',
@@ -22,32 +25,73 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const appScenariosIndexRoute = appScenariosIndexRouteImport.update({
+  id: '/scenarios/',
+  path: '/scenarios/',
+  getParentRoute: () => appRouteRoute,
+} as any)
 const appArtifactsIndexRoute = appArtifactsIndexRouteImport.update({
   id: '/artifacts/',
   path: '/artifacts/',
   getParentRoute: () => appRouteRoute,
 } as any)
+const appScenariosCreateRoute = appScenariosCreateRouteImport.update({
+  id: '/scenarios/create',
+  path: '/scenarios/create',
+  getParentRoute: () => appRouteRoute,
+} as any)
+const appScenariosScenarioIdRoute = appScenariosScenarioIdRouteImport.update({
+  id: '/scenarios/$scenario-id',
+  path: '/scenarios/$scenario-id',
+  getParentRoute: () => appRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/scenarios/$scenario-id': typeof appScenariosScenarioIdRoute
+  '/scenarios/create': typeof appScenariosCreateRoute
   '/artifacts/': typeof appArtifactsIndexRoute
+  '/scenarios/': typeof appScenariosIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/scenarios/$scenario-id': typeof appScenariosScenarioIdRoute
+  '/scenarios/create': typeof appScenariosCreateRoute
   '/artifacts': typeof appArtifactsIndexRoute
+  '/scenarios': typeof appScenariosIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/(app)': typeof appRouteRouteWithChildren
+  '/(app)/scenarios/$scenario-id': typeof appScenariosScenarioIdRoute
+  '/(app)/scenarios/create': typeof appScenariosCreateRoute
   '/(app)/artifacts/': typeof appArtifactsIndexRoute
+  '/(app)/scenarios/': typeof appScenariosIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/artifacts/'
+  fullPaths:
+    | '/'
+    | '/scenarios/$scenario-id'
+    | '/scenarios/create'
+    | '/artifacts/'
+    | '/scenarios/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/artifacts'
-  id: '__root__' | '/' | '/(app)' | '/(app)/artifacts/'
+  to:
+    | '/'
+    | '/scenarios/$scenario-id'
+    | '/scenarios/create'
+    | '/artifacts'
+    | '/scenarios'
+  id:
+    | '__root__'
+    | '/'
+    | '/(app)'
+    | '/(app)/scenarios/$scenario-id'
+    | '/(app)/scenarios/create'
+    | '/(app)/artifacts/'
+    | '/(app)/scenarios/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -71,6 +115,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/(app)/scenarios/': {
+      id: '/(app)/scenarios/'
+      path: '/scenarios'
+      fullPath: '/scenarios/'
+      preLoaderRoute: typeof appScenariosIndexRouteImport
+      parentRoute: typeof appRouteRoute
+    }
     '/(app)/artifacts/': {
       id: '/(app)/artifacts/'
       path: '/artifacts'
@@ -78,15 +129,35 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof appArtifactsIndexRouteImport
       parentRoute: typeof appRouteRoute
     }
+    '/(app)/scenarios/create': {
+      id: '/(app)/scenarios/create'
+      path: '/scenarios/create'
+      fullPath: '/scenarios/create'
+      preLoaderRoute: typeof appScenariosCreateRouteImport
+      parentRoute: typeof appRouteRoute
+    }
+    '/(app)/scenarios/$scenario-id': {
+      id: '/(app)/scenarios/$scenario-id'
+      path: '/scenarios/$scenario-id'
+      fullPath: '/scenarios/$scenario-id'
+      preLoaderRoute: typeof appScenariosScenarioIdRouteImport
+      parentRoute: typeof appRouteRoute
+    }
   }
 }
 
 interface appRouteRouteChildren {
+  appScenariosScenarioIdRoute: typeof appScenariosScenarioIdRoute
+  appScenariosCreateRoute: typeof appScenariosCreateRoute
   appArtifactsIndexRoute: typeof appArtifactsIndexRoute
+  appScenariosIndexRoute: typeof appScenariosIndexRoute
 }
 
 const appRouteRouteChildren: appRouteRouteChildren = {
+  appScenariosScenarioIdRoute: appScenariosScenarioIdRoute,
+  appScenariosCreateRoute: appScenariosCreateRoute,
   appArtifactsIndexRoute: appArtifactsIndexRoute,
+  appScenariosIndexRoute: appScenariosIndexRoute,
 }
 
 const appRouteRouteWithChildren = appRouteRoute._addFileChildren(
