@@ -7,6 +7,7 @@ from sqlalchemy.exc import OperationalError, SQLAlchemyError
 
 from . import config, db, leds, utils
 from .app.controllers.artifact_controller import blp as artifact_blp
+from .app.controllers.scenario_controller import blp as scenario_blp
 from .app.controllers.web_controller import blueprint as web_blueprint
 from .sa_db import db_session
 
@@ -80,6 +81,7 @@ def handle_sqlalchemy_error(e):
 app.register_blueprint(web_blueprint)
 
 api.register_blueprint(artifact_blp, url_prefix='/artifact')
+api.register_blueprint(scenario_blp, url_prefix='/scenario')
 
 
 @app.route('/static/<path:path>')

@@ -10,7 +10,7 @@ import type { VariantProps } from 'class-variance-authority';
 import type { ReactNode } from 'react';
 import { cn } from '@/lib/utils';
 
-export interface ArtifactCardProps extends React.HTMLAttributes<HTMLDivElement> {
+export interface ComponentCardProps extends React.HTMLAttributes<HTMLDivElement> {
   name: string;
   additionalContent?: ReactNode;
   badge?: {
@@ -28,7 +28,7 @@ export interface ArtifactCardProps extends React.HTMLAttributes<HTMLDivElement> 
   onDelete?: () => void;
   onUpdate?: () => void;
 }
-export function ArtifactCard({
+export function ComponentCard({
   additionalContent,
   badge,
   className,
@@ -43,7 +43,7 @@ export function ArtifactCard({
   tags,
   onDelete,
   onUpdate,
-}: ArtifactCardProps) {
+}: ComponentCardProps) {
   const navigate = useNavigate();
 
   const handleClick = () => {
@@ -158,7 +158,7 @@ export function ArtifactCard({
   );
 }
 
-export function ArtifactCardSkeleton() {
+export function ComponentCardSkeleton() {
   return (
     <div className="flex flex-1 flex-col items-start gap-4 rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
       <div className="flex items-start gap-2">

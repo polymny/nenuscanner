@@ -18,6 +18,16 @@ function RouteComponent() {
             <Link className="font-bold text-white" to="/artifacts">
               <h3>NenuScanner</h3>
             </Link>
+            <Link to="/scenarios">
+              <span
+                className={cn(
+                  'rounded-sm px-4 py-2 text-lg',
+                  pathname.startsWith('/scenarios') ? 'bg-gray-100 text-gray-700' : 'bg-transparent text-white'
+                )}
+              >
+                Scénarios
+              </span>
+            </Link>
             <Link to="/artifacts">
               <span
                 className={cn(
