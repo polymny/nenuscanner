@@ -1,4 +1,5 @@
 import json
+import time
 
 from flask import Blueprint, jsonify, render_template, request, send_file
 
@@ -28,8 +29,13 @@ def set_camera_settings():
         updated[key] = value
 
     try:
-        cam = C.get()
-        cam.capture_preview()
+        with C.get() as cam:
+            if hasattr(cam, 'capture_preview'):
+                n = C.PREVIEW_FLUSH_AFTER_SETTING
+                for i in range(n):
+                    cam.capture_preview()
+                    if i + 1 < n:
+                        time.sleep(C.PREVIEW_FLUSH_SLEEP_SEC)
         return jsonify({'status': 'ok'})
     except C.CameraException as e:
         return jsonify({'status': 'error', 'error': str(e)}), 500
@@ -39,8 +45,12 @@ def set_camera_settings():
 
 @blueprint.route('/feed.jpg', methods=['GET'])
 def camera_feed():
-    capture_preview()
-    return send_file('static/feed.jpg', mimetype='image/jpeg')
+    want_capture = request.args.get('capture', '1').lower() not in ('0', 'false', 'no')
+    if want_capture:
+        capture_preview()
+    resp = send_file('static/feed.jpg', mimetype='image/jpeg', max_age=0)
+    resp.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
+    return resp
 
 
 @blueprint.route('/config', methods=['GET'])
@@ -94,4 +104,3 @@ def capture_preview():
             return jsonify({'status': 'ok'})
     except C.CameraException as e:
         return jsonify({'status': 'error', 'error': str(e)}), 500
-

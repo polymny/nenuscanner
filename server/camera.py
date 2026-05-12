@@ -8,6 +8,11 @@ from PIL import Image
 
 from . import config, leds
 
+# Nikon Z : plusieurs previews après un set-config pour sortir des vieilles trames liveview.
+PREVIEW_FLUSH_AFTER_SETTING = 2
+# Petite pause entre deux lectures liveview (pipeline boîtier).
+PREVIEW_FLUSH_SLEEP_SEC = 0.05
+
 
 def parse_config(lines):
     config = {}
@@ -73,8 +78,14 @@ class RealCamera(Camera):
         return self
 
     def __exit__(self, *args):
-        # self.inner.exit()
-        pass
+        if not self._entered:
+            return
+        try:
+            self.inner.exit()
+        except Exception:
+            pass
+        finally:
+            self._entered = False
 
     def capture(self):
         try:
@@ -119,7 +130,18 @@ class RealCamera(Camera):
             json.dump(config_dict, f, indent=2, ensure_ascii=False)
 
     def set_config(self, parameter, value):
-        subprocess.run(['gphoto2', '--set-config', f'{parameter}={value}'])
+        was_entered = self._entered
+        if self._entered:
+            self._entered = False
+            try:
+                self.inner.exit()
+            except Exception:
+                pass
+        try:
+            subprocess.run(['gphoto2', '--set-config', f'{parameter}={value}'])
+        finally:
+            if was_entered:
+                self.__enter__()
         return 0
 
 

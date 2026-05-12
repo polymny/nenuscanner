@@ -20,6 +20,12 @@
                     <button class="button is-small is-info mt-2" type="button" onclick="CapturePreview()">Acquistion camera
                     
                     </button>
+                    <div class="buttons is-centered is-flex-wrap-wrap mt-2">
+                        <button class="button is-small is-warning" type="button"
+                            onclick="setShutterSpeedPoc(37)">gphoto2 shutterspeed=37</button>
+                        <button class="button is-small is-warning" type="button"
+                            onclick="setShutterSpeedPoc(31)">gphoto2 shutterspeed=31</button>
+                    </div>
                     
                     <nav class="level">
                         <div class="level-item has-text-centered">
@@ -64,14 +70,32 @@
             body: JSON.stringify({ [paramName]: value })
         }).then(() => location.reload());
     }
+
+    function setShutterSpeedPoc(value) {
+        fetch('/camera/set', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ shutterspeed: String(value) })
+        })
+            .then(async (r) => {
+                const data = await r.json().catch(() => ({}));
+                if (!r.ok || data.status === 'error') {
+                    alert('Erreur : ' + (data.error || r.statusText));
+                    return;
+                }
+                refreshPreview(false);
+            })
+            .catch(() => alert('Requête échouée'));
+    }
     
     const img = document.getElementById('camera-preview');
-    img.onload = function() {
-        requestAnimationFrame(refreshPreview);
-    }
+    //img.onload = function() {
+    //    requestAnimationFrame(refreshPreview);
+    //}
 
-    function refreshPreview() {
-        const url = '/camera/feed.jpg?' + new Date().getTime();
+    function refreshPreview(recapture) {
+        const capture = recapture === false ? '0' : '1';
+        const url = '/camera/feed.jpg?capture=' + capture + '&t=' + Date.now();
         img.src = url;
     }
 
@@ -151,7 +175,7 @@
                 });
         
 		    // When ready, load preview
-		    refreshPreview();
+		    //refreshPreview();
 	    });
 
     });
