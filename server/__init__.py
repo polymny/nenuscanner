@@ -6,6 +6,7 @@ from flask_smorest import Api, abort
 from sqlalchemy.exc import OperationalError, SQLAlchemyError
 
 from . import config, db, leds, utils
+from .app.controllers.arms_position_controller import blp as arms_position_blp
 from .app.controllers.artifact_controller import blp as artifact_blp
 from .app.controllers.scenario_controller import blp as scenario_blp
 from .app.controllers.web_controller import blueprint as web_blueprint
@@ -82,6 +83,7 @@ app.register_blueprint(web_blueprint)
 
 api.register_blueprint(artifact_blp, url_prefix='/artifact')
 api.register_blueprint(scenario_blp, url_prefix='/scenario')
+api.register_blueprint(arms_position_blp, url_prefix='/arms-position')
 
 
 @app.route('/static/<path:path>')

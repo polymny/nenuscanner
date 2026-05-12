@@ -1,4 +1,5 @@
 import { Link, Outlet, createFileRoute, useLocation } from '@tanstack/react-router';
+import ArmsPositionWidget from './-components/arms-position-widget';
 import { cn } from '@/lib/utils';
 
 export const Route = createFileRoute('/(app)')({
@@ -49,6 +50,7 @@ function RouteComponent() {
               </span>
             </Link>
           </div>
+          <ArmsPositionWidget />
           {/* <div className="flex items-center gap-2">
           <Link to="/profile">
             <UserCircle2 />
