@@ -1,5 +1,5 @@
 import { toast } from 'sonner';
-import { useEffect } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { Dispatch } from 'react';
 
 import { Button } from '@/components/ui/button';
@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/dialog';
 import { useGetLastArmsPosition } from '@/api/queries/arms-position.queries';
 import { useIncreaseArmsPosition } from '@/api/mutations/arms-position.mutations';
+import { cn } from '@/lib/utils';
 
 interface IncreaseArmsPositionDialogProps {
   open: boolean;
@@ -31,13 +32,34 @@ export default function IncreaseArmsPositionDialog({ open, setOpen }: IncreaseAr
       toast.success('Position des bras mise à jour.');
       setTimeout(() => {
         setOpen(false);
-      }, 1000);
+      }, 1200);
     },
   });
 
   useEffect(() => {
     if (open) reset();
   }, [open, reset]);
+
+  const [isPulsing, setIsPulsing] = useState(false);
+  const previousPositionKey = useRef<string | undefined>(undefined);
+  const positionKey = useMemo(
+    () => (lastArmsPosition ? `${lastArmsPosition.emojiLeft}-${lastArmsPosition.emojiRight}` : undefined),
+    [lastArmsPosition]
+  );
+
+  useEffect(() => {
+    if (!positionKey) return;
+    if (previousPositionKey.current === undefined) {
+      previousPositionKey.current = positionKey;
+      return;
+    }
+    if (previousPositionKey.current === positionKey) return;
+    previousPositionKey.current = positionKey;
+
+    setIsPulsing(true);
+    const timeout = setTimeout(() => setIsPulsing(false), 400);
+    return () => clearTimeout(timeout);
+  }, [positionKey]);
 
   return (
     <Dialog
@@ -49,8 +71,10 @@ export default function IncreaseArmsPositionDialog({ open, setOpen }: IncreaseAr
       <DialogContent className="w-max">
         <DialogHeader>
           <DialogTitle className="text-center text-2xl">
-            {lastArmsPosition?.emojiLeft}
-            {lastArmsPosition?.emojiRight}
+            <span className={cn('inline-block transition-transform duration-500 ease-out', isPulsing && 'scale-150')}>
+              {lastArmsPosition?.emojiLeft}
+              {lastArmsPosition?.emojiRight}
+            </span>
           </DialogTitle>
           <DialogDescription>
             Vous avez bougé les bras ? Mettez à jour la position des bras pour continuer.
