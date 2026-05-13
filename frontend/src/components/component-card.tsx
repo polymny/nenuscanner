@@ -160,7 +160,7 @@ export function ComponentCard({
 
 export function ComponentCardSkeleton() {
   return (
-    <div className="flex flex-1 flex-col items-start gap-4 rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+    <div className="flex h-[90px] flex-1 flex-col items-start gap-4 rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
       <div className="flex items-start gap-2">
         <Skeleton className="size-10 rounded-full" />
         <div className="flex items-start gap-3">

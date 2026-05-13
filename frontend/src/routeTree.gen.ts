@@ -15,6 +15,7 @@ import { Route as appScenariosIndexRouteImport } from './routes/(app)/scenarios/
 import { Route as appArtifactsIndexRouteImport } from './routes/(app)/artifacts/index'
 import { Route as appScenariosCreateRouteImport } from './routes/(app)/scenarios/create'
 import { Route as appScenariosScenarioIdRouteImport } from './routes/(app)/scenarios/$scenario-id'
+import { Route as appArtifactsArtifactIdIndexRouteImport } from './routes/(app)/artifacts/$artifact-id/index'
 
 const appRouteRoute = appRouteRouteImport.update({
   id: '/(app)',
@@ -45,6 +46,12 @@ const appScenariosScenarioIdRoute = appScenariosScenarioIdRouteImport.update({
   path: '/scenarios/$scenario-id',
   getParentRoute: () => appRouteRoute,
 } as any)
+const appArtifactsArtifactIdIndexRoute =
+  appArtifactsArtifactIdIndexRouteImport.update({
+    id: '/artifacts/$artifact-id/',
+    path: '/artifacts/$artifact-id/',
+    getParentRoute: () => appRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -52,6 +59,7 @@ export interface FileRoutesByFullPath {
   '/scenarios/create': typeof appScenariosCreateRoute
   '/artifacts/': typeof appArtifactsIndexRoute
   '/scenarios/': typeof appScenariosIndexRoute
+  '/artifacts/$artifact-id/': typeof appArtifactsArtifactIdIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -59,6 +67,7 @@ export interface FileRoutesByTo {
   '/scenarios/create': typeof appScenariosCreateRoute
   '/artifacts': typeof appArtifactsIndexRoute
   '/scenarios': typeof appScenariosIndexRoute
+  '/artifacts/$artifact-id': typeof appArtifactsArtifactIdIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -68,6 +77,7 @@ export interface FileRoutesById {
   '/(app)/scenarios/create': typeof appScenariosCreateRoute
   '/(app)/artifacts/': typeof appArtifactsIndexRoute
   '/(app)/scenarios/': typeof appScenariosIndexRoute
+  '/(app)/artifacts/$artifact-id/': typeof appArtifactsArtifactIdIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -77,6 +87,7 @@ export interface FileRouteTypes {
     | '/scenarios/create'
     | '/artifacts/'
     | '/scenarios/'
+    | '/artifacts/$artifact-id/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -84,6 +95,7 @@ export interface FileRouteTypes {
     | '/scenarios/create'
     | '/artifacts'
     | '/scenarios'
+    | '/artifacts/$artifact-id'
   id:
     | '__root__'
     | '/'
@@ -92,6 +104,7 @@ export interface FileRouteTypes {
     | '/(app)/scenarios/create'
     | '/(app)/artifacts/'
     | '/(app)/scenarios/'
+    | '/(app)/artifacts/$artifact-id/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -143,6 +156,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof appScenariosScenarioIdRouteImport
       parentRoute: typeof appRouteRoute
     }
+    '/(app)/artifacts/$artifact-id/': {
+      id: '/(app)/artifacts/$artifact-id/'
+      path: '/artifacts/$artifact-id'
+      fullPath: '/artifacts/$artifact-id/'
+      preLoaderRoute: typeof appArtifactsArtifactIdIndexRouteImport
+      parentRoute: typeof appRouteRoute
+    }
   }
 }
 
@@ -151,6 +171,7 @@ interface appRouteRouteChildren {
   appScenariosCreateRoute: typeof appScenariosCreateRoute
   appArtifactsIndexRoute: typeof appArtifactsIndexRoute
   appScenariosIndexRoute: typeof appScenariosIndexRoute
+  appArtifactsArtifactIdIndexRoute: typeof appArtifactsArtifactIdIndexRoute
 }
 
 const appRouteRouteChildren: appRouteRouteChildren = {
@@ -158,6 +179,7 @@ const appRouteRouteChildren: appRouteRouteChildren = {
   appScenariosCreateRoute: appScenariosCreateRoute,
   appArtifactsIndexRoute: appArtifactsIndexRoute,
   appScenariosIndexRoute: appScenariosIndexRoute,
+  appArtifactsArtifactIdIndexRoute: appArtifactsArtifactIdIndexRoute,
 }
 
 const appRouteRouteWithChildren = appRouteRoute._addFileChildren(
