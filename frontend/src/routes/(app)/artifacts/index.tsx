@@ -76,6 +76,7 @@ function RouteComponent() {
               <ComponentCard
                 name={artifact.name}
                 key={artifact.id}
+                onClickPath={`/artifacts/${artifact.id}`}
                 onDelete={() => {
                   setSelectedArtifactId(artifact.id);
                   setOpenDeleteDialog(true);
