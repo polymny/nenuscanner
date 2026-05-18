@@ -14,7 +14,7 @@ export const Route = createFileRoute('/(app)/scenarios/')({
 
 function RouteComponent() {
   const navigate = useNavigate();
-  const { data: scenarios, isLoading } = useGetScenarios();
+  const { data: scenarios, isPending } = useGetScenarios();
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [selectedScenarioId, setSelectedScenarioId] = useState<null | number>(null);
 
@@ -30,7 +30,7 @@ function RouteComponent() {
   return (
     <div className="bg-gray-25 flex h-full flex-col items-center gap-6 px-20 py-8">
       <div className="flex w-full items-center gap-4"></div>
-      {isLoading ? (
+      {isPending ? (
         <div className="grid w-full grid-cols-3 gap-5">
           <ComponentCardSkeleton />
           <ComponentCardSkeleton />

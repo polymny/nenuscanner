@@ -14,7 +14,7 @@ export const Route = createFileRoute('/(app)/artifacts/')({
 });
 
 function RouteComponent() {
-  const { data: artifacts, isLoading } = useGetArtifacts();
+  const { data: artifacts, isPending } = useGetArtifacts();
   const [upsertMode, setUpsertMode] = useState<'create' | 'update'>('create');
   const [openUpsertDialog, setOpenUpsertDialog] = useState(false);
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
@@ -31,8 +31,7 @@ function RouteComponent() {
 
   return (
     <div className="bg-gray-25 flex h-full flex-col items-center gap-6 px-20 py-8">
-      <div className="flex w-full items-center gap-4"></div>
-      {isLoading ? (
+      {isPending ? (
         <div className="grid w-full grid-cols-3 gap-5">
           <ComponentCardSkeleton />
           <ComponentCardSkeleton />
