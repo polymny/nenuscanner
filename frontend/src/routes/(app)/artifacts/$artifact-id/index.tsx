@@ -1,13 +1,16 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useMemo, useState } from 'react';
 import { Camera } from 'lucide-react';
-import ConfigureAcquisitionDialog from '../-components/configure-acquisition/configure-acquisition-dialog';
+import { toast } from 'sonner';
+import CreateAcquisitionDialog from '../-components/create-acquisition/create-acquisition-dialog';
 import { useGetArtifacts } from '@/api/queries/artifact.queries';
 import CustomBreadcrumb from '@/components/ui/custom-breadcrumb';
 import { Button } from '@/components/ui/button';
 import { useGetAcquisitionsByArtifactId } from '@/api/queries/acquisition.queries';
 import { ComponentCard, ComponentCardSkeleton } from '@/components/component-card';
 import { cn } from '@/lib/utils';
+import { useDeleteAcquisition } from '@/api/mutations/acquisition.mutations';
+import ConfirmActionDialog from '@/components/confirm-action-dialog';
 
 export const Route = createFileRoute('/(app)/artifacts/$artifact-id/')({
   component: RouteComponent,
@@ -23,7 +26,19 @@ function RouteComponent() {
     [artifacts, artifactId]
   );
 
-  const [openConfigureAcquisitionDialog, setOpenConfigureAcquisitionDialog] = useState(false);
+  const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
+  const [selectedAcquisitionId, setSelectedAcquisitionId] = useState<null | number>(null);
+
+  const { mutate: deleteAcquisition } = useDeleteAcquisition({
+    onSuccess: () => {
+      toast.success('Acquisition supprimée.');
+    },
+    onError: () => {
+      toast.error('La suppression a échoué.');
+    },
+  });
+
+  const [openCreateAcquisitionDialog, setOpenCreateAcquisitionDialog] = useState(false);
 
   if (!isLoadingArtifacts && !existingArtifact) {
     navigate({ to: '/artifacts' });
@@ -48,11 +63,11 @@ function RouteComponent() {
         </div>
       ) : (
         <div className="flex w-full flex-col gap-4">
-          <div className="flex items-center justify-between">
+          <div className="flex items-start justify-between">
             <h2 className="font-semibold text-gray-950">{`Acquisitions de ${existingArtifact.name}`}</h2>
             <Button
               className={cn(!acquisitions?.length ? 'hidden' : '')}
-              onClick={() => setOpenConfigureAcquisitionDialog(true)}
+              onClick={() => setOpenCreateAcquisitionDialog(true)}
             >
               Créer une acquisition
             </Button>
@@ -63,18 +78,40 @@ function RouteComponent() {
                 <Camera className="text-brand-600 size-6" />
               </div>
               <h4 className="font-semibold">Aucune acquisition trouvée</h4>
-              <Button onClick={() => setOpenConfigureAcquisitionDialog(true)}>Créer une acquisition</Button>
+              <Button onClick={() => setOpenCreateAcquisitionDialog(true)}>Créer une acquisition</Button>
             </div>
           ) : (
             <div className="grid grid-cols-3 gap-5">
               {acquisitions.map((acquisition) => (
-                <ComponentCard name={`Acquisition ${acquisition.id}`} key={acquisition.id} />
+                <ComponentCard
+                  name={acquisition.name}
+                  key={acquisition.id}
+                  onDelete={() => {
+                    setSelectedAcquisitionId(acquisition.id);
+                    setOpenDeleteDialog(true);
+                  }}
+                />
               ))}
             </div>
           )}
         </div>
       )}
-      <ConfigureAcquisitionDialog open={openConfigureAcquisitionDialog} setOpen={setOpenConfigureAcquisitionDialog} />
+      <CreateAcquisitionDialog
+        artifactId={existingArtifact.id}
+        open={openCreateAcquisitionDialog}
+        setOpen={setOpenCreateAcquisitionDialog}
+      />
+      <ConfirmActionDialog
+        confirmButtonContent="Supprimer"
+        confirmButtonVariant={{ variant: 'destructive' }}
+        description="Voulez-vous vraiment supprimer cette acquisition ? Cette action ne peut pas être annulée."
+        handleConfirmAction={() => {
+          if (selectedAcquisitionId) deleteAcquisition(selectedAcquisitionId);
+        }}
+        open={openDeleteDialog}
+        setOpen={setOpenDeleteDialog}
+        title="Supprimer l'acquisition"
+      />
     </div>
   );
 }

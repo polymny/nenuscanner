@@ -10,7 +10,9 @@ export const acquisitionsKeyFactory = {
 };
 
 const getAcquisitionsByArtifactId = async (artifactId: number) => {
-  const response = await client.get<Array<Acquisition>>(`/artifact/${artifactId}/acquisitions`);
+  const response = await client.get<Array<Acquisition>>('/acquisition/', {
+    params: { artifactId },
+  });
   return response.data;
 };
 

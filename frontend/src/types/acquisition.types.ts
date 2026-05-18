@@ -1,7 +1,9 @@
 export interface Acquisition {
   id: number;
+  name: string;
   artifactId: number;
   scenarioId: number;
+  calibrationId: number | null;
   armsPositionId: number;
   withRotationAutofocus: boolean;
   status: string;

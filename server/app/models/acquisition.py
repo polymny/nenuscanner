@@ -13,6 +13,7 @@ class Acquisition(Base):
     __tablename__ = 'artifact_acquisition'
 
     id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
     artifact_id: Mapped[int] = mapped_column(
         ForeignKey('artifact.id', ondelete='CASCADE'),
         nullable=False,
@@ -21,6 +22,11 @@ class Acquisition(Base):
     scenario_id: Mapped[int] = mapped_column(
         ForeignKey('scenario.id', ondelete='RESTRICT'),
         nullable=False,
+        index=True,
+    )
+    calibration_id: Mapped[int | None] = mapped_column(
+        ForeignKey('artifact_acquisition.id', ondelete='SET NULL'),
+        nullable=True,
         index=True,
     )
     arms_position_id: Mapped[int] = mapped_column(
@@ -48,10 +54,11 @@ class Acquisition(Base):
 
     artifact: Mapped[Artifact] = relationship()
     scenario: Mapped[Scenario] = relationship()
+    calibration: Mapped[Acquisition | None] = relationship()
     arms_position: Mapped[ArmsPosition] = relationship()
 
     def __repr__(self) -> str:
         return (
-            f'Acquisition(id={self.id!r}, artifact_id={self.artifact_id!r}, '
+            f'Acquisition(id={self.id!r}, name={self.name!r}, artifact_id={self.artifact_id!r}, '
             f'scenario_id={self.scenario_id!r}, status={self.status!r})'
         )
