@@ -16,6 +16,7 @@ import { Route as appArtifactsIndexRouteImport } from './routes/(app)/artifacts/
 import { Route as appScenariosCreateRouteImport } from './routes/(app)/scenarios/create'
 import { Route as appScenariosScenarioIdRouteImport } from './routes/(app)/scenarios/$scenario-id'
 import { Route as appArtifactsArtifactIdIndexRouteImport } from './routes/(app)/artifacts/$artifact-id/index'
+import { Route as appAcquisitionsAcquisitionIdIndexRouteImport } from './routes/(app)/acquisitions/$acquisition-id/index'
 
 const appRouteRoute = appRouteRouteImport.update({
   id: '/(app)',
@@ -52,6 +53,12 @@ const appArtifactsArtifactIdIndexRoute =
     path: '/artifacts/$artifact-id/',
     getParentRoute: () => appRouteRoute,
   } as any)
+const appAcquisitionsAcquisitionIdIndexRoute =
+  appAcquisitionsAcquisitionIdIndexRouteImport.update({
+    id: '/acquisitions/$acquisition-id/',
+    path: '/acquisitions/$acquisition-id/',
+    getParentRoute: () => appRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -59,6 +66,7 @@ export interface FileRoutesByFullPath {
   '/scenarios/create': typeof appScenariosCreateRoute
   '/artifacts/': typeof appArtifactsIndexRoute
   '/scenarios/': typeof appScenariosIndexRoute
+  '/acquisitions/$acquisition-id/': typeof appAcquisitionsAcquisitionIdIndexRoute
   '/artifacts/$artifact-id/': typeof appArtifactsArtifactIdIndexRoute
 }
 export interface FileRoutesByTo {
@@ -67,6 +75,7 @@ export interface FileRoutesByTo {
   '/scenarios/create': typeof appScenariosCreateRoute
   '/artifacts': typeof appArtifactsIndexRoute
   '/scenarios': typeof appScenariosIndexRoute
+  '/acquisitions/$acquisition-id': typeof appAcquisitionsAcquisitionIdIndexRoute
   '/artifacts/$artifact-id': typeof appArtifactsArtifactIdIndexRoute
 }
 export interface FileRoutesById {
@@ -77,6 +86,7 @@ export interface FileRoutesById {
   '/(app)/scenarios/create': typeof appScenariosCreateRoute
   '/(app)/artifacts/': typeof appArtifactsIndexRoute
   '/(app)/scenarios/': typeof appScenariosIndexRoute
+  '/(app)/acquisitions/$acquisition-id/': typeof appAcquisitionsAcquisitionIdIndexRoute
   '/(app)/artifacts/$artifact-id/': typeof appArtifactsArtifactIdIndexRoute
 }
 export interface FileRouteTypes {
@@ -87,6 +97,7 @@ export interface FileRouteTypes {
     | '/scenarios/create'
     | '/artifacts/'
     | '/scenarios/'
+    | '/acquisitions/$acquisition-id/'
     | '/artifacts/$artifact-id/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -95,6 +106,7 @@ export interface FileRouteTypes {
     | '/scenarios/create'
     | '/artifacts'
     | '/scenarios'
+    | '/acquisitions/$acquisition-id'
     | '/artifacts/$artifact-id'
   id:
     | '__root__'
@@ -104,6 +116,7 @@ export interface FileRouteTypes {
     | '/(app)/scenarios/create'
     | '/(app)/artifacts/'
     | '/(app)/scenarios/'
+    | '/(app)/acquisitions/$acquisition-id/'
     | '/(app)/artifacts/$artifact-id/'
   fileRoutesById: FileRoutesById
 }
@@ -163,6 +176,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof appArtifactsArtifactIdIndexRouteImport
       parentRoute: typeof appRouteRoute
     }
+    '/(app)/acquisitions/$acquisition-id/': {
+      id: '/(app)/acquisitions/$acquisition-id/'
+      path: '/acquisitions/$acquisition-id'
+      fullPath: '/acquisitions/$acquisition-id/'
+      preLoaderRoute: typeof appAcquisitionsAcquisitionIdIndexRouteImport
+      parentRoute: typeof appRouteRoute
+    }
   }
 }
 
@@ -171,6 +191,7 @@ interface appRouteRouteChildren {
   appScenariosCreateRoute: typeof appScenariosCreateRoute
   appArtifactsIndexRoute: typeof appArtifactsIndexRoute
   appScenariosIndexRoute: typeof appScenariosIndexRoute
+  appAcquisitionsAcquisitionIdIndexRoute: typeof appAcquisitionsAcquisitionIdIndexRoute
   appArtifactsArtifactIdIndexRoute: typeof appArtifactsArtifactIdIndexRoute
 }
 
@@ -179,6 +200,8 @@ const appRouteRouteChildren: appRouteRouteChildren = {
   appScenariosCreateRoute: appScenariosCreateRoute,
   appArtifactsIndexRoute: appArtifactsIndexRoute,
   appScenariosIndexRoute: appScenariosIndexRoute,
+  appAcquisitionsAcquisitionIdIndexRoute:
+    appAcquisitionsAcquisitionIdIndexRoute,
   appArtifactsArtifactIdIndexRoute: appArtifactsArtifactIdIndexRoute,
 }
 

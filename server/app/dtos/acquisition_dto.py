@@ -35,6 +35,31 @@ class AcquisitionReadSchema(Schema):
     updatedAt = fields.DateTime(required=True)
 
 
+class AcquisitionPhotoReadSchema(Schema):
+    class Meta:
+        ordered = True
+
+    id = fields.Integer(required=True)
+    path = fields.String(required=True)
+    imageUrl = fields.String(required=True)
+    acquisitionId = fields.Integer(required=True)
+    scenarioRotationId = fields.Integer(required=True, allow_none=True)
+    scenarioShutterSpeedId = fields.Integer(required=True, allow_none=True)
+    scenarioLedId = fields.Integer(required=True, allow_none=True)
+
+
+class AcquisitionDetailSchema(AcquisitionReadSchema):
+    photos = fields.Nested(AcquisitionPhotoReadSchema, many=True, required=True)
+
+
+class AcquisitionRunStartSchema(Schema):
+    class Meta:
+        ordered = True
+
+    jobId = fields.String(required=True)
+    acquisitionId = fields.Integer(required=True)
+
+
 class AcquisitionCreateSchema(Schema):
     class Meta:
         unknown = EXCLUDE

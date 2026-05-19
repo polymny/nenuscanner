@@ -1,25 +1,46 @@
+from flask import Response, stream_with_context
 from flask.views import MethodView
 from flask_smorest import Blueprint, abort
 
 from ..dtos.acquisition_dto import (
     AcquisitionCreateSchema,
+    AcquisitionDetailSchema,
     AcquisitionListQuerySchema,
     AcquisitionReadSchema,
+    AcquisitionRunStartSchema,
 )
-from ..models.acquisition import Acquisition
+from ..models.acquisition import Acquisition, AcquisitionStatus
 from ..models.artifact import Artifact
 from ..models.scenario import Scenario
+from ..services.acquisition_service import (
+    delete_pending_acquisitions,
+    get_acquisition_with_photos,
+    photo_path_to_url,
+    run_acquisition,
+)
 from ..services.arms_position_service import get_last_arms_position
+from ..services.sse_job_runner import sse_job_registry
 from ...sa_db import db_session
 
 blp = Blueprint('acquisition', __name__, description='Acquisition endpoints')
 
-ACQUISITION_STATUS_PENDING = 'PENDING'
 DEFAULT_CAMERA_VALUE = 1.0
 
 
-def _to_dto(row: Acquisition) -> dict:
+def _photo_to_dto(photo) -> dict:
     return {
+        'id': photo.id,
+        'path': photo.path,
+        'imageUrl': photo_path_to_url(photo.path),
+        'acquisitionId': photo.acquisition_id,
+        'scenarioRotationId': photo.scenario_rotation_id,
+        'scenarioShutterSpeedId': photo.scenario_shutter_speed_id,
+        'scenarioLedId': photo.scenario_led_id,
+    }
+
+
+def _to_dto(row: Acquisition, *, include_photos: bool = False) -> dict:
+    payload = {
         'id': row.id,
         'name': row.name,
         'artifactId': row.artifact_id,
@@ -35,10 +56,13 @@ def _to_dto(row: Acquisition) -> dict:
         'createdAt': row.created_at,
         'updatedAt': row.updated_at,
     }
+    if include_photos:
+        payload['photos'] = [_photo_to_dto(photo) for photo in row.photos]
+    return payload
 
 
 @blp.route('/')
-class AcquisitionCollectionController(MethodView):
+class AcquisitionController(MethodView):
     @blp.arguments(AcquisitionListQuerySchema, location='query')
     @blp.response(200, AcquisitionReadSchema(many=True))
     def get(self, query_args):
@@ -77,6 +101,13 @@ class AcquisitionCollectionController(MethodView):
 
         arms_position = get_last_arms_position()
 
+        delete_pending_acquisitions(
+            db_session,
+            artifact_id=payload['artifactId'],
+            scenario_id=scenario_id,
+            arms_position_id=arms_position.id,
+        )
+
         acquisition = Acquisition(
             name=payload['name'],
             artifact_id=payload['artifactId'],
@@ -84,7 +115,7 @@ class AcquisitionCollectionController(MethodView):
             calibration_id=calibration_id,
             arms_position_id=arms_position.id,
             with_rotation_autofocus=payload['withRotationAutofocus'],
-            status=ACQUISITION_STATUS_PENDING,
+            status=AcquisitionStatus.PENDING,
             iso_value=DEFAULT_CAMERA_VALUE,
             absolute_shutter_speed_value=DEFAULT_CAMERA_VALUE,
             aperture_value=DEFAULT_CAMERA_VALUE,
@@ -98,11 +129,57 @@ class AcquisitionCollectionController(MethodView):
 
 @blp.route('/<int:acquisition_id>')
 class AcquisitionByIdController(MethodView):
+    @blp.response(200, AcquisitionDetailSchema)
+    def get(self, acquisition_id):
+        """Détail d'une acquisition avec ses photos."""
+        acquisition = get_acquisition_with_photos(db_session, acquisition_id)
+        if acquisition is None:
+            abort(404, message='acquisition-not-found')
+        return _to_dto(acquisition, include_photos=True)
+
     @blp.response(204)
-    def delete(self, acquisition_id: int):
+    def delete(self, acquisition_id):
         """Supprime une acquisition par identifiant."""
         acquisition = db_session.get(Acquisition, acquisition_id)
         if acquisition is None:
             abort(404, message='acquisition-not-found')
         db_session.delete(acquisition)
         db_session.commit()
+
+
+@blp.route('/<int:acquisition_id>/run/start')
+class AcquisitionRunStartController(MethodView):
+    @blp.response(202, AcquisitionRunStartSchema)
+    def post(self, acquisition_id):
+        """Démarre l'exécution d'une acquisition."""
+        acquisition = db_session.get(Acquisition, acquisition_id)
+        if acquisition is None:
+            abort(404, message='acquisition-not-found')
+        if acquisition.status not in (AcquisitionStatus.PENDING, AcquisitionStatus.FAILED):
+            abort(409, message='acquisition-not-startable')
+
+        acquisition.status = AcquisitionStatus.RUNNING
+        db_session.commit()
+
+        job_id = sse_job_registry.start(
+            lambda ctx: run_acquisition(ctx, acquisition_id),
+            thread_name_prefix='acquisition',
+        )
+        return {'jobId': job_id, 'acquisitionId': acquisition_id}
+
+
+@blp.route('/run/<string:job_id>/events')
+class AcquisitionRunEventsController(MethodView):
+    def get(self, job_id):
+        """Flux SSE de progression d'une exécution d'acquisition."""
+        if sse_job_registry.get(job_id) is None:
+            abort(404, message='job-not-found')
+
+        return Response(
+            stream_with_context(sse_job_registry.iter_sse_events(job_id)),
+            mimetype='text/event-stream',
+            headers={
+                'Cache-Control': 'no-cache',
+                'X-Accel-Buffering': 'no',
+            },
+        )

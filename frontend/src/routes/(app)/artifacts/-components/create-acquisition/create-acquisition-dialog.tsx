@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { vineResolver } from '@hookform/resolvers/vine';
 import { toast } from 'sonner';
+import { useNavigate } from '@tanstack/react-router';
 import SelectAcquisitionScenario from './select-acquisition-scenario';
 import SelectAcquisitionCalibration from './select-acquisition-calibration';
 import SelectAcquisitionName from './select-acquisition-name';
@@ -22,14 +23,12 @@ interface CreateAcquisitionDialogProps {
 
 const CreateAcquisitionDialog = ({ open, setOpen, artifactId }: CreateAcquisitionDialogProps) => {
   const [currentStep, setCurrentStep] = useState<CreateAcquisitionStep>('scenario');
-
+  const navigate = useNavigate();
   const { mutate: createAcquisitionMutate } = useCreateAcquisition({
-    onSuccess: (_, { name }) => {
+    onSuccess: (data, { name }) => {
       setOpen(false);
       toast.success(`${name} a bien été créée.`);
-      setTimeout(() => {
-        form.reset();
-      }, 1000);
+      navigate({ to: `/acquisitions/${data.id}` });
     },
   });
 

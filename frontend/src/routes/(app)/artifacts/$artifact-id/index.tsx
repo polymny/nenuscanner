@@ -86,6 +86,7 @@ function RouteComponent() {
                 <ComponentCard
                   name={acquisition.name}
                   key={acquisition.id}
+                  onClickPath={`/acquisitions/${acquisition.id}`}
                   onDelete={() => {
                     setSelectedAcquisitionId(acquisition.id);
                     setOpenDeleteDialog(true);

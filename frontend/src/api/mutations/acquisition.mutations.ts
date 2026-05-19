@@ -3,21 +3,23 @@ import { acquisitionsKeyFactory } from '../queries/acquisition.queries';
 import type { ApiError, UseMutationOtherOptions } from '@/lib/api-types';
 import type { AxiosError } from 'axios';
 import type { CreateAcquisitionPayload } from '@/schemas/acquisition.schemas';
+import type { Acquisition } from '@/types/acquisition.types';
 import { client } from '@/lib/client';
 
 const createAcquisition = async (payload: CreateAcquisitionPayload) => {
-  return await client.post('/acquisition/', payload);
+  const { data } = await client.post<Acquisition>('/acquisition/', payload);
+  return data;
 };
 
 export const useCreateAcquisition = (
-  options?: UseMutationOtherOptions<void, AxiosError<ApiError>, CreateAcquisitionPayload>
+  options?: UseMutationOtherOptions<Acquisition, AxiosError<ApiError>, CreateAcquisitionPayload>
 ) => {
   const queryClient = useQueryClient();
 
   return useMutation({
     ...options,
     mutationFn: async (payload) => {
-      await createAcquisition(payload);
+      return await createAcquisition(payload);
     },
     onSuccess: (data, vars, result, ctx) => {
       void queryClient.invalidateQueries({ queryKey: acquisitionsKeyFactory.base() });

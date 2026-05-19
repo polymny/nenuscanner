@@ -1,12 +1,24 @@
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from sqlalchemy import Boolean, DateTime, Float, ForeignKey, String, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .arms_position import ArmsPosition
+
+if TYPE_CHECKING:
+    from .acquisition_photo import AcquisitionPhoto
 from .artifact import Artifact
 from .scenario import Scenario
 from ...sa_db import Base
+
+
+class AcquisitionStatus:
+    PENDING = 'PENDING'
+    RUNNING = 'RUNNING'
+    COMPLETED = 'COMPLETED'
+    FAILED = 'FAILED'
 
 
 class Acquisition(Base):
@@ -56,6 +68,12 @@ class Acquisition(Base):
     scenario: Mapped[Scenario] = relationship()
     calibration: Mapped[Acquisition | None] = relationship()
     arms_position: Mapped[ArmsPosition] = relationship()
+    photos: Mapped[list['AcquisitionPhoto']] = relationship(
+        'AcquisitionPhoto',
+        back_populates='acquisition',
+        cascade='all, delete-orphan',
+        order_by='AcquisitionPhoto.id',
+    )
 
     def __repr__(self) -> str:
         return (

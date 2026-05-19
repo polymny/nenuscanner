@@ -38,6 +38,7 @@ def init_db() -> None:
     # Import models so they register on Base.metadata before create_all.
     from .app.models import (
         acquisition,  # noqa: F401
+        acquisition_photo,  # noqa: F401
         arms_position,  # noqa: F401
         artifact,  # noqa: F401
         scenario,  # noqa: F401
