@@ -4,17 +4,17 @@ import { XCircle } from 'lucide-react';
 import type { UpsertScenarioPayload } from '@/schemas/scenario.schemas';
 import { FormLabel } from '@/components/ui/form';
 import { Button } from '@/components/ui/button';
-import { createLogSpacedValues, formatNumberAsFractionOrDecimal } from '@/lib/utils';
+import { SHUTTER_SPEED_REFERENCE_VALUE, SHUTTER_SPEED_VALUES } from '@/lib/shutter-speed-utils';
 import { SliderWithLabels } from '@/components/ui/slider-with-labels';
 import { BadgeWithAction } from '@/components/ui/badge-with-action';
+import { formatNumberAsFractionOrDecimal } from '@/lib/utils';
 
 const ShutterSpeedsFormSection = () => {
-  const shutterSpeedValues = useMemo(() => createLogSpacedValues(1 / 100, 100, 50), [createLogSpacedValues]);
-  const [shutterSpeedIndex, setShutterSpeedIndex] = useState(0);
-  const selectedShutterSpeed = useMemo(
-    () => shutterSpeedValues[shutterSpeedIndex],
-    [shutterSpeedValues, shutterSpeedIndex]
+  const [shutterSpeedIndex, setShutterSpeedIndex] = useState(
+    SHUTTER_SPEED_VALUES.indexOf(SHUTTER_SPEED_REFERENCE_VALUE)
   );
+
+  const selectedShutterSpeed = useMemo(() => SHUTTER_SPEED_VALUES[shutterSpeedIndex], [shutterSpeedIndex]);
 
   const form = useFormContext<UpsertScenarioPayload>();
   const shutterSpeedsWatch = useWatch({
@@ -31,10 +31,10 @@ const ShutterSpeedsFormSection = () => {
         <div className="flex items-start gap-4">
           <SliderWithLabels
             wrapperClassName="flex-1"
-            minLabel={formatNumberAsFractionOrDecimal(shutterSpeedValues[0])}
-            maxLabel={formatNumberAsFractionOrDecimal(shutterSpeedValues[shutterSpeedValues.length - 1])}
+            minLabel={formatNumberAsFractionOrDecimal(SHUTTER_SPEED_VALUES[0])}
+            maxLabel={formatNumberAsFractionOrDecimal(SHUTTER_SPEED_VALUES[SHUTTER_SPEED_VALUES.length - 1])}
             currentLabel={formatNumberAsFractionOrDecimal(selectedShutterSpeed)}
-            max={shutterSpeedValues.length - 1}
+            max={SHUTTER_SPEED_VALUES.length - 1}
             min={0}
             step={1}
             value={[shutterSpeedIndex]}

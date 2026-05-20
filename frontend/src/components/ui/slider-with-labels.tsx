@@ -19,7 +19,7 @@ export function SliderWithLabels({
     <div className={cn('flex flex-col gap-2', wrapperClassName)}>
       <div className="flex items-center justify-between text-xs text-gray-500">
         <div>{minLabel}</div>
-        <div className="font-medium text-gray-700">{currentLabel}</div>
+        <div className="-ml-2 font-medium text-gray-700">{currentLabel}</div> {/* -ml-2 to center the current label */}
         <div>{maxLabel}</div>
       </div>
       <Slider {...props} />

@@ -7,7 +7,7 @@ export function cn(...inputs: Array<ClassValue>) {
 }
 
 export const formatNumberAsFractionOrDecimal = (value: number) => {
-  if (value < 1) {
+  if (value <= 1) {
     const denom = Math.max(1, Math.round(1 / value));
     return `1/${denom}`;
   }

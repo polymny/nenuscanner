@@ -10,6 +10,7 @@ import { upsertScenarioSchema } from '@/schemas/scenario.schemas';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { SHUTTER_SPEED_REFERENCE_VALUE } from '@/lib/shutter-speed-utils';
 import { SliderWithLabels } from '@/components/ui/slider-with-labels';
 import { useUpsertScenario } from '@/api/mutations/scenario.mutations';
 import { useGetScenarios } from '@/api/queries/scenario.queries';
@@ -40,7 +41,7 @@ const UpsertScenarioForm = ({ mode, scenarioId }: UpsertScenarioFormProps) => {
       id: existingScenario?.id ?? undefined,
       leds: existingScenario?.leds ?? [],
       rotationsCount: existingScenario?.rotationsCount ?? 0,
-      shutterSpeeds: existingScenario?.shutterSpeeds ?? [],
+      shutterSpeeds: existingScenario?.shutterSpeeds ?? (mode === 'create' ? [SHUTTER_SPEED_REFERENCE_VALUE] : []),
     },
     mode: 'onChange',
   });
