@@ -33,6 +33,7 @@ class AcquisitionReadSchema(Schema):
     isCalibration = fields.Boolean(required=True)
     createdAt = fields.DateTime(required=True)
     updatedAt = fields.DateTime(required=True)
+    thumbnail = fields.String(required=True, allow_none=True)
 
 
 class AcquisitionPhotoReadSchema(Schema):
@@ -40,12 +41,12 @@ class AcquisitionPhotoReadSchema(Schema):
         ordered = True
 
     id = fields.Integer(required=True)
-    path = fields.String(required=True)
     imageUrl = fields.String(required=True)
     acquisitionId = fields.Integer(required=True)
-    scenarioRotationId = fields.Integer(required=True, allow_none=True)
-    scenarioShutterSpeedId = fields.Integer(required=True, allow_none=True)
-    scenarioLedId = fields.Integer(required=True, allow_none=True)
+    rotationRadians = fields.Float(required=True, allow_none=True)
+    ledValue = fields.String(required=True, allow_none=True)
+    ledPower = fields.Float(required=True, allow_none=True)
+    shutterSpeedRelative = fields.Float(required=True, allow_none=True)
 
 
 class AcquisitionDetailSchema(AcquisitionReadSchema):

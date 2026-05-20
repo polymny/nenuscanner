@@ -13,6 +13,9 @@ from ..models.acquisition import Acquisition, AcquisitionStatus
 from ..models.artifact import Artifact
 from ..models.scenario import Scenario
 from ..services.acquisition_service import (
+    acquisition_photos_load_options,
+    acquisition_thumbnail_url,
+    delete_acquisition_photos,
     delete_pending_acquisitions,
     get_acquisition_with_photos,
     photo_path_to_url,
@@ -28,14 +31,17 @@ DEFAULT_CAMERA_VALUE = 1.0
 
 
 def _photo_to_dto(photo) -> dict:
+    rotation = photo.scenario_rotation
+    led = photo.scenario_led
+    shutter_speed = photo.scenario_shutter_speed
     return {
         'id': photo.id,
-        'path': photo.path,
         'imageUrl': photo_path_to_url(photo.path),
         'acquisitionId': photo.acquisition_id,
-        'scenarioRotationId': photo.scenario_rotation_id,
-        'scenarioShutterSpeedId': photo.scenario_shutter_speed_id,
-        'scenarioLedId': photo.scenario_led_id,
+        'rotationRadians': rotation.radians_value if rotation is not None else None,
+        'ledValue': led.led_value if led is not None else None,
+        'ledPower': led.power if led is not None else None,
+        'shutterSpeedRelative': shutter_speed.relative_value if shutter_speed is not None else None,
     }
 
 
@@ -43,6 +49,7 @@ def _to_dto(row: Acquisition, *, include_photos: bool = False) -> dict:
     payload = {
         'id': row.id,
         'name': row.name,
+        'thumbnail': acquisition_thumbnail_url(row.photos),
         'artifactId': row.artifact_id,
         'scenarioId': row.scenario_id,
         'calibrationId': row.calibration_id,
@@ -73,6 +80,7 @@ class AcquisitionController(MethodView):
 
         rows = (
             db_session.query(Acquisition)
+            .options(*acquisition_photos_load_options())
             .filter(Acquisition.artifact_id == artifact_id)
             .order_by(Acquisition.id.asc())
             .all()
@@ -143,6 +151,7 @@ class AcquisitionByIdController(MethodView):
         acquisition = db_session.get(Acquisition, acquisition_id)
         if acquisition is None:
             abort(404, message='acquisition-not-found')
+        delete_acquisition_photos(db_session, acquisition_id)
         db_session.delete(acquisition)
         db_session.commit()
 

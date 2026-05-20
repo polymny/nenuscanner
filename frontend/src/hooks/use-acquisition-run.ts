@@ -1,6 +1,6 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import type { AcquisitionStatus } from '@/types/acquisition.types';
+import type { AcquisitionStatus, ScenarioProgressEvent } from '@/types/acquisition.types';
 import {
   acquisitionRunEventsUrl,
   acquisitionsKeyFactory,
@@ -8,24 +8,13 @@ import {
   toAbsoluteImageUrl,
 } from '@/api/queries/acquisition.queries';
 
-interface PhotoReadyEvent {
-  step: number;
-  total: number;
-  imageUrl: string;
-}
-
-interface CompletedEvent {
-  images: Array<string>;
-  total: number;
-}
-
 const jobStorageKey = (acquisitionId: number) => `acquisition-run-job:${acquisitionId}`;
 
 export function useAcquisitionRun(acquisitionId: number, status?: AcquisitionStatus) {
   const queryClient = useQueryClient();
   const eventSourceRef = useRef<EventSource | null>(null);
   const completedRef = useRef(false);
-  const [progress, setProgress] = useState({ step: 0, total: 10 });
+  const [progress, setProgress] = useState<ScenarioProgressEvent | null>(null);
   const [lastImageUrl, setLastImageUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -47,28 +36,22 @@ export function useAcquisitionRun(acquisitionId: number, status?: AcquisitionSta
       eventSourceRef.current = es;
 
       es.addEventListener('started', (event) => {
-        const data = JSON.parse(event.data) as { total: number };
-        setProgress((prev) => ({ step: prev.step, total: data.total }));
+        const data = JSON.parse(event.data) as ScenarioProgressEvent;
+        setProgress(data);
         void queryClient.invalidateQueries({ queryKey: acquisitionsKeyFactory.byId(acquisitionId) });
       });
 
       es.addEventListener('photo_ready', (event) => {
-        const data = JSON.parse(event.data) as PhotoReadyEvent;
-        setProgress({ step: data.step, total: data.total });
-        setLastImageUrl(toAbsoluteImageUrl(data.imageUrl));
-        void queryClient.invalidateQueries({ queryKey: acquisitionsKeyFactory.byId(acquisitionId) });
+        const data = JSON.parse(event.data) as ScenarioProgressEvent;
+        setProgress(data);
+        if (data.imageUrl) setLastImageUrl(toAbsoluteImageUrl(data.imageUrl));
       });
 
-      es.addEventListener('completed', (event) => {
-        const data = JSON.parse(event.data) as CompletedEvent;
-        if (data.images.length > 0) {
-          setLastImageUrl(toAbsoluteImageUrl(data.images[data.images.length - 1]));
-        }
+      es.addEventListener('completed', () => {
         completedRef.current = true;
         clearStoredJob();
         closeEventSource();
         void queryClient.invalidateQueries({ queryKey: acquisitionsKeyFactory.byId(acquisitionId) });
-        void queryClient.invalidateQueries({ queryKey: acquisitionsKeyFactory.base() });
       });
 
       es.addEventListener('failed', (event) => {
@@ -102,7 +85,7 @@ export function useAcquisitionRun(acquisitionId: number, status?: AcquisitionSta
     closeEventSource();
     setError(null);
     setLastImageUrl(null);
-    setProgress({ step: 0, total: 10 });
+    setProgress(null);
 
     try {
       const { jobId } = await startAcquisitionRun(acquisitionId);
@@ -113,10 +96,5 @@ export function useAcquisitionRun(acquisitionId: number, status?: AcquisitionSta
     }
   }, [acquisitionId, closeEventSource, subscribeToJob]);
 
-  return {
-    start,
-    progress,
-    lastImageUrl,
-    error,
-  };
+  return { start, progress, lastImageUrl, error };
 }

@@ -68,9 +68,8 @@ class SseJobRegistry:
         context = SseJobContext(job)
         try:
             task(context)
-        except Exception as exc:
+        except Exception:
             job.status = 'FAILED'
-            context.emit('failed', {'message': str(exc)})
         finally:
             job.events.put(None)
 
