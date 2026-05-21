@@ -41,6 +41,7 @@ def init_db() -> None:
         acquisition_photo,  # noqa: F401
         arms_position,  # noqa: F401
         artifact,  # noqa: F401
+        profile,  # noqa: F401
         scenario,  # noqa: F401
     )
 

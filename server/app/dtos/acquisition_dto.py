@@ -25,6 +25,7 @@ class AcquisitionReadSchema(Schema):
     scenarioId = fields.Integer(required=True)
     calibrationId = fields.Integer(required=True, allow_none=True)
     armsPositionId = fields.Integer(required=True)
+    profileId = fields.Integer(required=True, allow_none=True)
     withRotationAutofocus = fields.Boolean(required=True)
     status = fields.String(required=True)
     isoValue = fields.Float(required=True)

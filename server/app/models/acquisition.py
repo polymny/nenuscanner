@@ -10,6 +10,7 @@ from .arms_position import ArmsPosition
 if TYPE_CHECKING:
     from .acquisition_photo import AcquisitionPhoto
 from .artifact import Artifact
+from .profile import Profile
 from .scenario import Scenario
 from ...sa_db import Base
 
@@ -46,6 +47,11 @@ class Acquisition(Base):
         nullable=False,
         index=True,
     )
+    profile_id: Mapped[int | None] = mapped_column(
+        ForeignKey('profile.id', ondelete='SET NULL'),
+        nullable=True,
+        index=True,
+    )
     with_rotation_autofocus: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     status: Mapped[str] = mapped_column(String(255), nullable=False)
     iso_value: Mapped[float] = mapped_column(Float, nullable=False)
@@ -68,6 +74,7 @@ class Acquisition(Base):
     scenario: Mapped[Scenario] = relationship()
     calibration: Mapped[Acquisition | None] = relationship()
     arms_position: Mapped[ArmsPosition] = relationship()
+    profile: Mapped[Profile | None] = relationship()
     photos: Mapped[list['AcquisitionPhoto']] = relationship(
         'AcquisitionPhoto',
         back_populates='acquisition',

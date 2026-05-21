@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as appRouteRouteImport } from './routes/(app)/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as appScenariosIndexRouteImport } from './routes/(app)/scenarios/index'
+import { Route as appProfilesIndexRouteImport } from './routes/(app)/profiles/index'
 import { Route as appArtifactsIndexRouteImport } from './routes/(app)/artifacts/index'
 import { Route as appScenariosCreateRouteImport } from './routes/(app)/scenarios/create'
 import { Route as appScenariosScenarioIdRouteImport } from './routes/(app)/scenarios/$scenario-id'
@@ -30,6 +31,11 @@ const IndexRoute = IndexRouteImport.update({
 const appScenariosIndexRoute = appScenariosIndexRouteImport.update({
   id: '/scenarios/',
   path: '/scenarios/',
+  getParentRoute: () => appRouteRoute,
+} as any)
+const appProfilesIndexRoute = appProfilesIndexRouteImport.update({
+  id: '/profiles/',
+  path: '/profiles/',
   getParentRoute: () => appRouteRoute,
 } as any)
 const appArtifactsIndexRoute = appArtifactsIndexRouteImport.update({
@@ -65,6 +71,7 @@ export interface FileRoutesByFullPath {
   '/scenarios/$scenario-id': typeof appScenariosScenarioIdRoute
   '/scenarios/create': typeof appScenariosCreateRoute
   '/artifacts/': typeof appArtifactsIndexRoute
+  '/profiles/': typeof appProfilesIndexRoute
   '/scenarios/': typeof appScenariosIndexRoute
   '/acquisitions/$acquisition-id/': typeof appAcquisitionsAcquisitionIdIndexRoute
   '/artifacts/$artifact-id/': typeof appArtifactsArtifactIdIndexRoute
@@ -74,6 +81,7 @@ export interface FileRoutesByTo {
   '/scenarios/$scenario-id': typeof appScenariosScenarioIdRoute
   '/scenarios/create': typeof appScenariosCreateRoute
   '/artifacts': typeof appArtifactsIndexRoute
+  '/profiles': typeof appProfilesIndexRoute
   '/scenarios': typeof appScenariosIndexRoute
   '/acquisitions/$acquisition-id': typeof appAcquisitionsAcquisitionIdIndexRoute
   '/artifacts/$artifact-id': typeof appArtifactsArtifactIdIndexRoute
@@ -85,6 +93,7 @@ export interface FileRoutesById {
   '/(app)/scenarios/$scenario-id': typeof appScenariosScenarioIdRoute
   '/(app)/scenarios/create': typeof appScenariosCreateRoute
   '/(app)/artifacts/': typeof appArtifactsIndexRoute
+  '/(app)/profiles/': typeof appProfilesIndexRoute
   '/(app)/scenarios/': typeof appScenariosIndexRoute
   '/(app)/acquisitions/$acquisition-id/': typeof appAcquisitionsAcquisitionIdIndexRoute
   '/(app)/artifacts/$artifact-id/': typeof appArtifactsArtifactIdIndexRoute
@@ -96,6 +105,7 @@ export interface FileRouteTypes {
     | '/scenarios/$scenario-id'
     | '/scenarios/create'
     | '/artifacts/'
+    | '/profiles/'
     | '/scenarios/'
     | '/acquisitions/$acquisition-id/'
     | '/artifacts/$artifact-id/'
@@ -105,6 +115,7 @@ export interface FileRouteTypes {
     | '/scenarios/$scenario-id'
     | '/scenarios/create'
     | '/artifacts'
+    | '/profiles'
     | '/scenarios'
     | '/acquisitions/$acquisition-id'
     | '/artifacts/$artifact-id'
@@ -115,6 +126,7 @@ export interface FileRouteTypes {
     | '/(app)/scenarios/$scenario-id'
     | '/(app)/scenarios/create'
     | '/(app)/artifacts/'
+    | '/(app)/profiles/'
     | '/(app)/scenarios/'
     | '/(app)/acquisitions/$acquisition-id/'
     | '/(app)/artifacts/$artifact-id/'
@@ -146,6 +158,13 @@ declare module '@tanstack/react-router' {
       path: '/scenarios'
       fullPath: '/scenarios/'
       preLoaderRoute: typeof appScenariosIndexRouteImport
+      parentRoute: typeof appRouteRoute
+    }
+    '/(app)/profiles/': {
+      id: '/(app)/profiles/'
+      path: '/profiles'
+      fullPath: '/profiles/'
+      preLoaderRoute: typeof appProfilesIndexRouteImport
       parentRoute: typeof appRouteRoute
     }
     '/(app)/artifacts/': {
@@ -190,6 +209,7 @@ interface appRouteRouteChildren {
   appScenariosScenarioIdRoute: typeof appScenariosScenarioIdRoute
   appScenariosCreateRoute: typeof appScenariosCreateRoute
   appArtifactsIndexRoute: typeof appArtifactsIndexRoute
+  appProfilesIndexRoute: typeof appProfilesIndexRoute
   appScenariosIndexRoute: typeof appScenariosIndexRoute
   appAcquisitionsAcquisitionIdIndexRoute: typeof appAcquisitionsAcquisitionIdIndexRoute
   appArtifactsArtifactIdIndexRoute: typeof appArtifactsArtifactIdIndexRoute
@@ -199,6 +219,7 @@ const appRouteRouteChildren: appRouteRouteChildren = {
   appScenariosScenarioIdRoute: appScenariosScenarioIdRoute,
   appScenariosCreateRoute: appScenariosCreateRoute,
   appArtifactsIndexRoute: appArtifactsIndexRoute,
+  appProfilesIndexRoute: appProfilesIndexRoute,
   appScenariosIndexRoute: appScenariosIndexRoute,
   appAcquisitionsAcquisitionIdIndexRoute:
     appAcquisitionsAcquisitionIdIndexRoute,

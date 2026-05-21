@@ -22,6 +22,7 @@ from ..services.acquisition_service import (
     run_acquisition,
 )
 from ..services.arms_position_service import get_last_arms_position
+from ..services.profile_service import get_first_active_profile
 from ..services.sse_job_runner import sse_job_registry
 from ...sa_db import db_session
 
@@ -54,6 +55,7 @@ def _to_dto(row: Acquisition, *, include_photos: bool = False) -> dict:
         'scenarioId': row.scenario_id,
         'calibrationId': row.calibration_id,
         'armsPositionId': row.arms_position_id,
+        'profileId': row.profile_id,
         'withRotationAutofocus': row.with_rotation_autofocus,
         'status': row.status,
         'isoValue': row.iso_value,
@@ -108,6 +110,7 @@ class AcquisitionController(MethodView):
             abort(404, message='calibration-not-found')
 
         arms_position = get_last_arms_position()
+        active_profile = get_first_active_profile(db_session)
 
         delete_pending_acquisitions(
             db_session,
@@ -122,6 +125,7 @@ class AcquisitionController(MethodView):
             scenario_id=scenario_id,
             calibration_id=calibration_id,
             arms_position_id=arms_position.id,
+            profile_id=active_profile.id if active_profile is not None else None,
             with_rotation_autofocus=payload['withRotationAutofocus'],
             status=AcquisitionStatus.PENDING,
             iso_value=DEFAULT_CAMERA_VALUE,
