@@ -6,7 +6,7 @@ const ArmsPositionWidget = () => {
   const { data: armsPosition } = useGetLastArmsPosition();
   const [openIncreaseArmsPositionDialog, setOpenIncreaseArmsPositionDialog] = useState(false);
   return (
-    <div className="flex min-h-[32px] items-center rounded-lg">
+    <div className="flex h-[32px] items-center rounded-lg">
       <div className="flex h-full min-w-[70px] items-center justify-center gap-1 rounded-l-lg bg-gray-200 p-1 text-lg">
         <span>{armsPosition?.emojiLeft}</span>
         <span>{armsPosition?.emojiRight}</span>
