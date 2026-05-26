@@ -1,7 +1,18 @@
 import json
 import math
 import subprocess
+import threading
+import time
 from collections.abc import Callable
+from pathlib import Path
+
+# Nikon Z : le buffer liveview renvoie parfois d'anciennes trames après un réglage ou un mouvement.
+# Voir camera.py, gphoto2 #60 (--capture-movie) et libgphoto2 #846 (file d'événements PTP).
+PREVIEW_FLUSH_AFTER_SETTING = 2
+PREVIEW_FLUSH_FRAMES = 2
+PREVIEW_FLUSH_SLEEP_SEC = 0.05
+
+_gphoto2_lock = threading.Lock()
 
 
 def _parse_iso_label(label: str) -> float:
@@ -96,22 +107,24 @@ def _find_choice_index(config: dict, value: float, parse_label: Callable[[str], 
 
 
 def _run_gphoto2_get_config(config_name: str) -> str:
-    result = subprocess.run(
-        ['gphoto2', '--get-config', config_name],
-        capture_output=True,
-        encoding='utf-8',
-        check=False,
-    )
+    with _gphoto2_lock:
+        result = subprocess.run(
+            ['gphoto2', '--get-config', config_name],
+            capture_output=True,
+            encoding='utf-8',
+            check=False,
+        )
     return result.stdout or ''
 
 
 def _run_gphoto2_set_config(config_name: str, value: str) -> None:
-    subprocess.run(
-        ['gphoto2', '--set-config', f'{config_name}={value}'],
-        capture_output=True,
-        encoding='utf-8',
-        check=False,
-    )
+    with _gphoto2_lock:
+        subprocess.run(
+            ['gphoto2', '--set-config', f'{config_name}={value}'],
+            capture_output=True,
+            encoding='utf-8',
+            check=False,
+        )
 
 
 def _get_config(config_name: str) -> dict:
@@ -155,7 +168,51 @@ def set_camera_setting(setting: str, value: float) -> None:
         raise ValueError('invalid-camera-setting-value')
 
     _run_gphoto2_set_config(config_name, str(choice_index))
+    _flush_preview_buffer()
 
 
 def trigger_autofocus() -> None:
     _run_gphoto2_set_config('autofocusdrive', '1')
+    _flush_preview_buffer()
+
+
+def _capture_preview_bytes() -> bytes:
+    """Lit une frame liveview ; --capture-movie=0 est plus fiable que --capture-preview sur Nikon Z."""
+    commands = (
+        ['gphoto2', '--capture-movie=0', '--stdout', '--force-overwrite'],
+        ['gphoto2', '--capture-preview', '--stdout', '--force-overwrite'],
+    )
+    last_error = ''
+    for command in commands:
+        result = subprocess.run(command, capture_output=True, check=False)
+        if result.returncode == 0 and result.stdout:
+            return result.stdout
+        last_error = (result.stderr or b'').decode('utf-8', errors='replace').strip()
+
+    raise RuntimeError(last_error or 'capture-preview-failed')
+
+
+def _flush_preview_buffer() -> None:
+    """Jette les trames liveview en cache (après changement de réglage, autofocus, etc.)."""
+    with _gphoto2_lock:
+        for index in range(PREVIEW_FLUSH_AFTER_SETTING):
+            _capture_preview_bytes()
+            if index + 1 < PREVIEW_FLUSH_AFTER_SETTING:
+                time.sleep(PREVIEW_FLUSH_SLEEP_SEC)
+
+
+def capture_preview() -> str:
+    with _gphoto2_lock:
+        data = b''
+        for index in range(PREVIEW_FLUSH_FRAMES):
+            data = _capture_preview_bytes()
+            if index + 1 < PREVIEW_FLUSH_FRAMES:
+                time.sleep(PREVIEW_FLUSH_SLEEP_SEC)
+
+    if not data:
+        raise RuntimeError('capture-preview-empty')
+
+    PREVIEW_PATH = '/tmp/camera-preview.jpg'
+    preview_path = Path(PREVIEW_PATH)
+    preview_path.write_bytes(data)
+    return PREVIEW_PATH

@@ -100,3 +100,8 @@ def send_static(path):
 @app.route('/data/<path:path>')
 def send_data(path):
     return send_from_directory(config.DATA_DIR, path)
+
+
+@app.route('/tmp/<path:path>')
+def send_tmp(path):
+    return send_from_directory('/tmp', path)
