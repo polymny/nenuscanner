@@ -24,11 +24,11 @@ const AppNavLinks = memo(function AppNavLinks({ pathname }: AppNavbarProps) {
           Scénarios
         </span>
       </Link>
-      <Link to="/artifacts">
+      <Link to="/camera-settings">
         <span
           className={cn(
             'rounded-sm px-4 py-2 text-lg',
-            pathname.startsWith('/camera') ? 'bg-gray-100 text-gray-700' : 'bg-transparent text-white'
+            pathname.startsWith('/camera-settings') ? 'bg-gray-100 text-gray-700' : 'bg-transparent text-white'
           )}
         >
           Caméra
@@ -38,7 +38,7 @@ const AppNavLinks = memo(function AppNavLinks({ pathname }: AppNavbarProps) {
         <span
           className={cn(
             'rounded-sm px-4 py-2 text-lg',
-            pathname.startsWith('/camera') ? 'bg-gray-100 text-gray-700' : 'bg-transparent text-white'
+            pathname.startsWith('/leds') ? 'bg-gray-100 text-gray-700' : 'bg-transparent text-white'
           )}
         >
           Leds

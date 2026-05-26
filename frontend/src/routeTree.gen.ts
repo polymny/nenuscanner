@@ -13,6 +13,7 @@ import { Route as appRouteRouteImport } from './routes/(app)/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as appScenariosIndexRouteImport } from './routes/(app)/scenarios/index'
 import { Route as appProfilesIndexRouteImport } from './routes/(app)/profiles/index'
+import { Route as appCameraSettingsIndexRouteImport } from './routes/(app)/camera-settings/index'
 import { Route as appArtifactsIndexRouteImport } from './routes/(app)/artifacts/index'
 import { Route as appScenariosCreateRouteImport } from './routes/(app)/scenarios/create'
 import { Route as appScenariosScenarioIdRouteImport } from './routes/(app)/scenarios/$scenario-id'
@@ -36,6 +37,11 @@ const appScenariosIndexRoute = appScenariosIndexRouteImport.update({
 const appProfilesIndexRoute = appProfilesIndexRouteImport.update({
   id: '/profiles/',
   path: '/profiles/',
+  getParentRoute: () => appRouteRoute,
+} as any)
+const appCameraSettingsIndexRoute = appCameraSettingsIndexRouteImport.update({
+  id: '/camera-settings/',
+  path: '/camera-settings/',
   getParentRoute: () => appRouteRoute,
 } as any)
 const appArtifactsIndexRoute = appArtifactsIndexRouteImport.update({
@@ -71,6 +77,7 @@ export interface FileRoutesByFullPath {
   '/scenarios/$scenario-id': typeof appScenariosScenarioIdRoute
   '/scenarios/create': typeof appScenariosCreateRoute
   '/artifacts/': typeof appArtifactsIndexRoute
+  '/camera-settings/': typeof appCameraSettingsIndexRoute
   '/profiles/': typeof appProfilesIndexRoute
   '/scenarios/': typeof appScenariosIndexRoute
   '/acquisitions/$acquisition-id/': typeof appAcquisitionsAcquisitionIdIndexRoute
@@ -81,6 +88,7 @@ export interface FileRoutesByTo {
   '/scenarios/$scenario-id': typeof appScenariosScenarioIdRoute
   '/scenarios/create': typeof appScenariosCreateRoute
   '/artifacts': typeof appArtifactsIndexRoute
+  '/camera-settings': typeof appCameraSettingsIndexRoute
   '/profiles': typeof appProfilesIndexRoute
   '/scenarios': typeof appScenariosIndexRoute
   '/acquisitions/$acquisition-id': typeof appAcquisitionsAcquisitionIdIndexRoute
@@ -93,6 +101,7 @@ export interface FileRoutesById {
   '/(app)/scenarios/$scenario-id': typeof appScenariosScenarioIdRoute
   '/(app)/scenarios/create': typeof appScenariosCreateRoute
   '/(app)/artifacts/': typeof appArtifactsIndexRoute
+  '/(app)/camera-settings/': typeof appCameraSettingsIndexRoute
   '/(app)/profiles/': typeof appProfilesIndexRoute
   '/(app)/scenarios/': typeof appScenariosIndexRoute
   '/(app)/acquisitions/$acquisition-id/': typeof appAcquisitionsAcquisitionIdIndexRoute
@@ -105,6 +114,7 @@ export interface FileRouteTypes {
     | '/scenarios/$scenario-id'
     | '/scenarios/create'
     | '/artifacts/'
+    | '/camera-settings/'
     | '/profiles/'
     | '/scenarios/'
     | '/acquisitions/$acquisition-id/'
@@ -115,6 +125,7 @@ export interface FileRouteTypes {
     | '/scenarios/$scenario-id'
     | '/scenarios/create'
     | '/artifacts'
+    | '/camera-settings'
     | '/profiles'
     | '/scenarios'
     | '/acquisitions/$acquisition-id'
@@ -126,6 +137,7 @@ export interface FileRouteTypes {
     | '/(app)/scenarios/$scenario-id'
     | '/(app)/scenarios/create'
     | '/(app)/artifacts/'
+    | '/(app)/camera-settings/'
     | '/(app)/profiles/'
     | '/(app)/scenarios/'
     | '/(app)/acquisitions/$acquisition-id/'
@@ -165,6 +177,13 @@ declare module '@tanstack/react-router' {
       path: '/profiles'
       fullPath: '/profiles/'
       preLoaderRoute: typeof appProfilesIndexRouteImport
+      parentRoute: typeof appRouteRoute
+    }
+    '/(app)/camera-settings/': {
+      id: '/(app)/camera-settings/'
+      path: '/camera-settings'
+      fullPath: '/camera-settings/'
+      preLoaderRoute: typeof appCameraSettingsIndexRouteImport
       parentRoute: typeof appRouteRoute
     }
     '/(app)/artifacts/': {
@@ -209,6 +228,7 @@ interface appRouteRouteChildren {
   appScenariosScenarioIdRoute: typeof appScenariosScenarioIdRoute
   appScenariosCreateRoute: typeof appScenariosCreateRoute
   appArtifactsIndexRoute: typeof appArtifactsIndexRoute
+  appCameraSettingsIndexRoute: typeof appCameraSettingsIndexRoute
   appProfilesIndexRoute: typeof appProfilesIndexRoute
   appScenariosIndexRoute: typeof appScenariosIndexRoute
   appAcquisitionsAcquisitionIdIndexRoute: typeof appAcquisitionsAcquisitionIdIndexRoute
@@ -219,6 +239,7 @@ const appRouteRouteChildren: appRouteRouteChildren = {
   appScenariosScenarioIdRoute: appScenariosScenarioIdRoute,
   appScenariosCreateRoute: appScenariosCreateRoute,
   appArtifactsIndexRoute: appArtifactsIndexRoute,
+  appCameraSettingsIndexRoute: appCameraSettingsIndexRoute,
   appProfilesIndexRoute: appProfilesIndexRoute,
   appScenariosIndexRoute: appScenariosIndexRoute,
   appAcquisitionsAcquisitionIdIndexRoute:
