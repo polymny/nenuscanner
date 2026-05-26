@@ -1,7 +1,19 @@
+import type { VariantProps } from 'class-variance-authority';
 import type { LedValue } from './led.types';
+import type { badgeVariants } from '@/components/ui/badge';
 
 export const ACQUISITION_STATUSES = ['PENDING', 'RUNNING', 'COMPLETED', 'FAILED'] as const;
 export type AcquisitionStatus = (typeof ACQUISITION_STATUSES)[number];
+
+export const acquisitionStatusBadges: Record<
+  AcquisitionStatus,
+  { badgeVariant: VariantProps<typeof badgeVariants>; label: string }
+> = {
+  FAILED: { badgeVariant: { variant: 'error' }, label: 'Échoué' },
+  RUNNING: { badgeVariant: { variant: 'warning' }, label: 'En cours' },
+  PENDING: { badgeVariant: { variant: 'default' }, label: 'En attente' },
+  COMPLETED: { badgeVariant: { variant: 'success' }, label: 'Terminée' },
+};
 
 export interface Acquisition {
   id: number;

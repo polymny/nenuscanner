@@ -2,28 +2,16 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { Camera, Loader2 } from 'lucide-react';
 import AcquisitionPhotoCard from '../-components/acquisition-photo-card';
 import ScenarioProgressWidget from '../-components/scenario-progress-widget';
-import type { VariantProps } from 'class-variance-authority';
-import type { AcquisitionStatus } from '@/types/acquisition.types';
-import type { badgeVariants } from '@/components/ui/badge';
 import { Badge } from '@/components/ui/badge';
 import { useGetAcquisitionById } from '@/api/queries/acquisition.queries';
 import CustomBreadcrumb from '@/components/ui/custom-breadcrumb';
 import { Button } from '@/components/ui/button';
 import { useAcquisitionRun } from '@/hooks/use-acquisition-run';
+import { acquisitionStatusBadges } from '@/types/acquisition.types';
 
 export const Route = createFileRoute('/(app)/acquisitions/$acquisition-id/')({
   component: RouteComponent,
 });
-
-export const acquisitionStatusBadges: Record<
-  AcquisitionStatus,
-  { badgeVariant: VariantProps<typeof badgeVariants>; label: string }
-> = {
-  FAILED: { badgeVariant: { variant: 'error' }, label: 'Échoué' },
-  RUNNING: { badgeVariant: { variant: 'warning' }, label: 'En cours' },
-  PENDING: { badgeVariant: { variant: 'default' }, label: 'En attente' },
-  COMPLETED: { badgeVariant: { variant: 'success' }, label: 'Terminée' },
-};
 
 function RouteComponent() {
   const navigate = useNavigate();
@@ -74,11 +62,7 @@ function RouteComponent() {
               {progress && <ScenarioProgressWidget progress={progress} />}
               <div className="absolute inset-0 flex flex-col">
                 {lastImageUrl ? (
-                  <img
-                    alt={`Photo ${progress?.step ?? 0}`}
-                    className="size-full object-contain"
-                    src={lastImageUrl}
-                  />
+                  <img alt={`Photo ${progress?.step ?? 0}`} className="size-full object-contain" src={lastImageUrl} />
                 ) : (
                   <div className="flex flex-1 flex-col items-center justify-center gap-4 text-gray-500">
                     <Loader2 className="size-10 animate-spin" />

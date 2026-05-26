@@ -3,11 +3,12 @@ import { useMemo, useState } from 'react';
 import { Camera } from 'lucide-react';
 import { toast } from 'sonner';
 import CreateAcquisitionDialog from '../-components/create-acquisition/create-acquisition-dialog';
+import AcquisitionCard from '../../acquisitions/-components/acquisition-card';
 import { useGetArtifacts } from '@/api/queries/artifact.queries';
 import CustomBreadcrumb from '@/components/ui/custom-breadcrumb';
 import { Button } from '@/components/ui/button';
 import { useGetAcquisitionsByArtifactId } from '@/api/queries/acquisition.queries';
-import { ComponentCard, ComponentCardSkeleton } from '@/components/component-card';
+import { ComponentCardSkeleton } from '@/components/component-card';
 import { cn } from '@/lib/utils';
 import { useDeleteAcquisition } from '@/api/mutations/acquisition.mutations';
 import ConfirmActionDialog from '@/components/confirm-action-dialog';
@@ -81,12 +82,12 @@ function RouteComponent() {
               <Button onClick={() => setOpenCreateAcquisitionDialog(true)}>Créer une acquisition</Button>
             </div>
           ) : (
-            <div className="grid grid-cols-3 gap-5">
+            <div className="grid grid-cols-4 gap-5">
               {acquisitions.map((acquisition) => (
-                <ComponentCard
-                  name={acquisition.name}
+                <AcquisitionCard
+                  acquisition={acquisition}
                   key={acquisition.id}
-                  onClickPath={`/acquisitions/${acquisition.id}`}
+                  onClick={() => navigate({ to: `/acquisitions/${acquisition.id}` })}
                   onDelete={() => {
                     setSelectedAcquisitionId(acquisition.id);
                     setOpenDeleteDialog(true);
