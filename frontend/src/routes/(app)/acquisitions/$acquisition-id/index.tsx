@@ -19,12 +19,7 @@ function RouteComponent() {
   const acquisitionId = Number(acquisitionIdParam);
 
   const { data: acquisition, isPending, isError } = useGetAcquisitionById(acquisitionId);
-  const {
-    start,
-    progress,
-    lastImageUrl,
-    error: runError,
-  } = useAcquisitionRun(acquisitionId, acquisition?.artifactId, acquisition?.status);
+  const { start, progress, lastImageUrl, error: runError } = useAcquisitionRun(acquisitionId, acquisition?.status);
 
   const progressPercent = progress && progress.total > 0 ? Math.round((progress.step / progress.total) * 100) : 0;
 

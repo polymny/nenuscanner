@@ -28,7 +28,6 @@ const CreateAcquisitionDialog = ({ open, setOpen, artifactId }: CreateAcquisitio
     onSuccess: (data, { name }) => {
       toast.success(`${name} a bien été créée.`);
       void navigate({ to: `/acquisitions/${data.id}` });
-      form.reset();
     },
   });
 

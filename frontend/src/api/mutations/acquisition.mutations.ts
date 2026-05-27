@@ -22,7 +22,7 @@ export const useCreateAcquisition = (
       return await createAcquisition(payload);
     },
     onSuccess: (data, vars, result, ctx) => {
-      void queryClient.invalidateQueries({ queryKey: acquisitionsKeyFactory.base() });
+      void queryClient.invalidateQueries({ queryKey: acquisitionsKeyFactory.byArtifact(vars.artifactId) });
       options?.onSuccess?.(data, vars, result, ctx);
     },
   });
@@ -44,7 +44,7 @@ export const useCreateCalibration = (
       return await createCalibration(payload);
     },
     onSuccess: (data, vars, result, ctx) => {
-      void queryClient.invalidateQueries({ queryKey: acquisitionsKeyFactory.base() });
+      void queryClient.invalidateQueries({ queryKey: acquisitionsKeyFactory.calibrationsBase() });
       options?.onSuccess?.(data, vars, result, ctx);
     },
   });

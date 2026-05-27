@@ -26,7 +26,6 @@ const CreateCalibrationDialog = ({ open, setOpen }: CreateCalibrationDialogProps
     onSuccess: (data, { name }) => {
       toast.success(`${name} a bien été créée.`);
       navigate({ to: `/acquisitions/${data.id}` });
-      form.reset();
     },
   });
 

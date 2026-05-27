@@ -10,7 +10,7 @@ import {
 
 const jobStorageKey = (acquisitionId: number) => `acquisition-run-job:${acquisitionId}`;
 
-export function useAcquisitionRun(acquisitionId: number, artifactId?: number | null, status?: AcquisitionStatus) {
+export function useAcquisitionRun(acquisitionId: number, status?: AcquisitionStatus) {
   const queryClient = useQueryClient();
   const eventSourceRef = useRef<EventSource | null>(null);
   const completedRef = useRef(false);
@@ -38,9 +38,7 @@ export function useAcquisitionRun(acquisitionId: number, artifactId?: number | n
       es.addEventListener('started', (event) => {
         const data = JSON.parse(event.data) as ScenarioProgressEvent;
         setProgress(data);
-        void queryClient.invalidateQueries({ queryKey: acquisitionsKeyFactory.byId(acquisitionId) });
-        if (artifactId) void queryClient.invalidateQueries({ queryKey: acquisitionsKeyFactory.byArtifact(artifactId) });
-        void queryClient.invalidateQueries({ queryKey: acquisitionsKeyFactory.calibrationsBase() });
+        void queryClient.invalidateQueries({ queryKey: acquisitionsKeyFactory.base() });
       });
 
       es.addEventListener('photo_ready', (event) => {
@@ -53,9 +51,7 @@ export function useAcquisitionRun(acquisitionId: number, artifactId?: number | n
         completedRef.current = true;
         clearStoredJob();
         closeEventSource();
-        void queryClient.invalidateQueries({ queryKey: acquisitionsKeyFactory.byId(acquisitionId) });
-        if (artifactId) void queryClient.invalidateQueries({ queryKey: acquisitionsKeyFactory.byArtifact(artifactId) });
-        void queryClient.invalidateQueries({ queryKey: acquisitionsKeyFactory.calibrationsBase() });
+        void queryClient.invalidateQueries({ queryKey: acquisitionsKeyFactory.base() });
       });
 
       es.addEventListener('failed', (event) => {
@@ -64,9 +60,7 @@ export function useAcquisitionRun(acquisitionId: number, artifactId?: number | n
         completedRef.current = true;
         clearStoredJob();
         closeEventSource();
-        void queryClient.invalidateQueries({ queryKey: acquisitionsKeyFactory.byId(acquisitionId) });
-        if (artifactId) void queryClient.invalidateQueries({ queryKey: acquisitionsKeyFactory.byArtifact(artifactId) });
-        void queryClient.invalidateQueries({ queryKey: acquisitionsKeyFactory.calibrationsBase() });
+        void queryClient.invalidateQueries({ queryKey: acquisitionsKeyFactory.base() });
       });
 
       es.onerror = () => {
