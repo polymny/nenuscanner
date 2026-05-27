@@ -2,10 +2,11 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Boolean, DateTime, Float, ForeignKey, String, func
+from sqlalchemy import Boolean, DateTime, ForeignKey, String, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .arms_position import ArmsPosition
+from .camera_settings import CameraSettings
 
 if TYPE_CHECKING:
     from .acquisition_photo import AcquisitionPhoto
@@ -52,11 +53,13 @@ class Acquisition(Base):
         nullable=True,
         index=True,
     )
+    camera_settings_id: Mapped[int] = mapped_column(
+        ForeignKey('camera_settings.id', ondelete='RESTRICT'),
+        nullable=False,
+        index=True,
+    )
     with_rotation_autofocus: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     status: Mapped[str] = mapped_column(String(255), nullable=False)
-    iso_value: Mapped[float] = mapped_column(Float, nullable=False)
-    absolute_shutter_speed_value: Mapped[float] = mapped_column(Float, nullable=False)
-    aperture_value: Mapped[float] = mapped_column(Float, nullable=False)
     is_calibration: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     created_at: Mapped[object] = mapped_column(
         DateTime(timezone=True),
@@ -75,6 +78,7 @@ class Acquisition(Base):
     calibration: Mapped[Acquisition | None] = relationship()
     arms_position: Mapped[ArmsPosition] = relationship()
     profile: Mapped[Profile | None] = relationship()
+    camera_settings: Mapped[CameraSettings] = relationship()
     photos: Mapped[list['AcquisitionPhoto']] = relationship(
         'AcquisitionPhoto',
         back_populates='acquisition',

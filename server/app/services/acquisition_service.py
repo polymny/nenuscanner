@@ -105,6 +105,13 @@ def delete_acquisition_photos(session: Session, acquisition_id: int) -> None:
         shutil.rmtree(photos_dir)
 
 
+def delete_acquisition(session: Session, acquisition: Acquisition) -> None:
+    delete_acquisition_photos(session, acquisition.id)
+    camera_settings = acquisition.camera_settings
+    session.delete(acquisition)
+    session.delete(camera_settings)
+
+
 def _mark_acquisition_failed(session: Session, acquisition_id: int) -> None:
     acquisition = session.get(Acquisition, acquisition_id)
     if acquisition is not None:
@@ -136,7 +143,7 @@ def delete_pending_acquisitions(
         .all()
     )
     for row in pending_rows:
-        session.delete(row)
+        delete_acquisition(session, row)
 
 
 def get_acquisition_with_photos(session: Session, acquisition_id: int) -> Acquisition | None:

@@ -6,12 +6,14 @@ from flask.views import MethodView
 from flask_smorest import Blueprint, abort
 
 from ..dtos.camera_dto import CameraSettingsSchema, CameraSettingUpdateSchema
+from ..services.camera_settings_service import persist_current_camera_settings
 from ..services.gphoto2_service import (
     capture_preview,
     get_camera_settings,
     set_camera_setting,
     trigger_autofocus,
 )
+from ...sa_db import db_session
 
 blp = Blueprint('camera', __name__, description='Camera endpoints')
 
@@ -26,11 +28,17 @@ class CameraSettingsController(MethodView):
     @blp.arguments(CameraSettingUpdateSchema)
     @blp.response(204)
     def patch(self, payload):
-        """Applique un réglage caméra (ISO, temps de pose ou ouverture)."""
+        """Applique un réglage caméra (ISO, temps de pose ou ouverture) et persiste l'état courant en DB."""
         try:
             set_camera_setting(payload['setting'], payload['value'])
+            persist_current_camera_settings(db_session)
+            db_session.commit()
         except ValueError as error:
+            db_session.rollback()
             abort(400, message=str(error))
+        except Exception:
+            db_session.rollback()
+            raise
 
 
 @blp.route('/autofocus')

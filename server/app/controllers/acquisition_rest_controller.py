@@ -17,20 +17,19 @@ from ..models.scenario import Scenario
 from ..services.acquisition_service import (
     acquisition_photos_load_options,
     acquisition_thumbnail_url,
-    delete_acquisition_photos,
+    delete_acquisition,
     delete_pending_acquisitions,
     get_acquisition_with_photos,
     photo_path_to_url,
     run_acquisition,
 )
 from ..services.arms_position_service import get_last_arms_position
+from ..services.camera_settings_service import snapshot_current_camera_settings
 from ..services.profile_service import get_first_active_profile
 from ..services.sse_job_runner import sse_job_registry
 from ...sa_db import db_session
 
 blp = Blueprint('acquisition', __name__, description='Acquisition endpoints')
-
-DEFAULT_CAMERA_VALUE = 1.0
 
 
 def _photo_to_dto(photo) -> dict:
@@ -49,6 +48,7 @@ def _photo_to_dto(photo) -> dict:
 
 
 def _to_dto(row: Acquisition, *, include_photos: bool = False) -> dict:
+    cam = row.camera_settings
     payload = {
         'id': row.id,
         'name': row.name,
@@ -60,9 +60,9 @@ def _to_dto(row: Acquisition, *, include_photos: bool = False) -> dict:
         'profileId': row.profile_id,
         'withRotationAutofocus': row.with_rotation_autofocus,
         'status': row.status,
-        'isoValue': row.iso_value,
-        'absoluteShutterSpeedValue': row.absolute_shutter_speed_value,
-        'apertureValue': row.aperture_value,
+        'isoValue': cam.iso_value,
+        'absoluteShutterSpeedValue': cam.absolute_shutter_speed_value,
+        'apertureValue': cam.aperture_value,
         'isCalibration': row.is_calibration,
         'createdAt': row.created_at,
         'updatedAt': row.updated_at,
@@ -138,6 +138,8 @@ class AcquisitionController(MethodView):
             is_calibration=False,
         )
 
+        camera_settings_snapshot = snapshot_current_camera_settings(db_session)
+
         acquisition = Acquisition(
             name=payload['name'],
             artifact_id=payload['artifactId'],
@@ -145,11 +147,9 @@ class AcquisitionController(MethodView):
             calibration_id=calibration_id,
             arms_position_id=arms_position.id,
             profile_id=active_profile.id if active_profile is not None else None,
+            camera_settings_id=camera_settings_snapshot.id,
             with_rotation_autofocus=payload['withRotationAutofocus'],
             status=AcquisitionStatus.PENDING,
-            iso_value=DEFAULT_CAMERA_VALUE,
-            absolute_shutter_speed_value=DEFAULT_CAMERA_VALUE,
-            aperture_value=DEFAULT_CAMERA_VALUE,
             is_calibration=False,
         )
         db_session.add(acquisition)
@@ -211,6 +211,8 @@ class CalibrationController(MethodView):
             is_calibration=True,
         )
 
+        camera_settings_snapshot = snapshot_current_camera_settings(db_session)
+
         calibration = Acquisition(
             name=payload['name'],
             artifact_id=None,
@@ -218,11 +220,9 @@ class CalibrationController(MethodView):
             calibration_id=None,
             arms_position_id=arms_position.id,
             profile_id=active_profile.id if active_profile is not None else None,
+            camera_settings_id=camera_settings_snapshot.id,
             with_rotation_autofocus=payload['withRotationAutofocus'],
             status=AcquisitionStatus.PENDING,
-            iso_value=DEFAULT_CAMERA_VALUE,
-            absolute_shutter_speed_value=DEFAULT_CAMERA_VALUE,
-            aperture_value=DEFAULT_CAMERA_VALUE,
             is_calibration=True,
         )
         db_session.add(calibration)
@@ -247,8 +247,7 @@ class AcquisitionByIdController(MethodView):
         acquisition = db_session.get(Acquisition, acquisition_id)
         if acquisition is None:
             abort(404, message='acquisition-not-found')
-        delete_acquisition_photos(db_session, acquisition_id)
-        db_session.delete(acquisition)
+        delete_acquisition(db_session, acquisition)
         db_session.commit()
 
 
