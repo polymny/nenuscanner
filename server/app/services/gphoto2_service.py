@@ -9,7 +9,7 @@ from pathlib import Path
 # Nikon Z : le buffer liveview renvoie parfois d'anciennes trames après un réglage ou un mouvement.
 # Voir camera.py, gphoto2 #60 (--capture-movie) et libgphoto2 #846 (file d'événements PTP).
 PREVIEW_FLUSH_AFTER_SETTING = 2
-PREVIEW_FLUSH_FRAMES = 2
+PREVIEW_FLUSH_FRAMES = 1
 PREVIEW_FLUSH_SLEEP_SEC = 0.05
 
 _gphoto2_lock = threading.Lock()
@@ -179,7 +179,7 @@ def trigger_autofocus() -> None:
 def _capture_preview_bytes() -> bytes:
     """Lit une frame liveview ; --capture-movie=0 est plus fiable que --capture-preview sur Nikon Z."""
     commands = (
-        ['gphoto2', '--capture-movie=0', '--stdout', '--force-overwrite'],
+        ['gphoto2', '--capture-movie=1', '--stdout', '--force-overwrite'],
         ['gphoto2', '--capture-preview', '--stdout', '--force-overwrite'],
     )
     last_error = ''

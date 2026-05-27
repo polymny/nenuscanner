@@ -59,7 +59,7 @@ class CameraPreviewController(MethodView):
                         'preview_ready',
                         {'path': path},
                     )
-                    time.sleep(2)
+                    time.sleep(0.1)
                 except GeneratorExit:
                     return
                 except Exception as error:
