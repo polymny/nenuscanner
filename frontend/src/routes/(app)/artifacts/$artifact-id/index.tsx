@@ -2,8 +2,7 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useMemo, useState } from 'react';
 import { Camera } from 'lucide-react';
 import { toast } from 'sonner';
-import CreateAcquisitionDialog from '../-components/create-acquisition/create-acquisition-dialog';
-import AcquisitionCard from '../../acquisitions/-components/acquisition-card';
+import CreateAcquisitionDialog from './-components/create-acquisition/create-acquisition-dialog';
 import { useGetArtifacts } from '@/api/queries/artifact.queries';
 import CustomBreadcrumb from '@/components/ui/custom-breadcrumb';
 import { Button } from '@/components/ui/button';
@@ -12,6 +11,7 @@ import { ComponentCardSkeleton } from '@/components/component-card';
 import { cn } from '@/lib/utils';
 import { useDeleteAcquisition } from '@/api/mutations/acquisition.mutations';
 import ConfirmActionDialog from '@/components/confirm-action-dialog';
+import AcquisitionCard from '@/components/acquisition/acquisition-card';
 
 export const Route = createFileRoute('/(app)/artifacts/$artifact-id/')({
   component: RouteComponent,

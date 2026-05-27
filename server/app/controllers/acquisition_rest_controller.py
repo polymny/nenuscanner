@@ -8,6 +8,8 @@ from ..dtos.acquisition_dto import (
     AcquisitionListQuerySchema,
     AcquisitionReadSchema,
     AcquisitionRunStartSchema,
+    CalibrationCreateSchema,
+    CalibrationListQuerySchema,
 )
 from ..models.acquisition import Acquisition, AcquisitionStatus
 from ..models.artifact import Artifact
@@ -83,7 +85,10 @@ class AcquisitionController(MethodView):
         rows = (
             db_session.query(Acquisition)
             .options(*acquisition_photos_load_options())
-            .filter(Acquisition.artifact_id == artifact_id)
+            .filter(
+                Acquisition.artifact_id == artifact_id,
+                Acquisition.is_calibration.is_(False),
+            )
             .order_by(Acquisition.id.asc())
             .all()
         )
@@ -105,11 +110,24 @@ class AcquisitionController(MethodView):
         if scenario is None:
             abort(404, message='scenario-not-found')
 
-        calibration_id = payload['calibrationId']
-        if calibration_id is not None and db_session.get(Acquisition, calibration_id) is None:
-            abort(404, message='calibration-not-found')
-
         arms_position = get_last_arms_position()
+
+        calibration_id = payload['calibrationId']
+        if calibration_id is not None:
+            calibration = (
+                db_session.query(Acquisition)
+                .filter(
+                    Acquisition.id == calibration_id,
+                    Acquisition.is_calibration.is_(True),
+                    Acquisition.scenario_id == scenario_id,
+                    Acquisition.arms_position_id == arms_position.id,
+                    Acquisition.status == AcquisitionStatus.COMPLETED,
+                )
+                .one_or_none()
+            )
+            if calibration is None:
+                abort(404, message='calibration-not-found')
+
         active_profile = get_first_active_profile(db_session)
 
         delete_pending_acquisitions(
@@ -117,6 +135,7 @@ class AcquisitionController(MethodView):
             artifact_id=payload['artifactId'],
             scenario_id=scenario_id,
             arms_position_id=arms_position.id,
+            is_calibration=False,
         )
 
         acquisition = Acquisition(
@@ -137,6 +156,79 @@ class AcquisitionController(MethodView):
         db_session.commit()
 
         return _to_dto(acquisition)
+
+
+@blp.route('/calibrations')
+class CalibrationController(MethodView):
+    @blp.arguments(CalibrationListQuerySchema, location='query')
+    @blp.response(200, AcquisitionReadSchema(many=True))
+    def get(self, query_args):
+        """Liste toutes les calibrations."""
+        scenario_id = query_args['scenarioId']
+        if scenario_id is not None and db_session.get(Scenario, scenario_id) is None:
+            abort(404, message='scenario-not-found')
+
+        query = (
+            db_session.query(Acquisition)
+            .options(*acquisition_photos_load_options())
+            .filter(Acquisition.is_calibration.is_(True))
+        )
+
+        if query_args['onlyCurrentArmsPosition']:
+            arms_position = get_last_arms_position()
+            query = query.filter(Acquisition.arms_position_id == arms_position.id)
+
+        if scenario_id is not None:
+            query = query.filter(Acquisition.scenario_id == scenario_id)
+
+        status = query_args['status']
+        if status is not None:
+            query = query.filter(Acquisition.status == status)
+
+        rows = query.order_by(Acquisition.id.asc()).all()
+        return [_to_dto(a) for a in rows]
+
+    @blp.arguments(CalibrationCreateSchema)
+    @blp.response(201, AcquisitionReadSchema)
+    def post(self, payload):
+        """Crée une calibration."""
+        scenario_id = payload['scenarioId']
+        if scenario_id is None:
+            abort(400, message='scenario-id-required')
+
+        scenario = db_session.get(Scenario, scenario_id)
+        if scenario is None:
+            abort(404, message='scenario-not-found')
+
+        arms_position = get_last_arms_position()
+        active_profile = get_first_active_profile(db_session)
+
+        delete_pending_acquisitions(
+            db_session,
+            artifact_id=None,
+            scenario_id=scenario_id,
+            arms_position_id=arms_position.id,
+            is_calibration=True,
+        )
+
+        calibration = Acquisition(
+            name=payload['name'],
+            artifact_id=None,
+            scenario_id=scenario_id,
+            calibration_id=None,
+            arms_position_id=arms_position.id,
+            profile_id=active_profile.id if active_profile is not None else None,
+            with_rotation_autofocus=payload['withRotationAutofocus'],
+            status=AcquisitionStatus.PENDING,
+            iso_value=DEFAULT_CAMERA_VALUE,
+            absolute_shutter_speed_value=DEFAULT_CAMERA_VALUE,
+            aperture_value=DEFAULT_CAMERA_VALUE,
+            is_calibration=True,
+        )
+        db_session.add(calibration)
+        db_session.commit()
+
+        return _to_dto(calibration)
 
 
 @blp.route('/<int:acquisition_id>')

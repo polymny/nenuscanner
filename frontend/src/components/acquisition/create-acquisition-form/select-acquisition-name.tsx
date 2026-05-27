@@ -1,7 +1,6 @@
 import { useFormContext } from 'react-hook-form';
 import type { Dispatch } from 'react';
-import type { CreateAcquisitionStep } from './create-acquisition-dialog';
-import type { CreateAcquisitionPayload } from '@/schemas/acquisition.schemas';
+import type { CreateAcquisitionPayload, CreateCalibrationPayload } from '@/schemas/acquisition.schemas';
 import { Button } from '@/components/ui/button';
 import { DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
@@ -9,16 +8,25 @@ import { Input } from '@/components/ui/input';
 
 interface SelectAcquisitionNameProps {
   setOpen: Dispatch<boolean>;
-  setCurrentStep: Dispatch<CreateAcquisitionStep>;
+  setCurrentStep: Dispatch<'name' | 'scenario' | 'calibration'>;
+  isCalibration?: boolean;
 }
 
-const SelectAcquisitionName = ({ setOpen, setCurrentStep }: SelectAcquisitionNameProps) => {
-  const form = useFormContext<CreateAcquisitionPayload>();
+const SelectAcquisitionName = ({ setOpen, setCurrentStep, isCalibration = false }: SelectAcquisitionNameProps) => {
+  const form = useFormContext<CreateAcquisitionPayload | CreateCalibrationPayload>();
+
+  const handleContinue = async () => {
+    const isValid = await form.trigger(['name']);
+    if (isValid) setCurrentStep('scenario');
+  };
+
   return (
     <>
       <DialogHeader>
-        <DialogTitle>Créer une acquisition</DialogTitle>
-        <DialogDescription>Veuillez entrer un nom pour cette nouvelle acquisition.</DialogDescription>
+        <DialogTitle>{isCalibration ? 'Créer un étalonnage' : 'Créer une acquisition'}</DialogTitle>
+        <DialogDescription>
+          Veuillez entrer un nom pour {isCalibration ? 'ce nouvel étalonnage' : 'cette nouvelle acquisition'}.
+        </DialogDescription>
       </DialogHeader>
       <div className="bg-gray-25 flex flex-col gap-3 p-6">
         <FormField
@@ -27,7 +35,16 @@ const SelectAcquisitionName = ({ setOpen, setCurrentStep }: SelectAcquisitionNam
           render={({ field }) => (
             <FormItem className="w-full">
               <FormControl>
-                <Input {...field} placeholder="Nom" />
+                <Input
+                  {...field}
+                  placeholder="Nom"
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter') {
+                      event.preventDefault();
+                      void handleContinue();
+                    }
+                  }}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -47,9 +64,8 @@ const SelectAcquisitionName = ({ setOpen, setCurrentStep }: SelectAcquisitionNam
         </Button>
         <Button
           disabled={!form.watch('name')}
-          onClick={async () => {
-            const isValid = await form.trigger(['name']);
-            if (isValid) setCurrentStep('scenario');
+          onClick={() => {
+            void handleContinue();
           }}
           size="lg"
           type="button"

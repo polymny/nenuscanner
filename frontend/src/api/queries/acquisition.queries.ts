@@ -1,6 +1,11 @@
 import { useQuery } from '@tanstack/react-query';
 import type { UseQueryResult } from '@tanstack/react-query';
-import type { Acquisition, AcquisitionDetail, AcquisitionRunStartResponse } from '@/types/acquisition.types';
+import type {
+  Acquisition,
+  AcquisitionDetail,
+  AcquisitionRunStartResponse,
+  AcquisitionStatus,
+} from '@/types/acquisition.types';
 import { client } from '@/lib/client';
 import { QUERY_STALE_TIME } from '@/lib/constants';
 import { API_URL } from '@/lib/environment';
@@ -8,8 +13,17 @@ import { API_URL } from '@/lib/environment';
 export const acquisitionsKeyFactory = {
   base: () => ['acquisition'] as const,
   byArtifact: (artifactId: number) => [...acquisitionsKeyFactory.base(), 'artifact', artifactId] as const,
+  calibrationsBase: () => [...acquisitionsKeyFactory.base(), 'calibrations'] as const,
+  calibrations: (params?: GetCalibrationsParams) =>
+    [...acquisitionsKeyFactory.base(), 'calibrations', params ?? {}] as const,
   byId: (acquisitionId: number) => [...acquisitionsKeyFactory.base(), acquisitionId] as const,
 };
+
+export interface GetCalibrationsParams {
+  onlyCurrentArmsPosition?: boolean;
+  scenarioId?: number;
+  status?: AcquisitionStatus;
+}
 
 const getAcquisitionsByArtifactId = async (artifactId: number) => {
   const response = await client.get<Array<Acquisition>>('/acquisition/', {
@@ -24,6 +38,21 @@ export const useGetAcquisitionsByArtifactId = (artifactId: number): UseQueryResu
     queryFn: () => getAcquisitionsByArtifactId(artifactId),
     staleTime: QUERY_STALE_TIME,
     enabled: Number.isFinite(artifactId) && artifactId > 0,
+  });
+};
+
+const getCalibrations = async (params?: GetCalibrationsParams) => {
+  const response = await client.get<Array<Acquisition>>('/acquisition/calibrations', {
+    params,
+  });
+  return response.data;
+};
+
+export const useGetCalibrations = (params?: GetCalibrationsParams): UseQueryResult<Array<Acquisition>> => {
+  return useQuery({
+    queryKey: acquisitionsKeyFactory.calibrations(params),
+    queryFn: () => getCalibrations(params),
+    staleTime: QUERY_STALE_TIME,
   });
 };
 

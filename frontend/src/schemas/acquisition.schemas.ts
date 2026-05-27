@@ -21,3 +21,22 @@ createAcquisitionSchema.messagesProvider = new SimpleMessagesProvider({
 });
 
 export type CreateAcquisitionPayload = Infer<typeof createAcquisitionSchema>;
+
+export const createCalibrationSchema = vine.create(
+  vine.object({
+    name: vine
+      .string()
+      .minLength(1)
+      .regex(/^[a-zA-ZÀ-ÿ0-9\s\-_()]+$/)
+      .trim(),
+    scenarioId: vine.number().withoutDecimals().positive().nullable(),
+    withRotationAutofocus: vine.boolean(),
+  })
+);
+
+createCalibrationSchema.messagesProvider = new SimpleMessagesProvider({
+  'name.minLength': 'Le nom est requis',
+  'name.regex': 'Le nom contient des caractères non autorisés',
+});
+
+export type CreateCalibrationPayload = Infer<typeof createCalibrationSchema>;

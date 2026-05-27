@@ -3,11 +3,11 @@ import { useForm } from 'react-hook-form';
 import { vineResolver } from '@hookform/resolvers/vine';
 import { toast } from 'sonner';
 import { useNavigate } from '@tanstack/react-router';
-import SelectAcquisitionScenario from './select-acquisition-scenario';
 import SelectAcquisitionCalibration from './select-acquisition-calibration';
-import SelectAcquisitionName from './select-acquisition-name';
 import type { Dispatch } from 'react';
 import type { CreateAcquisitionPayload } from '@/schemas/acquisition.schemas';
+import SelectAcquisitionName from '@/components/acquisition/create-acquisition-form/select-acquisition-name';
+import SelectAcquisitionScenario from '@/components/acquisition/create-acquisition-form/select-acquisition-scenario';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { createAcquisitionSchema } from '@/schemas/acquisition.schemas';
 import { useCreateAcquisition } from '@/api/mutations/acquisition.mutations';
@@ -26,9 +26,9 @@ const CreateAcquisitionDialog = ({ open, setOpen, artifactId }: CreateAcquisitio
   const navigate = useNavigate();
   const { mutate: createAcquisitionMutate } = useCreateAcquisition({
     onSuccess: (data, { name }) => {
-      setOpen(false);
       toast.success(`${name} a bien été créée.`);
-      navigate({ to: `/acquisitions/${data.id}` });
+      void navigate({ to: `/acquisitions/${data.id}` });
+      form.reset();
     },
   });
 
@@ -54,9 +54,15 @@ const CreateAcquisitionDialog = ({ open, setOpen, artifactId }: CreateAcquisitio
       <DialogContent>
         <Form {...form}>
           <form
-            onSubmit={form.handleSubmit((payload) => {
-              createAcquisitionMutate(payload);
-            })}
+            onSubmit={(event) => {
+              if (currentStep !== 'calibration') {
+                event.preventDefault();
+                return;
+              }
+              void form.handleSubmit((payload) => {
+                createAcquisitionMutate(payload);
+              })(event);
+            }}
           >
             {currentStep === 'name' ? (
               <SelectAcquisitionName setOpen={setOpen} setCurrentStep={setCurrentStep} />

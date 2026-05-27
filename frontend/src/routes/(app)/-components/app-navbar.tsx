@@ -24,6 +24,16 @@ const AppNavLinks = memo(function AppNavLinks({ pathname }: AppNavbarProps) {
           Scénarios
         </span>
       </Link>
+      <Link to="/calibrations">
+        <span
+          className={cn(
+            'rounded-sm px-4 py-2 text-lg',
+            pathname.startsWith('/calibrations') ? 'bg-gray-100 text-gray-700' : 'bg-transparent text-white'
+          )}
+        >
+          Étalonnages
+        </span>
+      </Link>
       <Link to="/camera-settings">
         <span
           className={cn(

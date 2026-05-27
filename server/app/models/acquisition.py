@@ -27,9 +27,9 @@ class Acquisition(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(255), nullable=False)
-    artifact_id: Mapped[int] = mapped_column(
+    artifact_id: Mapped[int | None] = mapped_column(
         ForeignKey('artifact.id', ondelete='CASCADE'),
-        nullable=False,
+        nullable=True,
         index=True,
     )
     scenario_id: Mapped[int] = mapped_column(
@@ -70,7 +70,7 @@ class Acquisition(Base):
         onupdate=func.now(),
     )
 
-    artifact: Mapped[Artifact] = relationship()
+    artifact: Mapped[Artifact | None] = relationship()
     scenario: Mapped[Scenario] = relationship()
     calibration: Mapped[Acquisition | None] = relationship()
     arms_position: Mapped[ArmsPosition] = relationship()

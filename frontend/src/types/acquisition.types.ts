@@ -19,7 +19,7 @@ export interface Acquisition {
   id: number;
   name: string;
   thumbnail: string | null;
-  artifactId: number;
+  artifactId: number | null;
   scenarioId: number;
   calibrationId: number | null;
   armsPositionId: number;
