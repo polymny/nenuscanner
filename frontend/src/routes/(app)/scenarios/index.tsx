@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import ConfirmActionDialog from '@/components/confirm-action-dialog';
 import { useGetScenarios } from '@/api/queries/scenario.queries';
 import { useDeleteScenario } from '@/api/mutations/scenario.mutations';
+import { useMinimumLoadingDuration } from '@/hooks/use-minimum-loading-duration';
 
 export const Route = createFileRoute('/(app)/scenarios/')({
   component: RouteComponent,
@@ -15,6 +16,7 @@ export const Route = createFileRoute('/(app)/scenarios/')({
 function RouteComponent() {
   const navigate = useNavigate();
   const { data: scenarios, isPending } = useGetScenarios();
+  const showSkeleton = useMinimumLoadingDuration(isPending);
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [selectedScenarioId, setSelectedScenarioId] = useState<null | number>(null);
 
@@ -29,45 +31,47 @@ function RouteComponent() {
 
   return (
     <div className="bg-gray-25 flex h-full flex-col items-center gap-6 px-20 py-8">
-      {isPending ? (
-        <div className="grid w-full grid-cols-3 gap-5">
-          <ComponentCardSkeleton />
-          <ComponentCardSkeleton />
-          <ComponentCardSkeleton />
-          <ComponentCardSkeleton />
+      <div className="flex w-full flex-col gap-4">
+        <div className="flex items-start justify-between">
+          <h2 className="font-semibold text-gray-950">Scénarios</h2>
+          {!showSkeleton && !!scenarios?.length && (
+            <Button
+              onClick={() => {
+                navigate({
+                  to: '/scenarios/create',
+                });
+              }}
+            >
+              Créer un scénario
+            </Button>
+          )}
         </div>
-      ) : !scenarios?.length ? (
-        <div className="flex h-full justify-center">
-          <div className="mt-8 flex flex-col items-center gap-4">
-            <div className="size-max rounded-full border border-gray-200 bg-white p-3">
-              <Clapperboard className="text-brand-600 size-6" />
+        {showSkeleton ? (
+          <div className="grid grid-cols-3 gap-5">
+            <ComponentCardSkeleton />
+            <ComponentCardSkeleton />
+            <ComponentCardSkeleton />
+            <ComponentCardSkeleton />
+          </div>
+        ) : isPending ? null : !scenarios?.length ? (
+          <div className="flex justify-center">
+            <div className="mt-8 flex flex-col items-center gap-4">
+              <div className="size-max rounded-full border border-gray-200 bg-white p-3">
+                <Clapperboard className="text-brand-600 size-6" />
+              </div>
+              <h4 className="font-semibold">Aucun scénario trouvé</h4>
+              <Button
+                onClick={() => {
+                  navigate({
+                    to: '/scenarios/create',
+                  });
+                }}
+              >
+                Créer un scénario
+              </Button>
             </div>
-            <h4 className="font-semibold">Aucun scénario trouvé</h4>
-            <Button
-              onClick={() => {
-                navigate({
-                  to: '/scenarios/create',
-                });
-              }}
-            >
-              Créer un scénario
-            </Button>
           </div>
-        </div>
-      ) : (
-        <div className="flex w-full flex-col gap-4">
-          <div className="flex items-center justify-between">
-            <h2 className="font-semibold text-gray-950">Scénarios</h2>
-            <Button
-              onClick={() => {
-                navigate({
-                  to: '/scenarios/create',
-                });
-              }}
-            >
-              Créer un scénario
-            </Button>
-          </div>
+        ) : (
           <div className="grid grid-cols-3 gap-5">
             {scenarios.map((scenario) => (
               <ComponentCard
@@ -81,8 +85,8 @@ function RouteComponent() {
               />
             ))}
           </div>
-        </div>
-      )}
+        )}
+      </div>
       <ConfirmActionDialog
         confirmButtonContent="Supprimer"
         confirmButtonVariant={{ variant: 'destructive' }}

@@ -11,6 +11,7 @@ import { FormControl, FormField, FormItem, FormMessage } from '@/components/ui/f
 import { useGetCalibrations } from '@/api/queries/acquisition.queries';
 import { ComponentCardSkeleton } from '@/components/component-card';
 import { FlatRadioGroupItem, RadioGroup } from '@/components/ui/radio-group';
+import { useMinimumLoadingDuration } from '@/hooks/use-minimum-loading-duration';
 
 interface SelectAcquisitionCalibrationProps {
   setOpen: Dispatch<boolean>;
@@ -24,6 +25,7 @@ const SelectAcquisitionCalibration = ({ setOpen, setCurrentStep }: SelectAcquisi
     scenarioId: form.getValues('scenarioId') ?? undefined,
     status: 'COMPLETED',
   });
+  const showSkeleton = useMinimumLoadingDuration(isLoadingCalibrations);
 
   return (
     <>
@@ -37,14 +39,14 @@ const SelectAcquisitionCalibration = ({ setOpen, setCurrentStep }: SelectAcquisi
       </DialogHeader>
       <div className="bg-gray-25 flex h-[70vh] flex-col gap-5 p-6">
         <div className="text-sm font-bold text-gray-500">Étalonnages disponibles</div>
-        {isLoadingCalibrations ? (
+        {showSkeleton ? (
           <div className="grid w-full grid-cols-2 gap-5">
             <ComponentCardSkeleton />
             <ComponentCardSkeleton />
             <ComponentCardSkeleton />
             <ComponentCardSkeleton />
           </div>
-        ) : !calibrations?.length ? (
+        ) : isLoadingCalibrations ? null : !calibrations?.length ? (
           <div className="flex h-full w-full flex-col items-center justify-center gap-2 rounded-xl border border-gray-200">
             <h4 className="font-semibold">Aucun étalonnage trouvé</h4>
             <span className="text-sm text-gray-600">Allez sur les étalonnages et créez votre étalonnage</span>

@@ -8,10 +8,10 @@ import CustomBreadcrumb from '@/components/ui/custom-breadcrumb';
 import { Button } from '@/components/ui/button';
 import { useGetAcquisitionsByArtifactId } from '@/api/queries/acquisition.queries';
 import { ComponentCardSkeleton } from '@/components/component-card';
-import { cn } from '@/lib/utils';
 import { useDeleteAcquisition } from '@/api/mutations/acquisition.mutations';
 import ConfirmActionDialog from '@/components/confirm-action-dialog';
 import AcquisitionCard from '@/components/acquisition/acquisition-card';
+import { useMinimumLoadingDuration } from '@/hooks/use-minimum-loading-duration';
 
 export const Route = createFileRoute('/(app)/artifacts/$artifact-id/')({
   component: RouteComponent,
@@ -22,6 +22,7 @@ function RouteComponent() {
   const navigate = useNavigate();
   const { data: artifacts, isPending: isLoadingArtifacts } = useGetArtifacts();
   const { data: acquisitions, isPending: isLoadingAcquisitions } = useGetAcquisitionsByArtifactId(Number(artifactId));
+  const showSkeleton = useMinimumLoadingDuration(isLoadingAcquisitions);
   const existingArtifact = useMemo(
     () => artifacts?.find((artifact) => artifact.id === Number(artifactId)),
     [artifacts, artifactId]
@@ -55,49 +56,44 @@ function RouteComponent() {
         backPagePath="/artifacts"
         currentPageName={existingArtifact.name}
       />
-      {isLoadingAcquisitions ? (
-        <div className="grid w-full grid-cols-3 gap-5">
-          <ComponentCardSkeleton />
-          <ComponentCardSkeleton />
-          <ComponentCardSkeleton />
-          <ComponentCardSkeleton />
-        </div>
-      ) : (
-        <div className="flex w-full flex-col gap-4">
-          <div className="flex items-start justify-between">
-            <h2 className="font-semibold text-gray-950">{`Acquisitions de ${existingArtifact.name}`}</h2>
-            <Button
-              className={cn(!acquisitions?.length ? 'hidden' : '')}
-              onClick={() => setOpenCreateAcquisitionDialog(true)}
-            >
-              Créer une acquisition
-            </Button>
-          </div>
-          {!acquisitions?.length ? (
-            <div className="mt-8 flex flex-col items-center gap-4">
-              <div className="size-max rounded-full border border-gray-200 bg-white p-3">
-                <Camera className="text-brand-600 size-6" />
-              </div>
-              <h4 className="font-semibold">Aucune acquisition trouvée</h4>
-              <Button onClick={() => setOpenCreateAcquisitionDialog(true)}>Créer une acquisition</Button>
-            </div>
-          ) : (
-            <div className="grid grid-cols-4 gap-5">
-              {acquisitions.map((acquisition) => (
-                <AcquisitionCard
-                  acquisition={acquisition}
-                  key={acquisition.id}
-                  onClick={() => navigate({ to: `/acquisitions/${acquisition.id}` })}
-                  onDelete={() => {
-                    setSelectedAcquisitionId(acquisition.id);
-                    setOpenDeleteDialog(true);
-                  }}
-                />
-              ))}
-            </div>
+      <div className="flex w-full flex-col gap-4">
+        <div className="flex items-start justify-between">
+          <h2 className="font-semibold text-gray-950">{`Acquisitions de ${existingArtifact.name}`}</h2>
+          {!showSkeleton && !!acquisitions?.length && (
+            <Button onClick={() => setOpenCreateAcquisitionDialog(true)}>Créer une acquisition</Button>
           )}
         </div>
-      )}
+        {showSkeleton ? (
+          <div className="grid grid-cols-3 gap-5">
+            <ComponentCardSkeleton />
+            <ComponentCardSkeleton />
+            <ComponentCardSkeleton />
+            <ComponentCardSkeleton />
+          </div>
+        ) : isLoadingAcquisitions ? null : !acquisitions?.length ? (
+          <div className="mt-8 flex flex-col items-center gap-4">
+            <div className="size-max rounded-full border border-gray-200 bg-white p-3">
+              <Camera className="text-brand-600 size-6" />
+            </div>
+            <h4 className="font-semibold">Aucune acquisition trouvée</h4>
+            <Button onClick={() => setOpenCreateAcquisitionDialog(true)}>Créer une acquisition</Button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-4 gap-5">
+            {acquisitions.map((acquisition) => (
+              <AcquisitionCard
+                acquisition={acquisition}
+                key={acquisition.id}
+                onClick={() => navigate({ to: `/acquisitions/${acquisition.id}` })}
+                onDelete={() => {
+                  setSelectedAcquisitionId(acquisition.id);
+                  setOpenDeleteDialog(true);
+                }}
+              />
+            ))}
+          </div>
+        )}
+      </div>
       <CreateAcquisitionDialog
         artifactId={existingArtifact.id}
         open={openCreateAcquisitionDialog}

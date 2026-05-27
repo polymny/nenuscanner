@@ -13,6 +13,7 @@ import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
 import { FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
 import DialogBackButton from '@/components/ui/dialog-back-button';
+import { useMinimumLoadingDuration } from '@/hooks/use-minimum-loading-duration';
 
 interface SelectAcquisitionScenarioProps {
   setOpen: Dispatch<boolean>;
@@ -27,6 +28,7 @@ const SelectAcquisitionScenario = ({
 }: SelectAcquisitionScenarioProps) => {
   const form = useFormContext<CreateAcquisitionPayload | CreateCalibrationPayload>();
   const { data: scenarios, isPending: isLoadingScenarios } = useGetScenarios();
+  const showSkeleton = useMinimumLoadingDuration(isLoadingScenarios);
 
   return (
     <>
@@ -48,14 +50,14 @@ const SelectAcquisitionScenario = ({
           </AlertDescription>
         </Alert>
         <div className="text-sm font-bold text-gray-500">Scénarios disponibles</div>
-        {isLoadingScenarios ? (
+        {showSkeleton ? (
           <div className="grid w-full grid-cols-2 gap-5">
             <ComponentCardSkeleton />
             <ComponentCardSkeleton />
             <ComponentCardSkeleton />
             <ComponentCardSkeleton />
           </div>
-        ) : !scenarios?.length ? (
+        ) : isLoadingScenarios ? null : !scenarios?.length ? (
           <div className="flex h-full w-full flex-col items-center justify-center gap-2 rounded-xl border border-gray-200">
             <h4 className="font-semibold">Aucun scénario trouvé</h4>
             <span className="text-sm text-gray-600">Allez sur les scénarios et créez votre scénario</span>
