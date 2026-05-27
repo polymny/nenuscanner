@@ -1,13 +1,13 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { Camera, Loader2 } from 'lucide-react';
-import AcquisitionPhotoCard from '../-components/acquisition-photo-card';
-import ScenarioProgressWidget from '../-components/scenario-progress-widget';
-import { Badge } from '@/components/ui/badge';
+import AcquisitionPhotoCard from './-components/acquisition-photo-card';
+import ScenarioProgressWidget from './-components/scenario-progress-widget';
 import { useGetAcquisitionById } from '@/api/queries/acquisition.queries';
-import CustomBreadcrumb from '@/components/ui/custom-breadcrumb';
-import { Button } from '@/components/ui/button';
 import { useAcquisitionRun } from '@/hooks/use-acquisition-run';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { acquisitionStatusBadges } from '@/types/acquisition.types';
+import CustomBreadcrumb from '@/components/ui/custom-breadcrumb';
 
 export const Route = createFileRoute('/(app)/acquisitions/$acquisition-id/')({
   component: RouteComponent,
@@ -19,7 +19,12 @@ function RouteComponent() {
   const acquisitionId = Number(acquisitionIdParam);
 
   const { data: acquisition, isPending, isError } = useGetAcquisitionById(acquisitionId);
-  const { start, progress, lastImageUrl, error: runError } = useAcquisitionRun(acquisitionId, acquisition?.status);
+  const {
+    start,
+    progress,
+    lastImageUrl,
+    error: runError,
+  } = useAcquisitionRun(acquisitionId, acquisition?.artifactId, acquisition?.status);
 
   const progressPercent = progress && progress.total > 0 ? Math.round((progress.step / progress.total) * 100) : 0;
 
@@ -33,8 +38,14 @@ function RouteComponent() {
   return (
     <div className="bg-gray-25 flex h-full flex-col gap-6 px-20 py-8">
       <CustomBreadcrumb
-        backPageName="Revenir aux acquisitions"
-        backPagePath={`/artifacts/${acquisition.artifactId}`}
+        backPageName={`Revenir aux ${acquisition.isCalibration ? 'étalonnages' : 'acquisitions'}`}
+        backPagePath={
+          acquisition.isCalibration
+            ? '/calibrations'
+            : acquisition.artifactId
+              ? `/artifacts/${acquisition.artifactId}`
+              : '/artifacts'
+        }
         currentPageName={acquisition.name}
       />
 
@@ -52,7 +63,9 @@ function RouteComponent() {
               <div className="rounded-full border border-gray-200 bg-white p-4">
                 <Camera className="text-brand-600 size-10" />
               </div>
-              <p className="text-center text-gray-600">Acquisition prête à être lancée</p>
+              <p className="text-center text-gray-600">
+                {acquisition.isCalibration ? 'Étalonnage prêt à être lancé' : 'Acquisition prête à être lancée'}
+              </p>
               <Button onClick={() => void start()} size="lg">
                 Démarrer
               </Button>

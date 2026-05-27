@@ -1,6 +1,14 @@
 from marshmallow import EXCLUDE, Schema, fields, validate
 
+from ..models.acquisition import AcquisitionStatus
+
 _ACQUISITION_NAME_PATTERN = r'^[a-zA-ZÀ-ÿ0-9\s\-_()]+$'
+_ACQUISITION_STATUSES = (
+    AcquisitionStatus.PENDING,
+    AcquisitionStatus.RUNNING,
+    AcquisitionStatus.COMPLETED,
+    AcquisitionStatus.FAILED,
+)
 _NAME_VALIDATE = (
     validate.Length(min=1, max=255),
     validate.Regexp(_ACQUISITION_NAME_PATTERN),
@@ -21,7 +29,7 @@ class AcquisitionReadSchema(Schema):
 
     id = fields.Integer(required=True)
     name = fields.String(required=True)
-    artifactId = fields.Integer(required=True)
+    artifactId = fields.Integer(required=True, allow_none=True)
     scenarioId = fields.Integer(required=True)
     calibrationId = fields.Integer(required=True, allow_none=True)
     armsPositionId = fields.Integer(required=True)
@@ -71,4 +79,24 @@ class AcquisitionCreateSchema(Schema):
     artifactId = fields.Integer(required=True, validate=validate.Range(min=1))
     scenarioId = fields.Integer(required=True, allow_none=True, validate=validate.Range(min=1))
     calibrationId = fields.Integer(required=True, allow_none=True, validate=validate.Range(min=1))
+    withRotationAutofocus = fields.Boolean(required=True)
+
+
+class CalibrationListQuerySchema(Schema):
+    class Meta:
+        unknown = EXCLUDE
+        ordered = True
+
+    onlyCurrentArmsPosition = fields.Boolean(load_default=False)
+    scenarioId = fields.Integer(load_default=None, allow_none=True, validate=validate.Range(min=1))
+    status = fields.String(load_default=None, allow_none=True, validate=validate.OneOf(_ACQUISITION_STATUSES))
+
+
+class CalibrationCreateSchema(Schema):
+    class Meta:
+        unknown = EXCLUDE
+        ordered = True
+
+    name = fields.String(required=True, validate=_NAME_VALIDATE, pre_load=str.strip)
+    scenarioId = fields.Integer(required=True, allow_none=True, validate=validate.Range(min=1))
     withRotationAutofocus = fields.Boolean(required=True)

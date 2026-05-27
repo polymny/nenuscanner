@@ -116,17 +116,22 @@ def _mark_acquisition_failed(session: Session, acquisition_id: int) -> None:
 def delete_pending_acquisitions(
     session: Session,
     *,
-    artifact_id: int,
+    artifact_id: int | None,
     scenario_id: int,
     arms_position_id: int,
+    is_calibration: bool = False,
 ) -> None:
+    artifact_filter = (
+        Acquisition.artifact_id.is_(None) if artifact_id is None else Acquisition.artifact_id == artifact_id
+    )
     pending_rows = (
         session.query(Acquisition)
         .filter(
-            Acquisition.artifact_id == artifact_id,
+            artifact_filter,
             Acquisition.scenario_id == scenario_id,
             Acquisition.arms_position_id == arms_position_id,
             Acquisition.status == AcquisitionStatus.PENDING,
+            Acquisition.is_calibration.is_(is_calibration),
         )
         .all()
     )

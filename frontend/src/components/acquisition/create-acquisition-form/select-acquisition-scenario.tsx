@@ -2,8 +2,7 @@ import { AlertOctagon, Clapperboard } from 'lucide-react';
 import { useFormContext } from 'react-hook-form';
 import type { Dispatch } from 'react';
 
-import type { CreateAcquisitionStep } from './create-acquisition-dialog';
-import type { CreateAcquisitionPayload } from '@/schemas/acquisition.schemas';
+import type { CreateAcquisitionPayload, CreateCalibrationPayload } from '@/schemas/acquisition.schemas';
 import { ComponentCardSkeleton } from '@/components/component-card';
 import { Button } from '@/components/ui/button';
 import { DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -17,11 +16,16 @@ import DialogBackButton from '@/components/ui/dialog-back-button';
 
 interface SelectAcquisitionScenarioProps {
   setOpen: Dispatch<boolean>;
-  setCurrentStep: Dispatch<CreateAcquisitionStep>;
+  setCurrentStep: Dispatch<'name' | 'scenario' | 'calibration'>;
+  isCalibration?: boolean;
 }
 
-const SelectAcquisitionScenario = ({ setOpen, setCurrentStep }: SelectAcquisitionScenarioProps) => {
-  const form = useFormContext<CreateAcquisitionPayload>();
+const SelectAcquisitionScenario = ({
+  setOpen,
+  setCurrentStep,
+  isCalibration = false,
+}: SelectAcquisitionScenarioProps) => {
+  const form = useFormContext<CreateAcquisitionPayload | CreateCalibrationPayload>();
   const { data: scenarios, isPending: isLoadingScenarios } = useGetScenarios();
 
   return (
@@ -130,12 +134,16 @@ const SelectAcquisitionScenario = ({ setOpen, setCurrentStep }: SelectAcquisitio
                 <Button
                   disabled={!form.watch('scenarioId')}
                   size="lg"
-                  type="button"
-                  onClick={() => {
-                    setCurrentStep('calibration');
-                  }}
+                  type={isCalibration ? 'submit' : 'button'}
+                  onClick={
+                    isCalibration
+                      ? undefined
+                      : () => {
+                          setCurrentStep('calibration');
+                        }
+                  }
                 >
-                  Continuer
+                  {isCalibration ? 'Créer' : 'Continuer'}
                 </Button>
               </div>
               <FormMessage className="text-end" />

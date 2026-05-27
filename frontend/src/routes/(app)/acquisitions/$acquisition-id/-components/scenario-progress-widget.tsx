@@ -14,7 +14,7 @@ export default function ScenarioProgressWidget({ progress }: ScenarioProgressWid
       : progress.ledValue;
 
   return (
-    <div className="absolute top-4 right-4 z-10 max-w-xs rounded-xl border border-gray-200 bg-white p-4 text-sm shadow-md">
+    <div className="absolute top-4 right-4 z-10 max-w-xs min-w-[300px] rounded-xl border border-gray-200 bg-white p-4 text-sm shadow-md">
       <p className="mb-2 font-medium text-gray-900">
         Photo {progress.step} / {progress.total}
       </p>

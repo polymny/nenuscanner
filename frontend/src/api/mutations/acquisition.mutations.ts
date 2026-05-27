@@ -2,7 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { acquisitionsKeyFactory } from '../queries/acquisition.queries';
 import type { ApiError, UseMutationOtherOptions } from '@/lib/api-types';
 import type { AxiosError } from 'axios';
-import type { CreateAcquisitionPayload } from '@/schemas/acquisition.schemas';
+import type { CreateAcquisitionPayload, CreateCalibrationPayload } from '@/schemas/acquisition.schemas';
 import type { Acquisition } from '@/types/acquisition.types';
 import { client } from '@/lib/client';
 
@@ -20,6 +20,28 @@ export const useCreateAcquisition = (
     ...options,
     mutationFn: async (payload) => {
       return await createAcquisition(payload);
+    },
+    onSuccess: (data, vars, result, ctx) => {
+      void queryClient.invalidateQueries({ queryKey: acquisitionsKeyFactory.base() });
+      options?.onSuccess?.(data, vars, result, ctx);
+    },
+  });
+};
+
+const createCalibration = async (payload: CreateCalibrationPayload) => {
+  const { data } = await client.post<Acquisition>('/acquisition/calibrations', payload);
+  return data;
+};
+
+export const useCreateCalibration = (
+  options?: UseMutationOtherOptions<Acquisition, AxiosError<ApiError>, CreateCalibrationPayload>
+) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    ...options,
+    mutationFn: async (payload) => {
+      return await createCalibration(payload);
     },
     onSuccess: (data, vars, result, ctx) => {
       void queryClient.invalidateQueries({ queryKey: acquisitionsKeyFactory.base() });
