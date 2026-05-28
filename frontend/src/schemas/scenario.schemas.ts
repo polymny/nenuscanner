@@ -29,3 +29,21 @@ upsertScenarioSchema.messagesProvider = new SimpleMessagesProvider({
 });
 
 export type UpsertScenarioPayload = Infer<typeof upsertScenarioSchema>;
+
+export const duplicateScenarioSchema = vine.create(
+  vine.object({
+    sourceScenarioId: vine.number().withoutDecimals().positive(),
+    name: vine
+      .string()
+      .minLength(1)
+      .regex(/^[a-zA-ZÀ-ÿ0-9\s\-_()]+$/)
+      .trim(),
+  })
+);
+
+duplicateScenarioSchema.messagesProvider = new SimpleMessagesProvider({
+  'name.minLength': 'Le nom est requis',
+  'name.regex': 'Le nom contient des caractères non autorisés',
+});
+
+export type DuplicateScenarioPayload = Infer<typeof duplicateScenarioSchema>;

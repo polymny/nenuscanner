@@ -3,6 +3,7 @@ import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useNavigate } from '@tanstack/react-router';
 import { vineResolver } from '@hookform/resolvers/vine';
+import { useMemo } from 'react';
 import ShutterSpeedsFormSection from './shutter-speeds-form-section';
 import LedsFormSection from './leds-form-section';
 import type { UpsertScenarioPayload } from '@/schemas/scenario.schemas';
@@ -20,12 +21,18 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 interface UpsertScenarioFormProps {
   mode: 'create' | 'update';
   scenarioId?: number;
+  onRequestDuplicate?: () => void;
 }
 
-const UpsertScenarioForm = ({ mode, scenarioId }: UpsertScenarioFormProps) => {
+const UpsertScenarioForm = ({ mode, scenarioId, onRequestDuplicate }: UpsertScenarioFormProps) => {
   const navigate = useNavigate();
   const { data: scenarios } = useGetScenarios();
   const existingScenario = scenarios?.find((scenario) => scenario.id === scenarioId);
+
+  const isLockedForEdition = useMemo(() => {
+    if (mode !== 'update') return false;
+    return (existingScenario?.acquisitions.length ?? 0) > 0;
+  }, [existingScenario?.acquisitions.length, mode]);
 
   const { isPending: isUpsertingScenario, mutate: upsertScenarioMutate } = useUpsertScenario(mode, {
     onSuccess: (_, { name }) => {
@@ -54,6 +61,15 @@ const UpsertScenarioForm = ({ mode, scenarioId }: UpsertScenarioFormProps) => {
         className="flex w-full flex-col items-center gap-8"
         onSubmit={form.handleSubmit((data) => upsertScenarioMutate(data))}
       >
+        {isLockedForEdition && (
+          <Alert className="border-warning-200 bg-warning-50 text-warning-800 w-3/4">
+            <AlertTitle>Édition désactivée</AlertTitle>
+            <AlertDescription>
+              Ce scénario est déjà utilisé par plusieurs acquisitions. Pour éviter d'impacter l'existant, vous pouvez le
+              dupliquer.
+            </AlertDescription>
+          </Alert>
+        )}
         <div className="flex w-3/4 flex-col gap-8 rounded-lg bg-white p-6 shadow-lg">
           <h3 className="text-brand-600">Informations générales</h3>
           <FormField
@@ -63,7 +79,12 @@ const UpsertScenarioForm = ({ mode, scenarioId }: UpsertScenarioFormProps) => {
               <FormItem className="w-full">
                 <FormLabel>Nom du scénario</FormLabel>
                 <FormControl>
-                  <Input value={field.value} onChange={field.onChange} placeholder="Nom du scénario" />
+                  <Input
+                    disabled={isLockedForEdition}
+                    value={field.value}
+                    onChange={field.onChange}
+                    placeholder="Nom du scénario"
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -71,9 +92,9 @@ const UpsertScenarioForm = ({ mode, scenarioId }: UpsertScenarioFormProps) => {
           />
         </div>
 
-        <LedsFormSection />
+        <LedsFormSection disabled={isLockedForEdition} />
 
-        <ShutterSpeedsFormSection />
+        <ShutterSpeedsFormSection disabled={isLockedForEdition} />
 
         <div className="flex w-3/4 flex-col gap-8 rounded-lg bg-white p-6 shadow-lg">
           <h3 className="text-brand-600">Gestion des rotations</h3>
@@ -94,6 +115,7 @@ const UpsertScenarioForm = ({ mode, scenarioId }: UpsertScenarioFormProps) => {
                       max={12}
                       step={1}
                       value={[field.value]}
+                      disabled={isLockedForEdition}
                       onValueChange={(v) => field.onChange(v[0] ?? 0)}
                     />
                   </FormControl>
@@ -114,10 +136,17 @@ const UpsertScenarioForm = ({ mode, scenarioId }: UpsertScenarioFormProps) => {
             </Alert>
           </div>
         </div>
-        <Button disabled={!form.formState.isValid || isUpsertingScenario} size="lg" type="submit">
-          Valider
-          {isUpsertingScenario && <Loader2 className="ml-2 h-4 w-4 animate-spin" />}
-        </Button>
+
+        {isLockedForEdition ? (
+          <Button size="lg" type="button" onClick={onRequestDuplicate}>
+            Dupliquer
+          </Button>
+        ) : (
+          <Button disabled={!form.formState.isValid || isUpsertingScenario} size="lg" type="submit">
+            Valider
+            {isUpsertingScenario && <Loader2 className="ml-2 h-4 w-4 animate-spin" />}
+          </Button>
+        )}
       </form>
     </Form>
   );

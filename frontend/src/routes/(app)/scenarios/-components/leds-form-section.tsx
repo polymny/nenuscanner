@@ -7,7 +7,11 @@ import { LED_VALUES, getLedValueLabel } from '@/types/led.types';
 import { cn } from '@/lib/utils';
 import { Switch } from '@/components/ui/switch';
 
-const LedsFormSection = () => {
+interface LedsFormSectionProps {
+  disabled?: boolean;
+}
+
+const LedsFormSection = ({ disabled = false }: LedsFormSectionProps) => {
   const form = useFormContext<UpsertScenarioPayload>();
   const ledsWatch = useWatch({
     control: form.control,
@@ -52,6 +56,7 @@ const LedsFormSection = () => {
                   <Switch
                     className="data-[state=checked]:bg-success-500"
                     checked={isSelected}
+                    disabled={disabled}
                     onCheckedChange={(checked) => {
                       if (checked) {
                         appendLed({ value: ledValue, power: isNoLed ? 0 : currentPower });
@@ -78,6 +83,7 @@ const LedsFormSection = () => {
                     min={0.0}
                     step={0.1}
                     value={[currentPower]}
+                    disabled={disabled}
                     onValueChange={(v) => {
                       const nextPower = v[0] ?? 0;
                       setPowerByLedValue((prev) => ({ ...prev, [ledValue]: nextPower }));

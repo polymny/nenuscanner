@@ -1,7 +1,8 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { scenariosKeyFactory } from '../queries/scenario.queries';
 import type { ApiError, UseMutationOtherOptions } from '@/lib/api-types';
-import type { UpsertScenarioPayload } from '@/schemas/scenario.schemas';
+import type { DuplicateScenarioPayload, UpsertScenarioPayload } from '@/schemas/scenario.schemas';
+import type { Scenario } from '@/types/scenario.types';
 import type { AxiosError } from 'axios';
 import { client } from '@/lib/client';
 
@@ -46,3 +47,24 @@ export const useDeleteScenario = (options?: UseMutationOtherOptions<void, AxiosE
   });
 };
 
+const duplicateScenario = async (payload: DuplicateScenarioPayload) => {
+  const response = await client.post<Scenario>('/scenario/duplicate', payload);
+  return response.data;
+};
+
+export const useDuplicateScenario = (
+  options?: UseMutationOtherOptions<Scenario, AxiosError<ApiError>, DuplicateScenarioPayload>
+) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    ...options,
+    mutationFn: async (payload) => {
+      return await duplicateScenario(payload);
+    },
+    onSuccess: (data, vars, result, ctx) => {
+      void queryClient.invalidateQueries({ queryKey: scenariosKeyFactory.base() });
+      options?.onSuccess?.(data, vars, result, ctx);
+    },
+  });
+};

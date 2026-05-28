@@ -31,6 +31,8 @@ class ScenarioReadSchema(Schema):
     leds = fields.List(fields.Nested(ScenarioLEDSchema), required=True)
     rotationsCount = fields.Integer(required=True, data_key='rotationsCount')
     shutterSpeeds = fields.List(fields.Float(), required=True, data_key='shutterSpeeds')
+    acquisitions = fields.List(fields.Dict(), required=True)
+    calibrations = fields.List(fields.Dict(), required=True)
 
 
 class ScenarioCreateSchema(Schema):
@@ -55,3 +57,12 @@ class ScenarioUpdateSchema(ScenarioCreateSchema):
         ordered = True
 
     id = fields.Integer(required=True)
+
+
+class ScenarioDuplicateSchema(Schema):
+    class Meta:
+        unknown = EXCLUDE
+        ordered = True
+
+    sourceScenarioId = fields.Integer(required=True, data_key='sourceScenarioId')
+    name = fields.String(required=True, validate=_NAME_VALIDATE, pre_load=str.strip)

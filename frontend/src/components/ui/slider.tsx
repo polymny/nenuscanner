@@ -10,7 +10,7 @@ function Slider({
 }: React.ComponentProps<typeof SliderPrimitive.Root> & { rangeBgColor?: string }) {
   return (
     <SliderPrimitive.Root
-      className={cn('relative flex w-full touch-none items-center select-none', className)}
+      className={cn('relative flex w-full touch-none items-center select-none data-disabled:opacity-50', className)}
       {...props}
     >
       <SliderPrimitive.Track className="bg-primary/20 relative h-1.5 w-full grow overflow-hidden rounded-full">

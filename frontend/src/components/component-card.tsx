@@ -1,5 +1,5 @@
 import { useNavigate } from '@tanstack/react-router';
-import { EllipsisVertical, Pencil, Trash } from 'lucide-react';
+import { Copy, EllipsisVertical, Pencil, Trash } from 'lucide-react';
 import { Skeleton } from './ui/skeleton';
 import { Badge } from './ui/badge';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
@@ -27,6 +27,7 @@ export interface ComponentCardProps extends React.HTMLAttributes<HTMLDivElement>
   tags?: Array<string>;
   onDelete?: () => void;
   onUpdate?: () => void;
+  onDuplicate?: () => void;
 }
 export function ComponentCard({
   additionalContent,
@@ -43,6 +44,7 @@ export function ComponentCard({
   tags,
   onDelete,
   onUpdate,
+  onDuplicate,
 }: ComponentCardProps) {
   const navigate = useNavigate();
 
@@ -94,7 +96,7 @@ export function ComponentCard({
               <img src="/img/icons/upload-cloud-blue.svg" />
             </div>
           )}
-          {(onDelete || onUpdate) && (
+          {(onDelete || onUpdate || onDuplicate) && (
             <Popover>
               <PopoverTrigger asChild>
                 <Button
@@ -119,6 +121,18 @@ export function ComponentCard({
                     >
                       <Pencil className="text-gray-700" size={20} />
                       Modifier
+                    </Button>
+                  )}
+                  {onDuplicate && (
+                    <Button
+                      className={`w-full justify-start text-sm text-gray-700`}
+                      onClick={() => {
+                        onDuplicate();
+                      }}
+                      variant="link"
+                    >
+                      <Copy className="text-gray-700" size={20} />
+                      Dupliquer
                     </Button>
                   )}
                   {onDelete && (

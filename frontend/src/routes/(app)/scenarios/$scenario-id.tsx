@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import UpsertScenarioForm from './-components/upsert-scenario-form';
+import DuplicateScenarioDialog from './-components/duplicate-scenario-dialog';
 import { useGetScenarios } from '@/api/queries/scenario.queries';
 import CustomBreadcrumb from '@/components/ui/custom-breadcrumb';
 
@@ -12,6 +13,7 @@ function RouteComponent() {
   const { 'scenario-id': scenarioId } = Route.useParams();
   const navigate = useNavigate();
   const { data: scenarios, isPending: isLoadingScenarios } = useGetScenarios();
+  const [openDuplicateDialog, setOpenDuplicateDialog] = useState(false);
   const existingScenario = useMemo(
     () => scenarios?.find((scenario) => scenario.id === Number(scenarioId)),
     [scenarios, scenarioId]
@@ -32,7 +34,18 @@ function RouteComponent() {
         currentPageName={existingScenario.name}
       />
       <h1>{existingScenario.name}</h1>
-      <UpsertScenarioForm mode="update" scenarioId={existingScenario.id} />
+      <UpsertScenarioForm
+        mode="update"
+        scenarioId={existingScenario.id}
+        onRequestDuplicate={() => {
+          setOpenDuplicateDialog(true);
+        }}
+      />
+      <DuplicateScenarioDialog
+        open={openDuplicateDialog}
+        setOpen={setOpenDuplicateDialog}
+        sourceScenarioId={existingScenario.id}
+      />
     </div>
   );
 }

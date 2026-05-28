@@ -9,7 +9,11 @@ import { SliderWithLabels } from '@/components/ui/slider-with-labels';
 import { BadgeWithAction } from '@/components/ui/badge-with-action';
 import { formatNumberAsFractionOrDecimal } from '@/lib/utils';
 
-const ShutterSpeedsFormSection = () => {
+interface ShutterSpeedsFormSectionProps {
+  disabled?: boolean;
+}
+
+const ShutterSpeedsFormSection = ({ disabled = false }: ShutterSpeedsFormSectionProps) => {
   const [shutterSpeedIndex, setShutterSpeedIndex] = useState(
     SHUTTER_SPEED_VALUES.indexOf(SHUTTER_SPEED_REFERENCE_VALUE)
   );
@@ -38,10 +42,11 @@ const ShutterSpeedsFormSection = () => {
             min={0}
             step={1}
             value={[shutterSpeedIndex]}
+            disabled={disabled}
             onValueChange={(v) => setShutterSpeedIndex(v[0] ?? 0)}
           />
           <Button
-            disabled={shutterSpeedsWatch.includes(selectedShutterSpeed)}
+            disabled={disabled || shutterSpeedsWatch.includes(selectedShutterSpeed)}
             size="sm"
             className="shrink-0"
             type="button"
@@ -63,7 +68,7 @@ const ShutterSpeedsFormSection = () => {
               Icon={XCircle}
               iconColor="text-brand-600"
               action={
-                shutterSpeedsWatch.length > 1
+                !disabled && shutterSpeedsWatch.length > 1
                   ? () => {
                       form.setValue(
                         'shutterSpeeds',

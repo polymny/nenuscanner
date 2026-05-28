@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useState } from 'react';
 import { Clapperboard } from 'lucide-react';
 import { toast } from 'sonner';
+import DuplicateScenarioDialog from './-components/duplicate-scenario-dialog';
 import { ComponentCard, ComponentCardSkeleton } from '@/components/component-card';
 import { Button } from '@/components/ui/button';
 import ConfirmActionDialog from '@/components/confirm-action-dialog';
@@ -19,6 +20,7 @@ function RouteComponent() {
   const showSkeleton = useMinimumLoadingDuration(isPending);
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [selectedScenarioId, setSelectedScenarioId] = useState<null | number>(null);
+  const [openDuplicateDialog, setOpenDuplicateDialog] = useState(false);
 
   const { mutate: deleteScenario } = useDeleteScenario({
     onSuccess: () => {
@@ -78,6 +80,10 @@ function RouteComponent() {
                 name={scenario.name}
                 key={scenario.id}
                 onClickPath={`/scenarios/${scenario.id}`}
+                onDuplicate={() => {
+                  setSelectedScenarioId(scenario.id);
+                  setOpenDuplicateDialog(true);
+                }}
                 onDelete={() => {
                   setSelectedScenarioId(scenario.id);
                   setOpenDeleteDialog(true);
@@ -97,6 +103,11 @@ function RouteComponent() {
         open={openDeleteDialog}
         setOpen={setOpenDeleteDialog}
         title="Supprimer le scénario"
+      />
+      <DuplicateScenarioDialog
+        open={openDuplicateDialog}
+        setOpen={setOpenDuplicateDialog}
+        sourceScenarioId={selectedScenarioId}
       />
     </div>
   );

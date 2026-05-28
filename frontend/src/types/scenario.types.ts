@@ -11,5 +11,7 @@ export interface Scenario {
   leds: Array<ScenarioLed>;
   rotationsCount: number;
   shutterSpeeds: Array<number>;
+  acquisitions: Array<{ id: number; name: string }>;
+  calibrations: Array<{ id: number; name: string }>;
 }
 
