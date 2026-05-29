@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { acquisitionsKeyFactory } from '../queries/acquisition.queries';
+import { scenariosKeyFactory } from '../queries/scenario.queries';
 import type { ApiError, UseMutationOtherOptions } from '@/lib/api-types';
 import type { AxiosError } from 'axios';
 import type { CreateAcquisitionPayload, CreateCalibrationPayload } from '@/schemas/acquisition.schemas';
@@ -23,6 +24,7 @@ export const useCreateAcquisition = (
     },
     onSuccess: (data, vars, result, ctx) => {
       void queryClient.invalidateQueries({ queryKey: acquisitionsKeyFactory.byArtifact(vars.artifactId) });
+      void queryClient.invalidateQueries({ queryKey: scenariosKeyFactory.base() });
       options?.onSuccess?.(data, vars, result, ctx);
     },
   });
@@ -45,6 +47,7 @@ export const useCreateCalibration = (
     },
     onSuccess: (data, vars, result, ctx) => {
       void queryClient.invalidateQueries({ queryKey: acquisitionsKeyFactory.calibrationsBase() });
+      void queryClient.invalidateQueries({ queryKey: scenariosKeyFactory.base() });
       options?.onSuccess?.(data, vars, result, ctx);
     },
   });
@@ -64,6 +67,7 @@ export const useDeleteAcquisition = (options?: UseMutationOtherOptions<void, Axi
     },
     onSuccess: (data, vars, result, ctx) => {
       void queryClient.invalidateQueries({ queryKey: acquisitionsKeyFactory.base() });
+      void queryClient.invalidateQueries({ queryKey: scenariosKeyFactory.base() });
       options?.onSuccess?.(data, vars, result, ctx);
     },
   });

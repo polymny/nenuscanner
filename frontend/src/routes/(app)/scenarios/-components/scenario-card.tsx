@@ -6,6 +6,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Button } from '@/components/ui/button';
 
 import ScenarioSummaryStats from '@/components/scenario/scenario-summary-stats';
+import { useGetLastArmsPosition } from '@/api/queries/arms-position.queries';
 import { formatDateFr, pluralize } from '@/lib/utils';
 
 export interface ScenarioCardProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -15,8 +16,11 @@ export interface ScenarioCardProps extends React.HTMLAttributes<HTMLDivElement> 
 }
 export function ScenarioCard({ scenario, onDelete, onDuplicate }: ScenarioCardProps) {
   const navigate = useNavigate();
+  const { data: armsPosition } = useGetLastArmsPosition();
 
-  const isCalibrated = scenario.calibrations.length > 0;
+  const isCalibrated = scenario.calibrations.some(
+    (calibration) => calibration.armsPositionId === armsPosition?.id && calibration.status === 'COMPLETED'
+  );
 
   return (
     <div

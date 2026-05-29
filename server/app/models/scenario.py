@@ -1,9 +1,14 @@
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from sqlalchemy import Boolean, DateTime, Float, ForeignKey, String, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from ...sa_db import Base
+
+if TYPE_CHECKING:
+    from .acquisition import Acquisition
 
 
 class Scenario(Base):
@@ -33,6 +38,10 @@ class Scenario(Base):
         cascade='all, delete-orphan',
     )
     rotations: Mapped[list[ScenarioRotation]] = relationship(
+        back_populates='scenario',
+        cascade='all, delete-orphan',
+    )
+    acquisitions: Mapped[list[Acquisition]] = relationship(
         back_populates='scenario',
         cascade='all, delete-orphan',
     )

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Boolean, DateTime, ForeignKey, String, func
+from sqlalchemy import Boolean, DateTime, ForeignKey, String, event, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .arms_position import ArmsPosition
@@ -34,7 +34,7 @@ class Acquisition(Base):
         index=True,
     )
     scenario_id: Mapped[int] = mapped_column(
-        ForeignKey('scenario.id', ondelete='RESTRICT'),
+        ForeignKey('scenario.id', ondelete='CASCADE'),
         nullable=False,
         index=True,
     )
@@ -74,11 +74,14 @@ class Acquisition(Base):
     )
 
     artifact: Mapped[Artifact | None] = relationship()
-    scenario: Mapped[Scenario] = relationship()
+    scenario: Mapped[Scenario] = relationship(back_populates='acquisitions')
     calibration: Mapped[Acquisition | None] = relationship()
     arms_position: Mapped[ArmsPosition] = relationship()
     profile: Mapped[Profile | None] = relationship()
-    camera_settings: Mapped[CameraSettings] = relationship()
+    camera_settings: Mapped[CameraSettings] = relationship(
+        cascade='all, delete-orphan',
+        single_parent=True,
+    )
     photos: Mapped[list['AcquisitionPhoto']] = relationship(
         'AcquisitionPhoto',
         back_populates='acquisition',
@@ -91,3 +94,10 @@ class Acquisition(Base):
             f'Acquisition(id={self.id!r}, name={self.name!r}, artifact_id={self.artifact_id!r}, '
             f'scenario_id={self.scenario_id!r}, status={self.status!r})'
         )
+
+
+@event.listens_for(Acquisition, 'before_delete')
+def _acquisition_before_delete(_mapper, _connection, target: Acquisition) -> None:
+    from ..services.acquisition_service import delete_acquisition_files
+
+    delete_acquisition_files(target.id)

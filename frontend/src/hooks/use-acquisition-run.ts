@@ -7,6 +7,7 @@ import {
   startAcquisitionRun,
   toAbsoluteImageUrl,
 } from '@/api/queries/acquisition.queries';
+import { scenariosKeyFactory } from '@/api/queries/scenario.queries';
 
 const jobStorageKey = (acquisitionId: number) => `acquisition-run-job:${acquisitionId}`;
 
@@ -39,6 +40,7 @@ export function useAcquisitionRun(acquisitionId: number, status?: AcquisitionSta
         const data = JSON.parse(event.data) as ScenarioProgressEvent;
         setProgress(data);
         void queryClient.invalidateQueries({ queryKey: acquisitionsKeyFactory.base() });
+        void queryClient.invalidateQueries({ queryKey: scenariosKeyFactory.base() });
       });
 
       es.addEventListener('photo_ready', (event) => {
@@ -52,6 +54,7 @@ export function useAcquisitionRun(acquisitionId: number, status?: AcquisitionSta
         clearStoredJob();
         closeEventSource();
         void queryClient.invalidateQueries({ queryKey: acquisitionsKeyFactory.base() });
+        void queryClient.invalidateQueries({ queryKey: scenariosKeyFactory.base() });
       });
 
       es.addEventListener('failed', (event) => {
@@ -61,6 +64,7 @@ export function useAcquisitionRun(acquisitionId: number, status?: AcquisitionSta
         clearStoredJob();
         closeEventSource();
         void queryClient.invalidateQueries({ queryKey: acquisitionsKeyFactory.base() });
+        void queryClient.invalidateQueries({ queryKey: scenariosKeyFactory.base() });
       });
 
       es.onerror = () => {

@@ -1,3 +1,4 @@
+import type { AcquisitionStatus } from './acquisition.types';
 import type { LedValue } from './led.types';
 
 export interface ScenarioLed {
@@ -15,6 +16,6 @@ export interface ScenarioSummary {
 
 export interface Scenario extends ScenarioSummary {
   acquisitions: Array<{ id: number; name: string }>;
-  calibrations: Array<{ id: number; name: string }>;
+  calibrations: Array<{ id: number; name: string; armsPositionId: number; status: AcquisitionStatus }>;
   updatedAt: string;
 }

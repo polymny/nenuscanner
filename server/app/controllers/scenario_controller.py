@@ -2,9 +2,8 @@ from flask.views import MethodView
 from flask_smorest import Blueprint, abort
 
 from ..dtos.scenario_dto import ScenarioCreateSchema, ScenarioDuplicateSchema, ScenarioReadSchema, ScenarioUpdateSchema
-from ..models.acquisition import Acquisition, AcquisitionStatus
+from ..models.acquisition import Acquisition
 from ..models.scenario import Scenario
-from ..services.arms_position_service import get_last_arms_position
 from ..services.scenario_service import apply_scenario_payload, duplicate_scenario, scenario_summary_dto
 from ...sa_db import db_session
 
@@ -41,7 +40,6 @@ class ScenarioController(MethodView):
             .filter(
                 Acquisition.scenario_id.in_(scenario_ids),
                 Acquisition.is_calibration.is_(False),
-                Acquisition.status == AcquisitionStatus.COMPLETED,
             )
             .order_by(Acquisition.id.asc())
             .all()
@@ -49,21 +47,26 @@ class ScenarioController(MethodView):
         for acq_id, acq_name, scenario_id in rows:
             acquisitions_by_scenario_id[scenario_id].append({'id': acq_id, 'name': acq_name})
 
-        arms_position = get_last_arms_position()
         calibrations_by_scenario_id: dict[int, list[dict]] = {sid: [] for sid in scenario_ids}
         cal_rows = (
-            db_session.query(Acquisition.id, Acquisition.name, Acquisition.scenario_id)
+            db_session.query(
+                Acquisition.id,
+                Acquisition.name,
+                Acquisition.scenario_id,
+                Acquisition.arms_position_id,
+                Acquisition.status,
+            )
             .filter(
                 Acquisition.scenario_id.in_(scenario_ids),
                 Acquisition.is_calibration.is_(True),
-                Acquisition.arms_position_id == arms_position.id,
-                Acquisition.status == AcquisitionStatus.COMPLETED,
             )
             .order_by(Acquisition.id.asc())
             .all()
         )
-        for cal_id, cal_name, scenario_id in cal_rows:
-            calibrations_by_scenario_id[scenario_id].append({'id': cal_id, 'name': cal_name})
+        for cal_id, cal_name, scenario_id, arms_position_id, status in cal_rows:
+            calibrations_by_scenario_id[scenario_id].append(
+                {'id': cal_id, 'name': cal_name, 'armsPositionId': arms_position_id, 'status': status}
+            )
 
         return [
             _scenario_to_details_dto(
@@ -97,8 +100,6 @@ class ScenarioController(MethodView):
             db_session.query(Acquisition)
             .filter(
                 Acquisition.scenario_id == scenario_id,
-                Acquisition.is_calibration.is_(False),
-                Acquisition.status == AcquisitionStatus.COMPLETED,
             )
             .count()
         )

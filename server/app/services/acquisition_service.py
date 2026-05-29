@@ -106,19 +106,19 @@ def run_acquisition(context: SseJobContext, acquisition_id: int) -> None:
         db_session.remove()
 
 
-def delete_acquisition_photos(session: Session, acquisition_id: int) -> None:
-    session.query(AcquisitionPhoto).filter(AcquisitionPhoto.acquisition_id == acquisition_id).delete()
-
+def delete_acquisition_files(acquisition_id: int) -> None:
     photos_dir = SERVER_ROOT / 'data' / 'acquisitions' / str(acquisition_id)
     if photos_dir.is_dir():
         shutil.rmtree(photos_dir)
 
 
+def delete_acquisition_photos(session: Session, acquisition_id: int) -> None:
+    session.query(AcquisitionPhoto).filter(AcquisitionPhoto.acquisition_id == acquisition_id).delete()
+    delete_acquisition_files(acquisition_id)
+
+
 def delete_acquisition(session: Session, acquisition: Acquisition) -> None:
-    delete_acquisition_photos(session, acquisition.id)
-    camera_settings = acquisition.camera_settings
     session.delete(acquisition)
-    session.delete(camera_settings)
 
 
 def _mark_acquisition_failed(session: Session, acquisition_id: int) -> None:

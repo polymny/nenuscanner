@@ -41,9 +41,7 @@ def duplicate_scenario(source: Scenario, new_name: str) -> Scenario:
     duplicated = Scenario(name=new_name, is_custom=True)
 
     duplicated.leds = [ScenarioLED(led_value=led.led_value, power=led.power) for led in source.leds]
-    duplicated.shutter_speeds = [
-        ScenarioShutterSpeed(relative_value=ss.relative_value) for ss in source.shutter_speeds
-    ]
+    duplicated.shutter_speeds = [ScenarioShutterSpeed(relative_value=ss.relative_value) for ss in source.shutter_speeds]
     duplicated.rotations = [ScenarioRotation(radians_value=r.radians_value) for r in source.rotations]
 
     duplicated.updated_at = func.now()

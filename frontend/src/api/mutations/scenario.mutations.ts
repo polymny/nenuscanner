@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { scenariosKeyFactory } from '../queries/scenario.queries';
+import { acquisitionsKeyFactory } from '../queries/acquisition.queries';
 import type { ApiError, UseMutationOtherOptions } from '@/lib/api-types';
 import type { DuplicateScenarioPayload, UpsertScenarioPayload } from '@/schemas/scenario.schemas';
 import type { Scenario } from '@/types/scenario.types';
@@ -42,6 +43,7 @@ export const useDeleteScenario = (options?: UseMutationOtherOptions<void, AxiosE
     },
     onSuccess: (data, vars, result, ctx) => {
       void queryClient.invalidateQueries({ queryKey: scenariosKeyFactory.base() });
+      void queryClient.invalidateQueries({ queryKey: acquisitionsKeyFactory.base() });
       options?.onSuccess?.(data, vars, result, ctx);
     },
   });

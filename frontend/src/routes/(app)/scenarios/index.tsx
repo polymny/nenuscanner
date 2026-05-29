@@ -1,14 +1,12 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useState } from 'react';
 import { Clapperboard } from 'lucide-react';
-import { toast } from 'sonner';
+import DeleteScenarioDialog from './-components/delete-scenario-dialog';
 import DuplicateScenarioDialog from './-components/duplicate-scenario-dialog';
 import { ScenarioCard } from './-components/scenario-card';
 import { ComponentCardSkeleton } from '@/components/component-card';
 import { Button } from '@/components/ui/button';
-import ConfirmActionDialog from '@/components/confirm-action-dialog';
 import { useGetScenarios } from '@/api/queries/scenario.queries';
-import { useDeleteScenario } from '@/api/mutations/scenario.mutations';
 import { useMinimumLoadingDuration } from '@/hooks/use-minimum-loading-duration';
 
 export const Route = createFileRoute('/(app)/scenarios/')({
@@ -23,14 +21,7 @@ function RouteComponent() {
   const [selectedScenarioId, setSelectedScenarioId] = useState<null | number>(null);
   const [openDuplicateDialog, setOpenDuplicateDialog] = useState(false);
 
-  const { mutate: deleteScenario } = useDeleteScenario({
-    onSuccess: () => {
-      toast.success('Scénario supprimé.');
-    },
-    onError: () => {
-      toast.error('La suppression a échoué.');
-    },
-  });
+  const selectedScenario = scenarios?.find((scenario) => scenario.id === selectedScenarioId) ?? null;
 
   return (
     <div className="bg-gray-25 flex h-full flex-col items-center gap-6 px-20 py-8">
@@ -93,17 +84,7 @@ function RouteComponent() {
           </div>
         )}
       </div>
-      <ConfirmActionDialog
-        confirmButtonContent="Supprimer"
-        confirmButtonVariant={{ variant: 'destructive' }}
-        description="Voulez-vous vraiment supprimer ce scénario ? Cette action ne peut pas être annulée."
-        handleConfirmAction={() => {
-          if (selectedScenarioId) deleteScenario(selectedScenarioId);
-        }}
-        open={openDeleteDialog}
-        setOpen={setOpenDeleteDialog}
-        title="Supprimer le scénario"
-      />
+      <DeleteScenarioDialog open={openDeleteDialog} scenario={selectedScenario} setOpen={setOpenDeleteDialog} />
       <DuplicateScenarioDialog
         open={openDuplicateDialog}
         setOpen={setOpenDuplicateDialog}
