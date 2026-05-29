@@ -5,7 +5,7 @@ from ..dtos.scenario_dto import ScenarioCreateSchema, ScenarioDuplicateSchema, S
 from ..models.acquisition import Acquisition, AcquisitionStatus
 from ..models.scenario import Scenario
 from ..services.arms_position_service import get_last_arms_position
-from ..services.scenario_service import apply_scenario_payload, duplicate_scenario
+from ..services.scenario_service import apply_scenario_payload, duplicate_scenario, scenario_summary_dto
 from ...sa_db import db_session
 
 blp = Blueprint('scenario', __name__, description='Scenario endpoints')
@@ -18,11 +18,7 @@ def _scenario_to_details_dto(
     calibrations_by_scenario_id: dict[int, list[dict]] | None = None,
 ) -> dict:
     return {
-        'id': scenario.id,
-        'name': scenario.name,
-        'leds': [{'value': led.led_value, 'power': led.power} for led in scenario.leds],
-        'rotationsCount': len(scenario.rotations),
-        'shutterSpeeds': [ss.relative_value for ss in scenario.shutter_speeds],
+        **scenario_summary_dto(scenario),
         'acquisitions': (acquisitions_by_scenario_id or {}).get(scenario.id, []),
         'calibrations': (calibrations_by_scenario_id or {}).get(scenario.id, []),
         'updatedAt': scenario.updated_at,

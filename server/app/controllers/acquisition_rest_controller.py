@@ -16,6 +16,7 @@ from ..models.artifact import Artifact
 from ..models.scenario import Scenario
 from ..services.acquisition_service import (
     acquisition_photos_load_options,
+    acquisition_scenario_load_options,
     acquisition_thumbnail_url,
     delete_acquisition,
     delete_pending_acquisitions,
@@ -26,6 +27,7 @@ from ..services.acquisition_service import (
 from ..services.arms_position_service import get_last_arms_position
 from ..services.camera_settings_service import snapshot_current_camera_settings
 from ..services.profile_service import get_first_active_profile
+from ..services.scenario_service import scenario_summary_dto
 from ..services.sse_job_runner import sse_job_registry
 from ...sa_db import db_session
 
@@ -47,14 +49,13 @@ def _photo_to_dto(photo) -> dict:
     }
 
 
-def _to_dto(row: Acquisition, *, include_photos: bool = False) -> dict:
+def _to_dto(row: Acquisition, *, scenario: Scenario | None = None, include_photos: bool = False) -> dict:
     cam = row.camera_settings
     payload = {
         'id': row.id,
         'name': row.name,
         'thumbnail': acquisition_thumbnail_url(row.photos),
         'artifactId': row.artifact_id,
-        'scenarioId': row.scenario_id,
         'calibrationId': row.calibration_id,
         'armsPositionId': row.arms_position_id,
         'profileId': row.profile_id,
@@ -66,6 +67,7 @@ def _to_dto(row: Acquisition, *, include_photos: bool = False) -> dict:
         'isCalibration': row.is_calibration,
         'createdAt': row.created_at,
         'updatedAt': row.updated_at,
+        'scenario': scenario_summary_dto(scenario if scenario is not None else row.scenario),
     }
     if include_photos:
         payload['photos'] = [_photo_to_dto(photo) for photo in row.photos]
@@ -84,7 +86,7 @@ class AcquisitionController(MethodView):
 
         rows = (
             db_session.query(Acquisition)
-            .options(*acquisition_photos_load_options())
+            .options(*acquisition_photos_load_options(), *acquisition_scenario_load_options())
             .filter(
                 Acquisition.artifact_id == artifact_id,
                 Acquisition.is_calibration.is_(False),
@@ -155,7 +157,7 @@ class AcquisitionController(MethodView):
         db_session.add(acquisition)
         db_session.commit()
 
-        return _to_dto(acquisition)
+        return _to_dto(acquisition, scenario=scenario)
 
 
 @blp.route('/calibrations')
@@ -170,7 +172,7 @@ class CalibrationController(MethodView):
 
         query = (
             db_session.query(Acquisition)
-            .options(*acquisition_photos_load_options())
+            .options(*acquisition_photos_load_options(), *acquisition_scenario_load_options())
             .filter(Acquisition.is_calibration.is_(True))
         )
 
@@ -228,7 +230,7 @@ class CalibrationController(MethodView):
         db_session.add(calibration)
         db_session.commit()
 
-        return _to_dto(calibration)
+        return _to_dto(calibration, scenario=scenario)
 
 
 @blp.route('/<int:acquisition_id>')

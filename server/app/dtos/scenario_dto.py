@@ -22,6 +22,17 @@ class ScenarioLEDSchema(Schema):
     power = fields.Float(required=True, validate=validate.Range(min=0, max=1))
 
 
+class ScenarioSummarySchema(Schema):
+    class Meta:
+        ordered = True
+
+    id = fields.Integer(required=True)
+    name = fields.String(required=True)
+    leds = fields.List(fields.Nested(ScenarioLEDSchema), required=True)
+    rotationsCount = fields.Integer(required=True, data_key='rotationsCount')
+    shutterSpeeds = fields.List(fields.Float(), required=True, data_key='shutterSpeeds')
+
+
 class ScenarioReadSchema(Schema):
     class Meta:
         ordered = True

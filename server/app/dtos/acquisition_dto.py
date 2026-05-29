@@ -1,5 +1,6 @@
 from marshmallow import EXCLUDE, Schema, fields, validate
 
+from .scenario_dto import ScenarioSummarySchema
 from ..models.acquisition import AcquisitionStatus
 
 _ACQUISITION_NAME_PATTERN = r'^[a-zA-ZÀ-ÿ0-9\s\-_()]+$'
@@ -30,7 +31,6 @@ class AcquisitionReadSchema(Schema):
     id = fields.Integer(required=True)
     name = fields.String(required=True)
     artifactId = fields.Integer(required=True, allow_none=True)
-    scenarioId = fields.Integer(required=True)
     calibrationId = fields.Integer(required=True, allow_none=True)
     armsPositionId = fields.Integer(required=True)
     profileId = fields.Integer(required=True, allow_none=True)
@@ -43,6 +43,7 @@ class AcquisitionReadSchema(Schema):
     createdAt = fields.DateTime(required=True)
     updatedAt = fields.DateTime(required=True)
     thumbnail = fields.String(required=True, allow_none=True)
+    scenario = fields.Nested(ScenarioSummarySchema, required=True)
 
 
 class AcquisitionPhotoReadSchema(Schema):

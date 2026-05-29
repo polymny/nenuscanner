@@ -14,6 +14,7 @@ import { Switch } from '@/components/ui/switch';
 import { FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
 import DialogBackButton from '@/components/ui/dialog-back-button';
 import { useMinimumLoadingDuration } from '@/hooks/use-minimum-loading-duration';
+import ScenarioSummaryStats from '@/components/scenario/scenario-summary-stats';
 
 interface SelectAcquisitionScenarioProps {
   setOpen: Dispatch<boolean>;
@@ -80,11 +81,16 @@ const SelectAcquisitionScenario = ({
                       {scenarios.map((scenario) => {
                         return (
                           <FlatRadioGroupItem className="h-max" key={scenario.id} value={scenario.id.toString()}>
-                            <div className="flex items-center gap-2">
-                              <div className="bg-brand-600 rounded-full p-2">
-                                <Clapperboard className="size-4 text-white" />
+                            <div className="flex items-center gap-3 divide-x divide-gray-200">
+                              <div className="inline-flex items-center gap-2 px-2">
+                                <div className="bg-brand-600 flex rounded-full p-2">
+                                  <Clapperboard className="size-4 text-white" />
+                                </div>
+                                <div className="wrap-break-words max-w-[300px] text-sm font-medium text-gray-700">
+                                  {scenario.name}
+                                </div>
                               </div>
-                              <div className="text-sm font-semibold text-gray-700">{scenario.name}</div>
+                              <ScenarioSummaryStats scenario={scenario} />
                             </div>
                           </FlatRadioGroupItem>
                         );

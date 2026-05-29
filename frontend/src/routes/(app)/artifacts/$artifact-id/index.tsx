@@ -1,7 +1,8 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { Camera } from 'lucide-react';
 import { toast } from 'sonner';
+import AcquisitionsGrid from './-components/acquisitions-grid';
 import CreateAcquisitionDialog from './-components/create-acquisition/create-acquisition-dialog';
 import { useGetArtifacts } from '@/api/queries/artifact.queries';
 import CustomBreadcrumb from '@/components/ui/custom-breadcrumb';
@@ -10,7 +11,6 @@ import { useGetAcquisitionsByArtifactId } from '@/api/queries/acquisition.querie
 import { ComponentCardSkeleton } from '@/components/component-card';
 import { useDeleteAcquisition } from '@/api/mutations/acquisition.mutations';
 import ConfirmActionDialog from '@/components/confirm-action-dialog';
-import AcquisitionCard from '@/components/acquisition/acquisition-card';
 import { useMinimumLoadingDuration } from '@/hooks/use-minimum-loading-duration';
 
 export const Route = createFileRoute('/(app)/artifacts/$artifact-id/')({
@@ -41,6 +41,18 @@ function RouteComponent() {
   });
 
   const [openCreateAcquisitionDialog, setOpenCreateAcquisitionDialog] = useState(false);
+
+  const handleAcquisitionNavigate = useCallback(
+    (acquisitionId: number) => {
+      void navigate({ to: `/acquisitions/${acquisitionId}` });
+    },
+    [navigate]
+  );
+
+  const handleAcquisitionDelete = useCallback((acquisitionId: number) => {
+    setSelectedAcquisitionId(acquisitionId);
+    setOpenDeleteDialog(true);
+  }, []);
 
   if (!isLoadingArtifacts && !existingArtifact) {
     navigate({ to: '/artifacts' });
@@ -79,19 +91,11 @@ function RouteComponent() {
             <Button onClick={() => setOpenCreateAcquisitionDialog(true)}>Créer une acquisition</Button>
           </div>
         ) : (
-          <div className="grid grid-cols-4 gap-5">
-            {acquisitions.map((acquisition) => (
-              <AcquisitionCard
-                acquisition={acquisition}
-                key={acquisition.id}
-                onClick={() => navigate({ to: `/acquisitions/${acquisition.id}` })}
-                onDelete={() => {
-                  setSelectedAcquisitionId(acquisition.id);
-                  setOpenDeleteDialog(true);
-                }}
-              />
-            ))}
-          </div>
+          <AcquisitionsGrid
+            acquisitions={acquisitions}
+            onDelete={handleAcquisitionDelete}
+            onNavigate={handleAcquisitionNavigate}
+          />
         )}
       </div>
       <CreateAcquisitionDialog

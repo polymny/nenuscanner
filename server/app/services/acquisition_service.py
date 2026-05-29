@@ -11,6 +11,7 @@ from .scenario_execution_service import execute_scenario_mock
 from .sse_job_runner import SseJobContext
 from ..models.acquisition import Acquisition, AcquisitionStatus
 from ..models.acquisition_photo import AcquisitionPhoto
+from ..models.scenario import Scenario
 from ...sa_db import db_session
 
 _THUMBNAIL_TARGET_SHUTTER_RELATIVE = 1.0
@@ -33,6 +34,14 @@ def acquisition_photos_load_options():
         joinedload(Acquisition.photos).joinedload(AcquisitionPhoto.scenario_led),
         joinedload(Acquisition.photos).joinedload(AcquisitionPhoto.scenario_rotation),
         joinedload(Acquisition.photos).joinedload(AcquisitionPhoto.scenario_shutter_speed),
+    )
+
+
+def acquisition_scenario_load_options():
+    return (
+        joinedload(Acquisition.scenario).joinedload(Scenario.leds),
+        joinedload(Acquisition.scenario).joinedload(Scenario.rotations),
+        joinedload(Acquisition.scenario).joinedload(Scenario.shutter_speeds),
     )
 
 
@@ -149,7 +158,7 @@ def delete_pending_acquisitions(
 def get_acquisition_with_photos(session: Session, acquisition_id: int) -> Acquisition | None:
     return (
         session.query(Acquisition)
-        .options(*acquisition_photos_load_options())
+        .options(*acquisition_photos_load_options(), *acquisition_scenario_load_options())
         .filter(Acquisition.id == acquisition_id)
         .one_or_none()
     )

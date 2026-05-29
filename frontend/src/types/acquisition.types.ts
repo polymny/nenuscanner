@@ -1,5 +1,6 @@
 import type { VariantProps } from 'class-variance-authority';
 import type { LedValue } from './led.types';
+import type { ScenarioSummary } from './scenario.types';
 import type { badgeVariants } from '@/components/ui/badge';
 
 export const ACQUISITION_STATUSES = ['PENDING', 'RUNNING', 'COMPLETED', 'FAILED'] as const;
@@ -20,7 +21,7 @@ export interface Acquisition {
   name: string;
   thumbnail: string | null;
   artifactId: number | null;
-  scenarioId: number;
+  scenario: ScenarioSummary;
   calibrationId: number | null;
   armsPositionId: number;
   withRotationAutofocus: boolean;

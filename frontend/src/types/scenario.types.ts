@@ -5,12 +5,15 @@ export interface ScenarioLed {
   power: number;
 }
 
-export interface Scenario {
+export interface ScenarioSummary {
   id: number;
   name: string;
   leds: Array<ScenarioLed>;
   rotationsCount: number;
   shutterSpeeds: Array<number>;
+}
+
+export interface Scenario extends ScenarioSummary {
   acquisitions: Array<{ id: number; name: string }>;
   calibrations: Array<{ id: number; name: string }>;
   updatedAt: string;

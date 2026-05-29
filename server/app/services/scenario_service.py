@@ -10,6 +10,16 @@ from ..models.scenario import (
 )
 
 
+def scenario_summary_dto(scenario: Scenario) -> dict:
+    return {
+        'id': scenario.id,
+        'name': scenario.name,
+        'leds': [{'value': led.led_value, 'power': led.power} for led in scenario.leds],
+        'rotationsCount': len(scenario.rotations),
+        'shutterSpeeds': [ss.relative_value for ss in scenario.shutter_speeds],
+    }
+
+
 def apply_scenario_payload(scenario: Scenario, payload: dict) -> None:
     scenario.name = payload['name']
 

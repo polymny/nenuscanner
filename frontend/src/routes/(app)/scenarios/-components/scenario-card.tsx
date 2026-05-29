@@ -1,10 +1,11 @@
 import { useNavigate } from '@tanstack/react-router';
-import { Clapperboard, Copy, EllipsisVertical, Hourglass, Lightbulb, Moon, RotateCw, Sun, Trash } from 'lucide-react';
+import { Clapperboard, Copy, EllipsisVertical, Trash } from 'lucide-react';
 import type { Scenario } from '@/types/scenario.types';
 import { Badge } from '@/components/ui/badge';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 
+import ScenarioSummaryStats from '@/components/scenario/scenario-summary-stats';
 import { formatDateFr, pluralize } from '@/lib/utils';
 
 export interface ScenarioCardProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -16,12 +17,6 @@ export function ScenarioCard({ scenario, onDelete, onDuplicate }: ScenarioCardPr
   const navigate = useNavigate();
 
   const isCalibrated = scenario.calibrations.length > 0;
-  const ledValues = scenario.leds.map((l) => l.value);
-  const hasNoLed = ledValues.includes('NO_LED');
-  const hasAllLeds = ledValues.includes('ALL_LEDS');
-  const ledsCount = ledValues.length;
-  const shutterSpeedsCount = scenario.shutterSpeeds.length;
-  const rotationsCount = scenario.rotationsCount;
 
   return (
     <div
@@ -97,39 +92,7 @@ export function ScenarioCard({ scenario, onDelete, onDuplicate }: ScenarioCardPr
         </div>
       </div>
 
-      <div className="ml-[50px] flex flex-wrap items-center divide-x divide-gray-200 text-gray-600">
-        {hasNoLed && (
-          <span className="inline-flex items-center px-2 first:pl-0 last:pr-0" title="Aucune LED">
-            <Moon className="size-4 text-indigo-600" />
-          </span>
-        )}
-        {hasAllLeds && (
-          <span className="inline-flex items-center px-2 first:pl-0 last:pr-0" title="Toutes les LEDs">
-            <Sun className="size-4 text-amber-500" />
-          </span>
-        )}
-        <span
-          className="inline-flex items-center gap-1 px-2 first:pl-0 last:pr-0"
-          title={`${ledsCount} ${pluralize(ledsCount, 'valeur')} de LED`}
-        >
-          <span className="text-xs font-semibold text-sky-700 tabular-nums">{ledsCount}</span>
-          <Lightbulb className="size-4 text-sky-600" />
-        </span>
-        <span
-          className="inline-flex items-center gap-1 px-2 first:pl-0 last:pr-0"
-          title={`${shutterSpeedsCount} ${pluralize(shutterSpeedsCount, 'vitesse')} d'obturation`}
-        >
-          <span className="text-xs font-semibold text-cyan-700 tabular-nums">{shutterSpeedsCount}</span>
-          <Hourglass className="size-4 text-cyan-600" />
-        </span>
-        <span
-          className="inline-flex items-center gap-1 px-2 first:pl-0 last:pr-0"
-          title={`${rotationsCount} ${pluralize(rotationsCount, 'rotation')}`}
-        >
-          <span className="text-xs font-semibold text-violet-700 tabular-nums">{rotationsCount}</span>
-          <RotateCw className="size-4 text-violet-600" />
-        </span>
-      </div>
+      <ScenarioSummaryStats className="ml-[50px]" scenario={scenario} />
     </div>
   );
 }
