@@ -3,7 +3,8 @@ import { useState } from 'react';
 import { Clapperboard } from 'lucide-react';
 import { toast } from 'sonner';
 import DuplicateScenarioDialog from './-components/duplicate-scenario-dialog';
-import { ComponentCard, ComponentCardSkeleton } from '@/components/component-card';
+import { ScenarioCard } from './-components/scenario-card';
+import { ComponentCardSkeleton } from '@/components/component-card';
 import { Button } from '@/components/ui/button';
 import ConfirmActionDialog from '@/components/confirm-action-dialog';
 import { useGetScenarios } from '@/api/queries/scenario.queries';
@@ -76,10 +77,9 @@ function RouteComponent() {
         ) : (
           <div className="grid grid-cols-3 gap-5">
             {scenarios.map((scenario) => (
-              <ComponentCard
-                name={scenario.name}
+              <ScenarioCard
+                scenario={scenario}
                 key={scenario.id}
-                onClickPath={`/scenarios/${scenario.id}`}
                 onDuplicate={() => {
                   setSelectedScenarioId(scenario.id);
                   setOpenDuplicateDialog(true);

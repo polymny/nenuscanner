@@ -25,6 +25,7 @@ def _scenario_to_details_dto(
         'shutterSpeeds': [ss.relative_value for ss in scenario.shutter_speeds],
         'acquisitions': (acquisitions_by_scenario_id or {}).get(scenario.id, []),
         'calibrations': (calibrations_by_scenario_id or {}).get(scenario.id, []),
+        'updatedAt': scenario.updated_at,
     }
 
 

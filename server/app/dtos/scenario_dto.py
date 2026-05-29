@@ -28,6 +28,7 @@ class ScenarioReadSchema(Schema):
 
     id = fields.Integer(required=True)
     name = fields.String(required=True)
+    updatedAt = fields.DateTime(required=True)
     leds = fields.List(fields.Nested(ScenarioLEDSchema), required=True)
     rotationsCount = fields.Integer(required=True, data_key='rotationsCount')
     shutterSpeeds = fields.List(fields.Float(), required=True, data_key='shutterSpeeds')

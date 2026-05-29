@@ -13,5 +13,5 @@ export interface Scenario {
   shutterSpeeds: Array<number>;
   acquisitions: Array<{ id: number; name: string }>;
   calibrations: Array<{ id: number; name: string }>;
+  updatedAt: string;
 }
-

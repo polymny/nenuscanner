@@ -6,6 +6,8 @@ export function cn(...inputs: Array<ClassValue>) {
   return twMerge(clsx(inputs));
 }
 
+export const pluralize = (count: number, word: string) => (count <= 1 ? word : `${word}s`);
+
 export const formatDateFr = (date: Date | string | number) => {
   const parsed = date instanceof Date ? date : new Date(date);
   if (Number.isNaN(parsed.getTime())) return '';
