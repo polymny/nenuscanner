@@ -35,6 +35,7 @@ function RouteComponent() {
       />
       <h1>{existingScenario.name}</h1>
       <UpsertScenarioForm
+        key={existingScenario.id}
         mode="update"
         scenarioId={existingScenario.id}
         onRequestDuplicate={() => {
