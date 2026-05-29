@@ -1,4 +1,4 @@
-import { useForm } from 'react-hook-form';
+import { useForm, useFormContext, useFormState, useWatch } from 'react-hook-form';
 import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useNavigate } from '@tanstack/react-router';
@@ -10,19 +10,51 @@ import type { UpsertScenarioPayload } from '@/schemas/scenario.schemas';
 import { upsertScenarioSchema } from '@/schemas/scenario.schemas';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
 import { SHUTTER_SPEED_REFERENCE_VALUE } from '@/lib/shutter-speed-utils';
 import { SliderWithLabels } from '@/components/ui/slider-with-labels';
 import { useUpsertScenario } from '@/api/mutations/scenario.mutations';
 import { useGetScenarios } from '@/api/queries/scenario.queries';
 import { Input } from '@/components/ui/input';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { cn } from '@/lib/utils';
 
 interface UpsertScenarioFormProps {
   mode: 'create' | 'update';
   scenarioId?: number;
   onRequestDuplicate?: () => void;
 }
+
+const RotationsCountAlert = () => {
+  const { control } = useFormContext<UpsertScenarioPayload>();
+  const rotationsCount = useWatch({ control, name: 'rotationsCount' });
+
+  return (
+    <Alert
+      className={cn('border-success-200 bg-success-50 text-success-800', rotationsCount === 0 ? '' : 'opacity-0')}
+    >
+      <AlertTitle>Compatible sans plateau tournant</AlertTitle>
+      <AlertDescription>
+        Avec 0 rotation, votre configuration est compatible avec un setup sans plateau tournant.
+      </AlertDescription>
+    </Alert>
+  );
+};
+
+interface ScenarioFormSubmitButtonProps {
+  isUpserting: boolean;
+}
+
+const ScenarioFormSubmitButton = ({ isUpserting }: ScenarioFormSubmitButtonProps) => {
+  const { control } = useFormContext<UpsertScenarioPayload>();
+  const { isValid } = useFormState({ control });
+
+  return (
+    <Button disabled={!isValid || isUpserting} size="lg" type="submit">
+      Valider
+      {isUpserting && <Loader2 className="ml-2 h-4 w-4 animate-spin" />}
+    </Button>
+  );
+};
 
 const UpsertScenarioForm = ({ mode, scenarioId, onRequestDuplicate }: UpsertScenarioFormProps) => {
   const navigate = useNavigate();
@@ -52,8 +84,6 @@ const UpsertScenarioForm = ({ mode, scenarioId, onRequestDuplicate }: UpsertScen
     },
     mode: 'onChange',
   });
-
-  const rotationsCountWatch = form.watch('rotationsCount');
 
   return (
     <Form {...form}>
@@ -123,17 +153,7 @@ const UpsertScenarioForm = ({ mode, scenarioId, onRequestDuplicate }: UpsertScen
                 </FormItem>
               )}
             />
-            <Alert
-              className={cn(
-                'border-success-200 bg-success-50 text-success-800',
-                rotationsCountWatch === 0 ? '' : 'opacity-0'
-              )}
-            >
-              <AlertTitle>Compatible sans plateau tournant</AlertTitle>
-              <AlertDescription>
-                Avec 0 rotation, votre configuration est compatible avec un setup sans plateau tournant.
-              </AlertDescription>
-            </Alert>
+            <RotationsCountAlert />
           </div>
         </div>
 
@@ -142,10 +162,7 @@ const UpsertScenarioForm = ({ mode, scenarioId, onRequestDuplicate }: UpsertScen
             Dupliquer
           </Button>
         ) : (
-          <Button disabled={!form.formState.isValid || isUpsertingScenario} size="lg" type="submit">
-            Valider
-            {isUpsertingScenario && <Loader2 className="ml-2 h-4 w-4 animate-spin" />}
-          </Button>
+          <ScenarioFormSubmitButton isUpserting={isUpsertingScenario} />
         )}
       </form>
     </Form>
