@@ -1,0 +1,3 @@
+[virtualenvs]
+in-project = true
+system-site-packages = true # in order to use RPi python3-gpiozero package

@@ -13,10 +13,59 @@ from .sse_job_runner import SseJobContext
 from ..models.acquisition import Acquisition
 from ..models.acquisition_photo import AcquisitionPhoto
 from ..models.scenario import Scenario, ScenarioLED, ScenarioRotation, ScenarioShutterSpeed
+from ... import config, leds
 
 STEP_DELAY_SECONDS = 1
 POC_IMAGE_SIZE = '800/600'
 SERVER_ROOT = Path(__file__).resolve().parents[2]
+
+
+@dataclass
+class _LedState:
+    current_led_uuid: int | None = None
+    all_leds: bool = False
+
+
+def _led_index_to_uuid(led_index: int) -> int:
+    if led_index < 1 or led_index > len(config.LEDS_UUIDS):
+        raise ValueError(f'invalid-led-index:{led_index}')
+    return int(config.LEDS_UUIDS[led_index - 1])
+
+
+def _apply_led_value(gpio_leds: leds.Leds, led_value: str, state: _LedState) -> None:
+    """
+    Apply scenario LED value to hardware, with minimal switching.
+
+    `led_value` is either:
+    - 'NO_LED' (turn off all)
+    - 'ALL_LEDS' (turn on all)
+    - a numeric index '1'..'N' (index into config.LEDS_UUIDS)
+    """
+    if led_value == 'NO_LED':
+        if state.all_leds or state.current_led_uuid is not None:
+            gpio_leds.off()
+            state.current_led_uuid = None
+            state.all_leds = False
+        return
+
+    if led_value == 'ALL_LEDS':
+        if not state.all_leds:
+            gpio_leds.on()
+            state.current_led_uuid = None
+            state.all_leds = True
+        return
+
+    next_led_uuid = _led_index_to_uuid(int(led_value))
+
+    if state.all_leds:
+        gpio_leds.off()
+        state.all_leds = False
+
+    if next_led_uuid != state.current_led_uuid:
+        if state.current_led_uuid is not None:
+            gpio_leds.get_by_uuid(state.current_led_uuid).off()
+        gpio_leds.get_by_uuid(next_led_uuid).on()
+        state.current_led_uuid = next_led_uuid
 
 
 @dataclass(frozen=True)
@@ -128,7 +177,13 @@ def execute_scenario_mock(
         },
     )
 
+    gpio_leds = leds.get()
+    led_state = _LedState()
+    gpio_leds.off()
+
     for step in steps:
+        _apply_led_value(gpio_leds, step.led.led_value, led_state)
+
         filename = (
             f'photo-r{step.rotation.id if step.rotation else 0}'
             f'-l{step.led.id}-s{step.shutter_speed.id}-{step.step_index:04d}.jpg'
@@ -165,3 +220,5 @@ def execute_scenario_mock(
 
         if step.step_index < total:
             time.sleep(STEP_DELAY_SECONDS)
+
+    gpio_leds.off()

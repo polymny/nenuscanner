@@ -9,6 +9,6 @@ DATABASE_PATH = join(DATA_DIR, 'db.sqlite')
 AUTO_USE_LAST_CALIBRATION = False
 DELAY = 0.5
 GPIO_CHIP = None
-LEDS_UUIDS = [17, 18, 22, 23, 24, 27]
+LEDS_UUIDS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
 FAN_UUID = None
 CAMERA = 'dummy'
