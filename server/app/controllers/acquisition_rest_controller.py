@@ -40,7 +40,7 @@ def _photo_to_dto(photo) -> dict:
     shutter_speed = photo.scenario_shutter_speed
     return {
         'id': photo.id,
-        'imageUrl': photo_path_to_url(photo.path),
+        'imageUrl': photo_path_to_url(photo.preview_path),
         'acquisitionId': photo.acquisition_id,
         'rotationRadians': rotation.radians_value if rotation is not None else None,
         'ledValue': led.led_value if led is not None else None,

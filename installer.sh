@@ -7,7 +7,7 @@ yes | sudo apt-get update
 yes | sudo apt-get upgrade
 yes | sudo apt-get install \
     python3-flask python3-gphoto2 python3-pil python3-numpy python3-scipy python3-waitress \
-    git gphoto2 imagemagick
+    git gphoto2 imagemagick exiftool
 
 # Setup code
 git clone https://github.com/polymny/nenuscanner

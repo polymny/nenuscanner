@@ -13,3 +13,4 @@ GPIO_CHIP = 'gpiochip0'
 LEDS_UUIDS = [17, 27, 22, 5, 6, 13, 19, 26, 21, 20, 16, 12]
 FAN_UUID = 10
 CAMERA = 'real'
+CAMERA_RAW_EXTENSION = 'nef'

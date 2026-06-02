@@ -9,7 +9,8 @@ from pathlib import Path
 
 from sqlalchemy.orm import Session, joinedload
 
-from .gphoto2_service import capture_image_to_file
+from .exiftool_service import write_jpeg_preview_from_raw
+from .gphoto2_service import capture_raw_to_file
 from .sse_job_runner import SseJobContext
 from ..models.acquisition import Acquisition
 from ..models.acquisition_photo import AcquisitionPhoto
@@ -185,32 +186,38 @@ def execute_scenario_mock(
     for step in steps:
         _apply_led_value(gpio_leds, step.led.led_value, led_state)
 
-        filename = (
+        base = (
             f'photo-r{step.rotation.id if step.rotation else 0}'
-            f'-l{step.led.id}-s{step.shutter_speed.id}-{step.step_index:04d}.jpg'
+            f'-l{step.led.id}-s{step.shutter_speed.id}-{step.step_index:04d}'
         )
-        relative_path = photo_relative_path(acquisition_id, filename)
-        file_path = SERVER_ROOT / relative_path
+        preview_relative_path = photo_relative_path(acquisition_id, f'{base}.jpg')
+        raw_ext = getattr(config, 'CAMERA_RAW_EXTENSION', 'nef')  # fallback on Nikon RAW extension
+        raw_relative_path = photo_relative_path(acquisition_id, f'{base}.{raw_ext}')
 
         if config.CAMERA == 'real':
             cam = acquisition.camera_settings
             target_shutter_speed = float(cam.absolute_shutter_speed_value) * float(step.shutter_speed.relative_value)
-            capture_image_to_file(
-                str(file_path),
+            raw_file_path = str(SERVER_ROOT / raw_relative_path)
+            preview_file_path = str(SERVER_ROOT / preview_relative_path)
+            capture_raw_to_file(
+                raw_file_path,
                 shutterspeed_value=target_shutter_speed,
                 iso_value=float(cam.iso_value),
                 aperture_value=float(cam.aperture_value),
             )
+            write_jpeg_preview_from_raw(raw_file_path, preview_file_path)
         else:
             seed = (
                 f'nenuscanner-{acquisition_id}-r{step.rotation.id if step.rotation else 0}'
                 f'-l{step.led.id}-s{step.shutter_speed.id}'
             )
             source_url = f'https://picsum.photos/seed/{seed}/{POC_IMAGE_SIZE}'
-            urllib.request.urlretrieve(source_url, file_path)
+            urllib.request.urlretrieve(source_url, SERVER_ROOT / preview_relative_path)
+            raw_relative_path = preview_relative_path
 
         photo = AcquisitionPhoto(
-            path=relative_path,
+            preview_path=preview_relative_path,
+            raw_path=raw_relative_path,
             acquisition_id=acquisition_id,
             scenario_rotation_id=step.rotation.id if step.rotation is not None else None,
             scenario_shutter_speed_id=step.shutter_speed.id,
@@ -223,13 +230,13 @@ def execute_scenario_mock(
             'photo_ready',
             {
                 'total': total,
-                'imageUrl': photo_path_to_url(relative_path),
+                'imageUrl': photo_path_to_url(preview_relative_path),
                 **_scenario_progress_payload(step),
             },
         )
         session.commit()
 
-        if step.step_index < total:
+        if step.step_index < total and config.CAMERA != 'real':
             time.sleep(STEP_DELAY_SECONDS)
 
     gpio_leds.off()

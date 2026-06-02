@@ -68,7 +68,7 @@ def acquisition_thumbnail_url(photos: list[AcquisitionPhoto]) -> str | None:
             else float('inf')
         ),
     )
-    return photo_path_to_url(best.path)
+    return photo_path_to_url(best.preview_path)
 
 
 def run_acquisition(context: SseJobContext, acquisition_id: int) -> None:

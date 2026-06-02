@@ -12,7 +12,8 @@ class AcquisitionPhoto(Base):
     __tablename__ = 'acquisition_photo'
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    path: Mapped[str] = mapped_column(String(512), nullable=False)
+    preview_path: Mapped[str] = mapped_column(String(512), nullable=False)
+    raw_path: Mapped[str] = mapped_column(String(512), nullable=False)
     acquisition_id: Mapped[int] = mapped_column(
         ForeignKey('artifact_acquisition.id', ondelete='CASCADE'),
         nullable=False,
@@ -41,5 +42,6 @@ class AcquisitionPhoto(Base):
 
     def __repr__(self) -> str:
         return (
-            f'AcquisitionPhoto(id={self.id!r}, acquisition_id={self.acquisition_id!r}, path={self.path!r})'
+            f'AcquisitionPhoto(id={self.id!r}, acquisition_id={self.acquisition_id!r}, '
+            f'preview_path={self.preview_path!r}, raw_path={self.raw_path!r})'
         )

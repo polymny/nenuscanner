@@ -115,19 +115,15 @@ def _run_gphoto2_set_config(config_name: str, value: str) -> None:
         )
 
 
-def capture_image_to_file(
-    output_path: str,
+def capture_raw_to_file(
+    raw_path: str,
     *,
     shutterspeed_value: float | None = None,
     iso_value: float | None = None,
     aperture_value: float | None = None,
 ) -> None:
-    """
-    Capture a real image via gphoto2 and save it to `output_path`.
+    """Capture one RAW file via gphoto2 CLI (camera in RAW mode only)."""
 
-    Uses a single gphoto2 invocation with optional --set-config args followed by
-    capture + download to ensure the file is written locally.
-    """
     def _set_config_args(setting: str, value: float) -> list[str]:
         if setting not in _SETTING_CONFIGS:
             raise ValueError('unknown-camera-setting')
@@ -146,10 +142,12 @@ def capture_image_to_file(
     if aperture_value is not None:
         args += _set_config_args('aperture', float(aperture_value))
 
+    Path(raw_path).parent.mkdir(parents=True, exist_ok=True)
+
     args += [
         '--capture-image-and-download',
         '--filename',
-        output_path,
+        raw_path,
         '--force-overwrite',
     ]
 
@@ -158,9 +156,7 @@ def capture_image_to_file(
 
     if result.returncode != 0:
         err = (result.stderr or result.stdout or '').strip()
-        raise RuntimeError(err or 'capture-image-failed')
-
-    _flush_preview_buffer()
+        raise RuntimeError(err or 'capture-raw-failed')
 
 
 def _get_config(config_name: str) -> dict:
