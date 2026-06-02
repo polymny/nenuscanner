@@ -1,5 +1,4 @@
 import json
-import math
 import subprocess
 import threading
 import time
@@ -74,10 +73,6 @@ def parse_gphoto2_config_output(output: str) -> dict:
     return config
 
 
-def _values_match(left: float, right: float) -> bool:
-    return math.isclose(left, right, rel_tol=0.0, abs_tol=1e-9)
-
-
 def _parse_choices(config: dict, parse_label: Callable[[str], float]) -> list[tuple[int, float]]:
     parsed: list[tuple[int, float]] = []
     for choice in config.get('Choices', []):
@@ -91,19 +86,12 @@ def _parse_choices(config: dict, parse_label: Callable[[str], float]) -> list[tu
     return parsed
 
 
-def _choices_to_numbers(config: dict, parse_label: Callable[[str], float]) -> list[float]:
-    return [numeric_value for _, numeric_value in _parse_choices(config, parse_label)]
-
-
-def _current_to_number(config: dict, parse_label: Callable[[str], float]) -> float:
-    return parse_label(str(config.get('Current', '')))
-
-
-def _find_choice_index(config: dict, value: float, parse_label: Callable[[str], float]) -> int | None:
-    for choice_id, numeric_value in _parse_choices(config, parse_label):
-        if _values_match(numeric_value, value):
-            return choice_id
-    return None
+def _find_nearest_choice_index(config: dict, value: float, parse_label: Callable[[str], float]) -> int | None:
+    parsed = _parse_choices(config, parse_label)
+    if not parsed:
+        return None
+    best_id, _best_value = min(parsed, key=lambda pair: abs(pair[1] - value))
+    return int(best_id)
 
 
 def _run_gphoto2_get_config(config_name: str) -> str:
@@ -127,18 +115,56 @@ def _run_gphoto2_set_config(config_name: str, value: str) -> None:
         )
 
 
+def capture_image_to_file(
+    output_path: str,
+    *,
+    shutterspeed_value: float | None = None,
+    iso_value: float | None = None,
+    aperture_value: float | None = None,
+) -> None:
+    """
+    Capture a real image via gphoto2 and save it to `output_path`.
+
+    Uses a single gphoto2 invocation with optional --set-config args followed by
+    capture + download to ensure the file is written locally.
+    """
+    def _set_config_args(setting: str, value: float) -> list[str]:
+        if setting not in _SETTING_CONFIGS:
+            raise ValueError('unknown-camera-setting')
+        config_name, parse_label = _SETTING_CONFIGS[setting]
+        config = _get_config(config_name)
+        choice_index = _find_nearest_choice_index(config, value, parse_label)
+        if choice_index is None:
+            raise ValueError('invalid-camera-setting-value')
+        return ['--set-config', f'{config_name}={choice_index}']
+
+    args: list[str] = ['gphoto2']
+    if shutterspeed_value is not None:
+        args += _set_config_args('shutterspeed', float(shutterspeed_value))
+    if iso_value is not None:
+        args += _set_config_args('iso', float(iso_value))
+    if aperture_value is not None:
+        args += _set_config_args('aperture', float(aperture_value))
+
+    args += [
+        '--capture-image-and-download',
+        '--filename',
+        output_path,
+        '--force-overwrite',
+    ]
+
+    with _gphoto2_lock:
+        result = subprocess.run(args, capture_output=True, encoding='utf-8', check=False)
+
+    if result.returncode != 0:
+        err = (result.stderr or result.stdout or '').strip()
+        raise RuntimeError(err or 'capture-image-failed')
+
+    _flush_preview_buffer()
+
+
 def _get_config(config_name: str) -> dict:
     return parse_gphoto2_config_output(_run_gphoto2_get_config(config_name))
-
-
-def _fetch_setting(config_name: str, parse_label: Callable[[str], float]) -> tuple[list[float], float]:
-    config = _get_config(config_name)
-    values = _choices_to_numbers(config, parse_label)
-    try:
-        current = _current_to_number(config, parse_label)
-    except (TypeError, ValueError):
-        current = values[0] if values else 0.0
-    return values, current
 
 
 def get_camera_settings() -> dict:
@@ -150,7 +176,12 @@ def get_camera_settings() -> dict:
     }
     for setting, (config_name, parse_label) in _SETTING_CONFIGS.items():
         values_key, current_key = SETTING_RESPONSE_KEYS[setting]
-        values, current = _fetch_setting(config_name, parse_label)
+        config = _get_config(config_name)
+        values = [numeric_value for _, numeric_value in _parse_choices(config, parse_label)]
+        try:
+            current = parse_label(str(config.get('Current', '')))
+        except (TypeError, ValueError):
+            current = values[0] if values else 0.0
         settings[values_key] = values
         settings[current_key] = current
     return settings
@@ -163,7 +194,7 @@ def set_camera_setting(setting: str, value: float) -> None:
     config_name, parse_label = _SETTING_CONFIGS[setting]
     config = _get_config(config_name)
 
-    choice_index = _find_choice_index(config, value, parse_label)
+    choice_index = _find_nearest_choice_index(config, value, parse_label)
     if choice_index is None:
         raise ValueError('invalid-camera-setting-value')
 

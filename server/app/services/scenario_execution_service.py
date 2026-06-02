@@ -9,6 +9,7 @@ from pathlib import Path
 
 from sqlalchemy.orm import Session, joinedload
 
+from .gphoto2_service import capture_image_to_file
 from .sse_job_runner import SseJobContext
 from ..models.acquisition import Acquisition
 from ..models.acquisition_photo import AcquisitionPhoto
@@ -191,12 +192,22 @@ def execute_scenario_mock(
         relative_path = photo_relative_path(acquisition_id, filename)
         file_path = SERVER_ROOT / relative_path
 
-        seed = (
-            f'nenuscanner-{acquisition_id}-r{step.rotation.id if step.rotation else 0}'
-            f'-l{step.led.id}-s{step.shutter_speed.id}'
-        )
-        source_url = f'https://picsum.photos/seed/{seed}/{POC_IMAGE_SIZE}'
-        urllib.request.urlretrieve(source_url, file_path)
+        if config.CAMERA == 'real':
+            cam = acquisition.camera_settings
+            target_shutter_speed = float(cam.absolute_shutter_speed_value) * float(step.shutter_speed.relative_value)
+            capture_image_to_file(
+                str(file_path),
+                shutterspeed_value=target_shutter_speed,
+                iso_value=float(cam.iso_value),
+                aperture_value=float(cam.aperture_value),
+            )
+        else:
+            seed = (
+                f'nenuscanner-{acquisition_id}-r{step.rotation.id if step.rotation else 0}'
+                f'-l{step.led.id}-s{step.shutter_speed.id}'
+            )
+            source_url = f'https://picsum.photos/seed/{seed}/{POC_IMAGE_SIZE}'
+            urllib.request.urlretrieve(source_url, file_path)
 
         photo = AcquisitionPhoto(
             path=relative_path,
