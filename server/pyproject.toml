@@ -15,7 +15,6 @@ sqlalchemy = "^2.0.0"
 marshmallow = "^4"
 marshmallow-sqlalchemy = "^1.5"
 
-gpiozero = "^2.0.1"
 gphoto2 = "^2.6.0"
 flask-cors = "^6.0.2"
 pillow = "^12.2.0"
@@ -39,15 +38,15 @@ line-length = 120
 
 [tool.ruff.lint]
 select = [
-    "E",  # pycodestyle errors (settings from FastAPI, thanks, @tiangolo!)
-    "W",  # pycodestyle warnings
-    "F",  # pyflakes
-    "I",  # isort
-    "C",  # flake8-comprehensions
-    "B",  # flake8-bugbear
+    "E", # pycodestyle errors (settings from FastAPI, thanks, @tiangolo!)
+    "W", # pycodestyle warnings
+    "F", # pyflakes
+    "I", # isort
+    "C", # flake8-comprehensions
+    "B", # flake8-bugbear
 ]
 ignore = [
-    "C901",  # too complex
+    "C901", # too complex
 ]
 
 [tool.ruff.format]
@@ -57,5 +56,11 @@ quote-style = "single"
 order-by-type = true
 relative-imports-order = "closest-to-furthest"
 extra-standard-library = ["typing"]
-section-order = ["future", "standard-library", "third-party", "first-party", "local-folder"]
+section-order = [
+    "future",
+    "standard-library",
+    "third-party",
+    "first-party",
+    "local-folder",
+]
 known-first-party = []
