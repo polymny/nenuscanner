@@ -1,4 +1,4 @@
-import { Camera, Clapperboard, EllipsisVertical, Trash } from 'lucide-react';
+import { Camera, Clapperboard, Download, EllipsisVertical, Trash } from 'lucide-react';
 import { useNavigate } from '@tanstack/react-router';
 import type { Acquisition } from '@/types/acquisition.types';
 import { acquisitionStatusBadges } from '@/types/acquisition.types';
@@ -7,23 +7,44 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Button } from '@/components/ui/button';
 import { cn, formatDateFr } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
 import ScenarioSummaryStats from '@/components/scenario/scenario-summary-stats';
 
 interface AcquisitionCardProps {
   acquisition: Acquisition;
   onClick: () => void;
   onDelete: () => void;
+  onDownload?: () => void;
+  onSelect?: (selected: boolean) => void;
+  selected?: boolean;
 }
 
-export default function AcquisitionCard({ acquisition, onClick, onDelete }: AcquisitionCardProps) {
+export default function AcquisitionCard({
+  acquisition,
+  onClick,
+  onDelete,
+  onDownload,
+  onSelect,
+  selected = false,
+}: AcquisitionCardProps) {
   const navigate = useNavigate();
   return (
     <div
-      className="flex cursor-pointer flex-col gap-4 rounded-lg border border-gray-300 bg-white p-3"
+      className={cn(
+        'flex cursor-pointer flex-col gap-4 rounded-lg border border-gray-300 bg-white p-3',
+        selected && 'border-brand-600 bg-brand-50'
+      )}
       onClick={onClick}
     >
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
+          {onSelect && (
+            <Checkbox
+              checked={selected}
+              onCheckedChange={(checked) => onSelect(checked === true)}
+              onClick={(event) => event.stopPropagation()}
+            />
+          )}
           <div className="text-lg font-semibold text-gray-950">{acquisition.name}</div>
           <Badge variant={acquisitionStatusBadges[acquisition.status].badgeVariant.variant}>
             {acquisitionStatusBadges[acquisition.status].label}
@@ -41,8 +62,22 @@ export default function AcquisitionCard({ acquisition, onClick, onDelete }: Acqu
               <EllipsisVertical color="#64748B" size={20} />
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-[150px]">
+          <PopoverContent className="w-[180px]">
             <div className="flex flex-col gap-3">
+              {onDownload && (
+                <Button
+                  className="w-full justify-start text-sm text-gray-700"
+                  onClick={(event) => {
+                    onDownload();
+                    event.stopPropagation();
+                    return false;
+                  }}
+                  variant="link"
+                >
+                  <Download size={20} />
+                  Télécharger
+                </Button>
+              )}
               <Button
                 className={`text-error-700 w-full justify-start text-sm`}
                 onClick={(event) => {

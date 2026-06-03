@@ -6,6 +6,7 @@ import type { AxiosError } from 'axios';
 import type { CreateAcquisitionPayload, CreateCalibrationPayload } from '@/schemas/acquisition.schemas';
 import type { Acquisition } from '@/types/acquisition.types';
 import { client } from '@/lib/client';
+import { downloadBlobResponse } from '@/lib/download-blob';
 
 const createAcquisition = async (payload: CreateAcquisitionPayload) => {
   const { data } = await client.post<Acquisition>('/acquisition/', payload);
@@ -55,6 +56,26 @@ export const useCreateCalibration = (
 
 const deleteAcquisition = async (id: number) => {
   return await client.delete(`/acquisition/${id}`);
+};
+
+export type DownloadAcquisitionsPayload = {
+  acquisitionIds: Array<number>;
+};
+
+const downloadAcquisitions = async (payload: DownloadAcquisitionsPayload) => {
+  const response = await client.post<Blob>('/acquisition/download', payload, { responseType: 'blob' });
+  downloadBlobResponse(response);
+};
+
+export const useDownloadAcquisitions = (
+  options?: UseMutationOtherOptions<void, AxiosError<ApiError>, DownloadAcquisitionsPayload>
+) => {
+  return useMutation({
+    ...options,
+    mutationFn: async (payload) => {
+      await downloadAcquisitions(payload);
+    },
+  });
 };
 
 export const useDeleteAcquisition = (options?: UseMutationOtherOptions<void, AxiosError<ApiError>, number>) => {

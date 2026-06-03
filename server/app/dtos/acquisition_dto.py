@@ -101,3 +101,15 @@ class CalibrationCreateSchema(Schema):
     name = fields.String(required=True, validate=_NAME_VALIDATE, pre_load=str.strip)
     scenarioId = fields.Integer(required=True, allow_none=True, validate=validate.Range(min=1))
     withRotationAutofocus = fields.Boolean(required=True)
+
+
+class AcquisitionDownloadSchema(Schema):
+    class Meta:
+        unknown = EXCLUDE
+        ordered = True
+
+    acquisitionIds = fields.List(
+        fields.Integer(validate=validate.Range(min=1)),
+        required=True,
+        validate=validate.Length(min=1),
+    )

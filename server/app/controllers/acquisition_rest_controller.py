@@ -5,6 +5,7 @@ from flask_smorest import Blueprint, abort
 from ..dtos.acquisition_dto import (
     AcquisitionCreateSchema,
     AcquisitionDetailSchema,
+    AcquisitionDownloadSchema,
     AcquisitionListQuerySchema,
     AcquisitionReadSchema,
     AcquisitionRunStartSchema,
@@ -14,6 +15,7 @@ from ..dtos.acquisition_dto import (
 from ..models.acquisition import Acquisition, AcquisitionStatus
 from ..models.artifact import Artifact
 from ..models.scenario import Scenario
+from ..services.acquisition_download_service import download_acquisitions_data
 from ..services.acquisition_service import (
     acquisition_photos_load_options,
     acquisition_scenario_load_options,
@@ -231,6 +233,25 @@ class CalibrationController(MethodView):
         db_session.commit()
 
         return _to_dto(calibration, scenario=scenario)
+
+
+@blp.route('/download')
+class AcquisitionDownloadController(MethodView):
+    @blp.arguments(AcquisitionDownloadSchema)
+    def post(self, payload):
+        """Télécharge les données des acquisitions sélectionnées."""
+        unique_ids = list(dict.fromkeys(payload['acquisitionIds']))
+        acquisitions = db_session.query(Acquisition).filter(Acquisition.id.in_(unique_ids)).all()
+        if len(acquisitions) != len(unique_ids):
+            abort(404, message='acquisition-not-found')
+
+        for acquisition in acquisitions:
+            if acquisition.is_calibration:
+                abort(400, message='acquisition-is-calibration')
+            if acquisition.status != AcquisitionStatus.COMPLETED:
+                abort(400, message='acquisition-not-completed')
+
+        return download_acquisitions_data(db_session, acquisitions)
 
 
 @blp.route('/<int:acquisition_id>')

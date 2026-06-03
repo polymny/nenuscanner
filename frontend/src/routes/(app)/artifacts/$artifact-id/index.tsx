@@ -9,7 +9,7 @@ import CustomBreadcrumb from '@/components/ui/custom-breadcrumb';
 import { Button } from '@/components/ui/button';
 import { useGetAcquisitionsByArtifactId } from '@/api/queries/acquisition.queries';
 import { ComponentCardSkeleton } from '@/components/component-card';
-import { useDeleteAcquisition } from '@/api/mutations/acquisition.mutations';
+import { useDeleteAcquisition, useDownloadAcquisitions } from '@/api/mutations/acquisition.mutations';
 import ConfirmActionDialog from '@/components/confirm-action-dialog';
 import { useMinimumLoadingDuration } from '@/hooks/use-minimum-loading-duration';
 
@@ -30,6 +30,7 @@ function RouteComponent() {
 
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [selectedAcquisitionId, setSelectedAcquisitionId] = useState<null | number>(null);
+  const [multiSelectedAcquisitionIds, setMultiSelectedAcquisitionIds] = useState<Array<number>>([]);
 
   const { mutate: deleteAcquisition } = useDeleteAcquisition({
     onSuccess: () => {
@@ -37,6 +38,15 @@ function RouteComponent() {
     },
     onError: () => {
       toast.error('La suppression a échoué.');
+    },
+  });
+
+  const { mutate: downloadAcquisitions, isPending: isDownloadingAcquisitions } = useDownloadAcquisitions({
+    onSuccess: () => {
+      toast.success('Téléchargement des acquisitions terminé.');
+    },
+    onError: () => {
+      toast.error('Le téléchargement a échoué.');
     },
   });
 
@@ -53,6 +63,19 @@ function RouteComponent() {
     setSelectedAcquisitionId(acquisitionId);
     setOpenDeleteDialog(true);
   }, []);
+
+  const handleAcquisitionSelect = useCallback((acquisitionId: number, selected: boolean) => {
+    setMultiSelectedAcquisitionIds((previous) =>
+      selected ? [...previous, acquisitionId] : previous.filter((id) => id !== acquisitionId)
+    );
+  }, []);
+
+  const handleAcquisitionDownload = useCallback(
+    (acquisitionId: number) => {
+      downloadAcquisitions({ acquisitionIds: [acquisitionId] });
+    },
+    [downloadAcquisitions]
+  );
 
   if (!isLoadingArtifacts && !existingArtifact) {
     navigate({ to: '/artifacts' });
@@ -72,7 +95,16 @@ function RouteComponent() {
         <div className="flex items-start justify-between">
           <h2 className="font-semibold text-gray-950">{`Acquisitions de ${existingArtifact.name}`}</h2>
           {!showSkeleton && !!acquisitions?.length && (
-            <Button onClick={() => setOpenCreateAcquisitionDialog(true)}>Créer une acquisition</Button>
+            <div className="flex items-center gap-3">
+              <Button
+                disabled={multiSelectedAcquisitionIds.length === 0 || isDownloadingAcquisitions}
+                onClick={() => downloadAcquisitions({ acquisitionIds: multiSelectedAcquisitionIds })}
+                variant="outline"
+              >
+                Télécharger les acquisitions
+              </Button>
+              <Button onClick={() => setOpenCreateAcquisitionDialog(true)}>Créer une acquisition</Button>
+            </div>
           )}
         </div>
         {showSkeleton ? (
@@ -94,7 +126,10 @@ function RouteComponent() {
           <AcquisitionsGrid
             acquisitions={acquisitions}
             onDelete={handleAcquisitionDelete}
+            onDownloadAcquisition={handleAcquisitionDownload}
             onNavigate={handleAcquisitionNavigate}
+            onSelectAcquisition={handleAcquisitionSelect}
+            multiSelectedAcquisitionIds={multiSelectedAcquisitionIds}
           />
         )}
       </div>

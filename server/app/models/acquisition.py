@@ -75,7 +75,10 @@ class Acquisition(Base):
 
     artifact: Mapped[Artifact | None] = relationship()
     scenario: Mapped[Scenario] = relationship(back_populates='acquisitions')
-    calibration: Mapped[Acquisition | None] = relationship()
+    calibration: Mapped[Acquisition | None] = relationship(
+        remote_side=[id],
+        foreign_keys=[calibration_id],
+    )
     arms_position: Mapped[ArmsPosition] = relationship()
     profile: Mapped[Profile | None] = relationship()
     camera_settings: Mapped[CameraSettings] = relationship(
