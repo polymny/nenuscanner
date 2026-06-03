@@ -1,5 +1,3 @@
-"""Acquisition execution (scenario steps, captures). Mock capture via Picsum for now."""
-
 from __future__ import annotations
 
 import shutil
@@ -7,7 +5,7 @@ from pathlib import Path
 
 from sqlalchemy.orm import Session, joinedload
 
-from .scenario_execution_service import execute_scenario_mock
+from .scenario_execution_service import execute_scenario
 from .sse_job_runner import SseJobContext
 from ..models.acquisition import Acquisition, AcquisitionStatus
 from ..models.acquisition_photo import AcquisitionPhoto
@@ -72,7 +70,7 @@ def acquisition_thumbnail_url(photos: list[AcquisitionPhoto]) -> str | None:
 
 
 def run_acquisition(context: SseJobContext, acquisition_id: int) -> None:
-    """Run acquisition for the given id following its scenario (mock captures)."""
+    """Run acquisition for the given id following its scenario."""
     session = db_session()
     try:
         acquisition = session.get(Acquisition, acquisition_id)
@@ -81,7 +79,7 @@ def run_acquisition(context: SseJobContext, acquisition_id: int) -> None:
         if acquisition.status != AcquisitionStatus.RUNNING:
             raise ValueError('acquisition-not-running')
 
-        execute_scenario_mock(
+        execute_scenario(
             context,
             session,
             acquisition,

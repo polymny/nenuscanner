@@ -1,5 +1,3 @@
-"""Build and execute scenario capture steps (mock capture via Picsum for now)."""
-
 from __future__ import annotations
 
 import time
@@ -144,7 +142,7 @@ def _scenario_progress_payload(step: ScenarioCaptureStep) -> dict:
     }
 
 
-def execute_scenario_mock(
+def execute_scenario(
     context: SseJobContext,
     session: Session,
     acquisition: Acquisition,
