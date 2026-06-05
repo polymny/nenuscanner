@@ -3,19 +3,10 @@ import { useCallback, useMemo, useState } from 'react';
 
 import DraggableWrapper from '@/components/floating/draggable-wrapper';
 import { Button } from '@/components/ui/button';
-import { MEDIAMTX_STREAM_URL } from '@/lib/environment';
+import { buildMediamtxPlayerUrl } from '@/lib/mediamtx';
 
 const STORAGE_KEY = 'nenu-camera-live-preview';
 const CLOSED_STORAGE_KEY = 'nenu-camera-live-preview-closed';
-
-/** WebRTC player page served by MediaMTX (path `cam`). */
-export function buildMediamtxPlayerUrl(baseUrl: string = MEDIAMTX_STREAM_URL): string {
-  const url = new URL(baseUrl);
-  url.searchParams.set('autoplay', 'true');
-  url.searchParams.set('muted', 'true');
-  url.searchParams.set('controls', 'false');
-  return url.toString();
-}
 
 function readClosed(): boolean {
   try {

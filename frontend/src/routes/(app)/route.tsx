@@ -2,6 +2,11 @@ import { Outlet, createFileRoute, useLocation } from '@tanstack/react-router';
 import AppNavbar from './-components/app-navbar';
 import CameraLivePreviewWidget from '@/components/floating/camera-live-preview-widget';
 
+// Routes where the live preview draggable widget should be disabled
+const WIDGET_DISABLED_ROUTES = [
+  '/camera-settings',
+];
+
 export const Route = createFileRoute('/(app)')({
   component: RouteComponent,
 });
@@ -11,13 +16,15 @@ function RouteComponent() {
     select: (location) => location.pathname,
   });
 
+  const isWidgetDisabled = WIDGET_DISABLED_ROUTES.includes(pathname);
+
   return (
     <div className="relative flex">
       <AppNavbar pathname={pathname} />
       <div className="mt-[65px] flex min-h-[calc(100vh-65px)] w-full flex-col">
         <Outlet />
       </div>
-      <CameraLivePreviewWidget />
+      {!isWidgetDisabled && <CameraLivePreviewWidget />}
     </div>
   );
 }
