@@ -1,6 +1,6 @@
 import os
 
-from flask import Flask, send_from_directory, session
+from flask import Flask, send_file, send_from_directory, session
 from flask_cors import CORS
 from flask_smorest import Api, abort
 from sqlalchemy.exc import OperationalError, SQLAlchemyError
@@ -105,3 +105,10 @@ def send_data(path):
 @app.route('/tmp/<path:path>')
 def send_tmp(path):
     return send_from_directory('/tmp', path)
+
+
+# If still nothing has been reached, send index.html
+@app.route('/', defaults={'path': ''})
+@app.route('/<path:path>')
+def default(path):
+    return send_file('../frontend/dist/index.html')
