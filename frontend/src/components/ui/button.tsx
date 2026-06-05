@@ -26,6 +26,7 @@ const buttonVariants = cva(
         link: 'text-brand-800 p-0 disabled:border-none disabled:bg-transparent has-[>svg]:p-0',
         outline: 'hover:bg-accent hover:text-accent-foreground border border-gray-300 bg-white text-gray-800',
         secondary: 'bg-secondary text-secondary-foreground hover:bg-secondary/80 shadow-xs',
+        ghost: "hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:hover:bg-muted/50",
       },
     },
   }
