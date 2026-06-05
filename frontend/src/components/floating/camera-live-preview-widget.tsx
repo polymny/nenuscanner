@@ -13,7 +13,7 @@ export function buildMediamtxPlayerUrl(baseUrl: string = MEDIAMTX_STREAM_URL): s
   const url = new URL(baseUrl);
   url.searchParams.set('autoplay', 'true');
   url.searchParams.set('muted', 'true');
-  url.searchParams.set('controls', 'true');
+  url.searchParams.set('controls', 'false');
   return url.toString();
 }
 
@@ -67,7 +67,14 @@ const CameraLivePreviewWidget = () => {
       className="bg-background w-full"
       defaultAnchor="bottom-right"
       headerActions={
-        <Button aria-label="Fermer le flux live" onClick={handleClose} size="icon" type="button" variant="outline">
+        <Button
+          aria-label="Fermer le flux live"
+          onClick={handleClose}
+          size="icon"
+          type="button"
+          variant="ghost"
+          className="mr-0 pr-0"
+        >
           <X className="size-4" />
         </Button>
       }
@@ -75,6 +82,8 @@ const CameraLivePreviewWidget = () => {
       storageKey={STORAGE_KEY}
       title="Live caméra HDMI"
       width="w-full"
+      maximizeButton={null}
+      minimizeButton={null}
     >
       <iframe
         allow="autoplay; fullscreen"
