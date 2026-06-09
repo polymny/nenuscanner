@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session, joinedload
 from .exiftool_service import write_jpeg_preview_from_raw
 from .gphoto2_service import capture_raw_to_file
 from .sse_job_runner import SseJobContext
+from ..constants.leds import LEDS_COUNT
 from ..models.acquisition import Acquisition
 from ..models.acquisition_photo import AcquisitionPhoto
 from ..models.scenario import Scenario, ScenarioLED, ScenarioRotation, ScenarioShutterSpeed
@@ -195,6 +196,9 @@ def execute_scenario(
         if config.CAMERA == 'real':
             cam = acquisition.camera_settings
             target_shutter_speed = float(cam.absolute_shutter_speed_value) * float(step.shutter_speed.relative_value)
+            # TODO : temporary fix for ALL_LEDS
+            if step.led.led_value == 'ALL_LEDS':
+                target_shutter_speed /= LEDS_COUNT
             raw_file_path = str(SERVER_ROOT / raw_relative_path)
             preview_file_path = str(SERVER_ROOT / preview_relative_path)
             capture_raw_to_file(
