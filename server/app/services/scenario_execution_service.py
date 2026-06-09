@@ -182,6 +182,11 @@ def execute_scenario(
     led_state = _LedState()
     gpio_leds.off()
 
+    # TODO : temporary trigger autofocus on start acquisition
+    # gpio_leds.on()
+    # trigger_autofocus()
+    # gpio_leds.off()
+
     for step in steps:
         _apply_led_value(gpio_leds, step.led.led_value, led_state)
 
