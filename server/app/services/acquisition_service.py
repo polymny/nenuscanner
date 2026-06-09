@@ -5,6 +5,8 @@ from pathlib import Path
 
 from sqlalchemy.orm import Session, joinedload
 
+from server import leds
+
 from .scenario_execution_service import execute_scenario
 from .sse_job_runner import SseJobContext
 from ..models.acquisition import Acquisition, AcquisitionStatus
@@ -100,6 +102,7 @@ def run_acquisition(context: SseJobContext, acquisition_id: int) -> None:
         context.emit('failed', {'message': str(exc)})
         raise
     finally:
+        leds.guard_off()
         session.close()
         db_session.remove()
 

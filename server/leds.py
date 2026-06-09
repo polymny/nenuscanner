@@ -1,3 +1,5 @@
+import atexit
+
 from gpiozero import PWMLED
 
 from . import config
@@ -21,6 +23,7 @@ class GpioLed:
             initial_value=1.0,
             frequency=200,
         )
+        self.off()
 
     def set_value(self, value: float):
         value = min(1.0, max(0.0, value))
@@ -43,6 +46,7 @@ class GpioLeds(Leds):
 
         for pin in gpio_pins:
             self.leds.append(GpioLed(pin))
+        self.off()
 
     def off(self):
         for led in self.leds:
@@ -79,6 +83,7 @@ class DummyLeds(Leds):
         self.leds = []
         for pin in gpio_pins:
             self.leds.append(DummyLed(pin))
+        self.off()
 
     def __enter__(self):
         for led in self.leds:
@@ -111,6 +116,15 @@ class DummyLeds(Leds):
 
 
 _leds = GpioLeds(config.LEDS_UUIDS) if config.GPIO_CHIP is not None else DummyLeds(config.LEDS_UUIDS)
+
+
+def guard_off() -> None:
+    """Turn all LEDs off. Safe to call at shutdown."""
+    _leds.off()
+
+
+guard_off()
+atexit.register(guard_off)
 
 
 def get() -> Leds:

@@ -10,6 +10,8 @@ from dataclasses import dataclass, field
 from queue import Empty, Queue
 from typing import Any
 
+from ... import leds
+
 JobTask = Callable[['SseJobContext'], None]
 
 
@@ -71,6 +73,7 @@ class SseJobRegistry:
         except Exception:
             job.status = 'FAILED'
         finally:
+            leds.guard_off()
             job.events.put(None)
 
     def iter_sse_events(self, job_id: str):
