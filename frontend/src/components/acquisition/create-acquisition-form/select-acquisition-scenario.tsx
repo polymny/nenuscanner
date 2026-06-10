@@ -1,4 +1,5 @@
-import { AlertOctagon, Clapperboard } from 'lucide-react';
+import { useMemo } from 'react';
+import { AlertOctagon, CircleCheck, Clapperboard } from 'lucide-react';
 import { useFormContext } from 'react-hook-form';
 import type { Dispatch } from 'react';
 
@@ -7,7 +8,7 @@ import { ComponentCardSkeleton } from '@/components/component-card';
 import { Button } from '@/components/ui/button';
 import { DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { FlatRadioGroupItem, RadioGroup } from '@/components/ui/radio-group';
-import { useGetScenarios } from '@/api/queries/scenario.queries';
+import { useGetCompatibleScenarioIds, useGetScenarios } from '@/api/queries/scenario.queries';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
@@ -15,6 +16,7 @@ import { FormControl, FormField, FormItem, FormMessage } from '@/components/ui/f
 import DialogBackButton from '@/components/ui/dialog-back-button';
 import { useMinimumLoadingDuration } from '@/hooks/use-minimum-loading-duration';
 import ScenarioSummaryStats from '@/components/scenario/scenario-summary-stats';
+import { cn } from '@/lib/utils';
 
 interface SelectAcquisitionScenarioProps {
   setOpen: Dispatch<boolean>;
@@ -28,7 +30,19 @@ const SelectAcquisitionScenario = ({
   isCalibration = false,
 }: SelectAcquisitionScenarioProps) => {
   const form = useFormContext<CreateAcquisitionPayload | CreateCalibrationPayload>();
+  const selectedScenarioId = form.watch('scenarioId');
   const { data: scenarios, isPending: isLoadingScenarios } = useGetScenarios();
+  const { data: compatibleScenarioIds = [] } = useGetCompatibleScenarioIds(
+    selectedScenarioId ?? 0,
+    isCalibration && !!selectedScenarioId
+  );
+  const compatibleScenarios = useMemo(
+    () =>
+      (scenarios ?? [])
+        .filter((scenario) => compatibleScenarioIds.includes(scenario.id))
+        .sort((a, b) => a.name.localeCompare(b.name)),
+    [compatibleScenarioIds, scenarios]
+  );
   const showSkeleton = useMinimumLoadingDuration(isLoadingScenarios);
 
   return (
@@ -72,21 +86,31 @@ const SelectAcquisitionScenario = ({
                 <FormItem className="no-scrollbar grid h-[40vh] w-full overflow-y-scroll py-0.5">
                   <FormControl>
                     <RadioGroup
-                      className="grid-cols-2 gap-5"
+                      className="h-max grid-cols-2 gap-5"
                       onValueChange={(newValue) => {
                         field.onChange(Number(newValue));
                       }}
                       value={field.value?.toString() ?? ''}
                     >
                       {scenarios.map((scenario) => {
+                        const isCompatible =
+                          isCalibration && !!selectedScenarioId && compatibleScenarioIds.includes(scenario.id);
+
                         return (
-                          <FlatRadioGroupItem className="h-max" key={scenario.id} value={scenario.id.toString()}>
+                          <FlatRadioGroupItem
+                            className={cn('h-max', isCompatible && 'border-success-300 bg-success-50')}
+                            key={scenario.id}
+                            value={scenario.id.toString()}
+                          >
                             <div className="flex items-center gap-3 divide-x divide-gray-200">
                               <div className="inline-flex items-center gap-2 px-2">
                                 <div className="bg-brand-600 flex rounded-full p-2">
                                   <Clapperboard className="size-4 text-white" />
                                 </div>
-                                <div className="wrap-break-words max-w-[300px] text-sm font-medium text-gray-700">
+                                <div
+                                  title={scenario.name}
+                                  className="wrap-break-words max-w-[100px] overflow-hidden text-sm font-medium text-ellipsis text-gray-700"
+                                >
                                   {scenario.name}
                                 </div>
                               </div>
@@ -100,6 +124,22 @@ const SelectAcquisitionScenario = ({
                 </FormItem>
               )}
             />
+
+            {isCalibration && compatibleScenarios.length > 0 && (
+              <Alert className="border-success-200 bg-success-50 text-success-800">
+                <CircleCheck className="text-success-800! size-5" />
+                <AlertTitle>Étalonnage étendu</AlertTitle>
+                <AlertDescription>
+                  {compatibleScenarios.length === 1
+                    ? 'Le scénario suivant sera également étalonné automatiquement : '
+                    : 'Les scénarios suivants seront également étalonnés automatiquement : '}
+                  <span className="font-semibold">
+                    {compatibleScenarios.map((scenario) => scenario.name).join(', ')}
+                  </span>
+                  .
+                </AlertDescription>
+              </Alert>
+            )}
 
             <Separator />
             <FormField

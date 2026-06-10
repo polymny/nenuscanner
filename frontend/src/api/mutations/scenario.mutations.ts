@@ -3,7 +3,6 @@ import { scenariosKeyFactory } from '../queries/scenario.queries';
 import { acquisitionsKeyFactory } from '../queries/acquisition.queries';
 import type { ApiError, UseMutationOtherOptions } from '@/lib/api-types';
 import type { DuplicateScenarioPayload, UpsertScenarioPayload } from '@/schemas/scenario.schemas';
-import type { Scenario } from '@/types/scenario.types';
 import type { AxiosError } from 'axios';
 import { client } from '@/lib/client';
 
@@ -24,6 +23,7 @@ export const useUpsertScenario = (
     },
     onSuccess: (data, vars, result, ctx) => {
       void queryClient.invalidateQueries({ queryKey: scenariosKeyFactory.base() });
+      void queryClient.invalidateQueries({ queryKey: acquisitionsKeyFactory.calibrationsBase() }); // to update the compatible scenario
       options?.onSuccess?.(data, vars, result, ctx);
     },
   });
@@ -50,12 +50,12 @@ export const useDeleteScenario = (options?: UseMutationOtherOptions<void, AxiosE
 };
 
 const duplicateScenario = async (payload: DuplicateScenarioPayload) => {
-  const response = await client.post<Scenario>('/scenario/duplicate', payload);
+  const response = await client.post<{ id: number }>('/scenario/duplicate', payload);
   return response.data;
 };
 
 export const useDuplicateScenario = (
-  options?: UseMutationOtherOptions<Scenario, AxiosError<ApiError>, DuplicateScenarioPayload>
+  options?: UseMutationOtherOptions<{ id: number }, AxiosError<ApiError>, DuplicateScenarioPayload>
 ) => {
   const queryClient = useQueryClient();
 
@@ -66,6 +66,7 @@ export const useDuplicateScenario = (
     },
     onSuccess: (data, vars, result, ctx) => {
       void queryClient.invalidateQueries({ queryKey: scenariosKeyFactory.base() });
+      void queryClient.invalidateQueries({ queryKey: acquisitionsKeyFactory.calibrationsBase() }); // to update the compatible scenario
       options?.onSuccess?.(data, vars, result, ctx);
     },
   });

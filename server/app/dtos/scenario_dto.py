@@ -45,6 +45,7 @@ class ScenarioReadSchema(Schema):
     shutterSpeedIds = fields.List(fields.Integer(), required=True, data_key='shutterSpeedIds')
     acquisitions = fields.List(fields.Dict(), required=True)
     calibrations = fields.List(fields.Dict(), required=True)
+    isCalibrated = fields.Boolean(required=True, data_key='isCalibrated')
 
 
 class ScenarioCreateSchema(Schema):
@@ -69,6 +70,14 @@ class ScenarioUpdateSchema(ScenarioCreateSchema):
         ordered = True
 
     id = fields.Integer(required=True)
+
+
+class ScenarioIdSchema(Schema):
+    id = fields.Integer(required=True)
+
+
+class CompatibleScenarioIdsSchema(Schema):
+    ids = fields.List(fields.Integer(), required=True)
 
 
 class ScenarioDuplicateSchema(Schema):

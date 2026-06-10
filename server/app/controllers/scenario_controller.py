@@ -1,10 +1,24 @@
 from flask.views import MethodView
 from flask_smorest import Blueprint, abort
 
-from ..dtos.scenario_dto import ScenarioCreateSchema, ScenarioDuplicateSchema, ScenarioReadSchema, ScenarioUpdateSchema
-from ..models.acquisition import Acquisition
+from ..dtos.scenario_dto import (
+    CompatibleScenarioIdsSchema,
+    ScenarioCreateSchema,
+    ScenarioDuplicateSchema,
+    ScenarioIdSchema,
+    ScenarioReadSchema,
+    ScenarioUpdateSchema,
+)
+from ..models.acquisition import Acquisition, AcquisitionStatus
 from ..models.scenario import Scenario
-from ..services.scenario_service import apply_scenario_payload, duplicate_scenario, scenario_summary_dto
+from ..services.arms_position_service import get_last_arms_position
+from ..services.scenario_service import (
+    apply_scenario_payload,
+    compatible_scenario_ids,
+    duplicate_scenario,
+    is_scenario_calibrated,
+    scenario_summary_dto,
+)
 from ...sa_db import db_session
 
 blp = Blueprint('scenario', __name__, description='Scenario endpoints')
@@ -15,12 +29,14 @@ def _scenario_to_details_dto(
     *,
     acquisitions_by_scenario_id: dict[int, list[dict]] | None = None,
     calibrations_by_scenario_id: dict[int, list[dict]] | None = None,
+    is_calibrated: bool = False,
 ) -> dict:
     return {
         **scenario_summary_dto(scenario),
         'acquisitions': (acquisitions_by_scenario_id or {}).get(scenario.id, []),
         'calibrations': (calibrations_by_scenario_id or {}).get(scenario.id, []),
         'updatedAt': scenario.updated_at,
+        'isCalibrated': is_calibrated,
     }
 
 
@@ -48,6 +64,8 @@ class ScenarioController(MethodView):
             acquisitions_by_scenario_id[scenario_id].append({'id': acq_id, 'name': acq_name})
 
         calibrations_by_scenario_id: dict[int, list[dict]] = {sid: [] for sid in scenario_ids}
+        arms_position = get_last_arms_position()
+        scenario_ids_with_completed_calibration: set[int] = set()
         cal_rows = (
             db_session.query(
                 Acquisition.id,
@@ -67,28 +85,30 @@ class ScenarioController(MethodView):
             calibrations_by_scenario_id[scenario_id].append(
                 {'id': cal_id, 'name': cal_name, 'armsPositionId': arms_position_id, 'status': status}
             )
+            if arms_position_id == arms_position.id and status == AcquisitionStatus.COMPLETED:
+                scenario_ids_with_completed_calibration.add(scenario_id)
 
         return [
             _scenario_to_details_dto(
                 s,
                 acquisitions_by_scenario_id=acquisitions_by_scenario_id,
                 calibrations_by_scenario_id=calibrations_by_scenario_id,
+                is_calibrated=is_scenario_calibrated(s, scenarios, scenario_ids_with_completed_calibration),
             )
             for s in scenarios
         ]
 
     @blp.arguments(ScenarioCreateSchema)
-    @blp.response(201, ScenarioReadSchema)
+    @blp.response(204)
     def post(self, payload):
         """Crée un scénario (avec LEDs, temps de pose, rotations)."""
         scenario = Scenario(name=payload['name'], is_custom=True)
         apply_scenario_payload(scenario, payload)
         db_session.add(scenario)
         db_session.commit()
-        return _scenario_to_details_dto(scenario)
 
     @blp.arguments(ScenarioUpdateSchema)
-    @blp.response(200, ScenarioReadSchema)
+    @blp.response(204)
     def patch(self, payload):
         """Met à jour un scénario."""
         scenario_id = payload['id']
@@ -108,7 +128,19 @@ class ScenarioController(MethodView):
 
         apply_scenario_payload(scenario, payload)
         db_session.commit()
-        return _scenario_to_details_dto(scenario)
+
+
+@blp.route('/<int:scenario_id>/compatible')
+class ScenarioCompatibleController(MethodView):
+    @blp.response(200, CompatibleScenarioIdsSchema)
+    def get(self, scenario_id):
+        """Liste les identifiants des scénarios compatibles avec un scénario donné."""
+        scenario = db_session.get(Scenario, scenario_id)
+        if scenario is None:
+            abort(404, message='scenario-not-found')
+
+        all_scenarios = db_session.query(Scenario).all()
+        return {'ids': list(compatible_scenario_ids(scenario, all_scenarios))}
 
 
 @blp.route('/<int:scenario_id>')
@@ -126,7 +158,7 @@ class ScenarioByIdController(MethodView):
 @blp.route('/duplicate')
 class ScenarioDuplicateController(MethodView):
     @blp.arguments(ScenarioDuplicateSchema)
-    @blp.response(201, ScenarioReadSchema)
+    @blp.response(201, ScenarioIdSchema)
     def post(self, payload):
         """Duplique un scénario existant sous un nouveau nom."""
         source_scenario_id = payload['sourceScenarioId']
@@ -139,4 +171,4 @@ class ScenarioDuplicateController(MethodView):
         duplicated = duplicate_scenario(source, new_name)
         db_session.add(duplicated)
         db_session.commit()
-        return _scenario_to_details_dto(duplicated)
+        return {'id': duplicated.id}

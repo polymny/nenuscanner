@@ -6,7 +6,6 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Button } from '@/components/ui/button';
 
 import ScenarioSummaryStats from '@/components/scenario/scenario-summary-stats';
-import { useGetLastArmsPosition } from '@/api/queries/arms-position.queries';
 import { formatDateFr, pluralize } from '@/lib/utils';
 
 export interface ScenarioCardProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -16,11 +15,6 @@ export interface ScenarioCardProps extends React.HTMLAttributes<HTMLDivElement> 
 }
 export function ScenarioCard({ scenario, onDelete, onDuplicate }: ScenarioCardProps) {
   const navigate = useNavigate();
-  const { data: armsPosition } = useGetLastArmsPosition();
-
-  const isCalibrated = scenario.calibrations.some(
-    (calibration) => calibration.armsPositionId === armsPosition?.id && calibration.status === 'COMPLETED'
-  );
 
   return (
     <div
@@ -42,8 +36,8 @@ export function ScenarioCard({ scenario, onDelete, onDuplicate }: ScenarioCardPr
                   {formatDateFr(scenario.updatedAt)}
                 </div>
               </div>
-              <Badge className="self-start" variant={isCalibrated ? 'success' : 'error'}>
-                {isCalibrated ? 'Étalonné' : 'Non étalonné'}
+              <Badge className="self-start" variant={scenario.isCalibrated ? 'success' : 'error'}>
+                {scenario.isCalibrated ? 'Étalonné' : 'Non étalonné'}
               </Badge>
               <Badge className="self-start" variant="light-gray">
                 {scenario.acquisitions.length} {pluralize(scenario.acquisitions.length, 'acquisition')}
