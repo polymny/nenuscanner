@@ -1,4 +1,5 @@
 import type { VariantProps } from 'class-variance-authority';
+import type { ArmsPositionEmojis } from './arms-position.types';
 import type { LedValue } from './led.types';
 import type { ScenarioSummary } from './scenario.types';
 import type { badgeVariants } from '@/components/ui/badge';
@@ -24,6 +25,7 @@ export interface Acquisition {
   scenario: ScenarioSummary;
   calibrationId: number | null;
   armsPositionId: number;
+  armsPosition: ArmsPositionEmojis;
   withRotationAutofocus: boolean;
   status: AcquisitionStatus;
   isoValue: number;
@@ -63,7 +65,7 @@ export interface ScenarioProgressEvent {
   rotationRadians: number | null;
   ledIndex: number;
   ledTotal: number;
-  ledValue: string;
+  ledValue: LedValue;
   ledPower: number;
   shutterSpeedIndex: number;
   shutterSpeedTotal: number;

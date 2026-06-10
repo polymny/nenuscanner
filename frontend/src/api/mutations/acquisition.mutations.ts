@@ -4,17 +4,16 @@ import { scenariosKeyFactory } from '../queries/scenario.queries';
 import type { ApiError, UseMutationOtherOptions } from '@/lib/api-types';
 import type { AxiosError } from 'axios';
 import type { CreateAcquisitionPayload, CreateCalibrationPayload } from '@/schemas/acquisition.schemas';
-import type { Acquisition } from '@/types/acquisition.types';
 import { client } from '@/lib/client';
 import { downloadBlobResponse } from '@/lib/download-blob';
 
 const createAcquisition = async (payload: CreateAcquisitionPayload) => {
-  const { data } = await client.post<Acquisition>('/acquisition/', payload);
+  const { data } = await client.post<{ id: number }>('/acquisition/', payload);
   return data;
 };
 
 export const useCreateAcquisition = (
-  options?: UseMutationOtherOptions<Acquisition, AxiosError<ApiError>, CreateAcquisitionPayload>
+  options?: UseMutationOtherOptions<{ id: number }, AxiosError<ApiError>, CreateAcquisitionPayload>
 ) => {
   const queryClient = useQueryClient();
 
@@ -32,12 +31,12 @@ export const useCreateAcquisition = (
 };
 
 const createCalibration = async (payload: CreateCalibrationPayload) => {
-  const { data } = await client.post<Acquisition>('/acquisition/calibrations', payload);
+  const { data } = await client.post<{ id: number }>('/acquisition/calibrations', payload);
   return data;
 };
 
 export const useCreateCalibration = (
-  options?: UseMutationOtherOptions<Acquisition, AxiosError<ApiError>, CreateCalibrationPayload>
+  options?: UseMutationOtherOptions<{ id: number }, AxiosError<ApiError>, CreateCalibrationPayload>
 ) => {
   const queryClient = useQueryClient();
 

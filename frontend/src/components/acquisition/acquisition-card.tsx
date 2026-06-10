@@ -61,6 +61,10 @@ export default function AcquisitionCard({
             />
           )}
           <div className="text-lg font-semibold text-gray-950">{acquisition.name}</div>
+          <span className="flex items-center gap-1 text-lg" title="Position des bras">
+            <span>{acquisition.armsPosition.emojiLeft}</span>
+            <span>{acquisition.armsPosition.emojiRight}</span>
+          </span>
           <Badge variant={acquisitionStatusBadges[acquisition.status].badgeVariant.variant}>
             {acquisitionStatusBadges[acquisition.status].label}
           </Badge>

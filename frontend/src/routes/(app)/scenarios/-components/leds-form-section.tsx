@@ -37,7 +37,7 @@ const LedsFormSection = ({ disabled = false }: LedsFormSectionProps) => {
     );
   }
 
-  const defaultPowerId = powerOptions[0].id;
+  const minPowerId = powerOptions[0].id;
 
   return (
     <div className="flex w-3/4 flex-col gap-8 rounded-lg bg-white p-6 shadow-lg">
@@ -56,11 +56,11 @@ const LedsFormSection = ({ disabled = false }: LedsFormSectionProps) => {
                 powerOptions={powerOptions}
                 disabled={disabled}
                 isSelected={selected !== undefined}
-                powerId={selected?.powerId ?? defaultPowerId}
+                powerId={selected?.powerId ?? minPowerId}
                 fieldIndex={selected?.index}
                 onToggle={(checked, currentPowerId) => {
                   if (checked) {
-                    appendLed({ value: ledValue, powerId: isNoLed ? defaultPowerId : currentPowerId });
+                    appendLed({ value: ledValue, powerId: isNoLed ? minPowerId : currentPowerId });
                     return;
                   }
                   if (selected) {

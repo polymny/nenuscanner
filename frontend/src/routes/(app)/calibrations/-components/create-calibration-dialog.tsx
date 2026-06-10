@@ -23,9 +23,9 @@ const CreateCalibrationDialog = ({ open, setOpen }: CreateCalibrationDialogProps
   const [currentStep, setCurrentStep] = useState<CreateCalibrationStep>('name');
   const navigate = useNavigate();
   const { mutate: createCalibrationMutate } = useCreateCalibration({
-    onSuccess: (data, { name }) => {
+    onSuccess: ({ id }, { name }) => {
       toast.success(`${name} a bien été créée.`);
-      navigate({ to: `/acquisitions/${data.id}` });
+      navigate({ to: `/acquisitions/${id}` });
     },
   });
 

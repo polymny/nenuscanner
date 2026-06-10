@@ -90,11 +90,20 @@ class ScenarioCaptureStep:
 def build_scenario_capture_steps(scenario: Scenario) -> list[ScenarioCaptureStep]:
     """
     Order: for each rotation (or one fixed position if none), for each LED, for each shutter speed.
+
+    LEDs are applied as NO_LED, then numeric values ascending, then ALL_LEDS.
+    Shutter speeds are applied in ascending relative value order.
     """
     rotations = sorted(scenario.rotations, key=lambda row: row.radians_value)
     rotation_slots = rotations if rotations else [None]
-    leds = list(scenario.leds)
-    shutter_speeds = list(scenario.shutter_speeds)
+    leds = sorted(
+        scenario.leds,
+        key=lambda led: (
+            0 if led.led_value == 'NO_LED' else 2 if led.led_value == 'ALL_LEDS' else 1,
+            0 if led.led_value in ('NO_LED', 'ALL_LEDS') else int(led.led_value),
+        ),
+    )
+    shutter_speeds = sorted(scenario.shutter_speeds, key=lambda ss: ss.shutter_speed_value.value)
     if not leds or not shutter_speeds:
         raise ValueError('scenario-missing-leds-or-shutter-speeds')
 

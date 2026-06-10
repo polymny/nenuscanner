@@ -31,7 +31,9 @@ def photo_path_to_url(path: str) -> str:
 
 def acquisition_photos_load_options():
     return (
-        joinedload(Acquisition.photos).joinedload(AcquisitionPhoto.scenario_led).joinedload(ScenarioLED.led_power_value),
+        joinedload(Acquisition.photos)
+        .joinedload(AcquisitionPhoto.scenario_led)
+        .joinedload(ScenarioLED.led_power_value),
         joinedload(Acquisition.photos).joinedload(AcquisitionPhoto.scenario_rotation),
         joinedload(Acquisition.photos)
         .joinedload(AcquisitionPhoto.scenario_shutter_speed)
@@ -158,12 +160,3 @@ def delete_pending_acquisitions(
     )
     for row in pending_rows:
         delete_acquisition(session, row)
-
-
-def get_acquisition_with_photos(session: Session, acquisition_id: int) -> Acquisition | None:
-    return (
-        session.query(Acquisition)
-        .options(*acquisition_photos_load_options(), *acquisition_scenario_load_options())
-        .filter(Acquisition.id == acquisition_id)
-        .one_or_none()
-    )

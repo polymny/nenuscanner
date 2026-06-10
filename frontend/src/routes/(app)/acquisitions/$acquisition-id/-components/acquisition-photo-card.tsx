@@ -1,6 +1,6 @@
+import ScenarioMetadata from './scenario-metadata';
 import type { AcquisitionPhoto } from '@/types/acquisition.types';
 import { toAbsoluteImageUrl } from '@/api/queries/acquisition.queries';
-import { getLedValueLabel } from '@/types/led.types';
 
 interface AcquisitionPhotoCardProps {
   photo: AcquisitionPhoto;
@@ -18,18 +18,16 @@ export default function AcquisitionPhotoCard({ photo }: AcquisitionPhotoCardProp
           backgroundRepeat: 'no-repeat',
           backgroundColor: 'rgba(236, 240, 250, 1)',
         }}
-      ></div>
-      <div className="flex flex-col gap-1 p-3 text-xs text-gray-600">
-        {photo.rotationRadians !== null ? (
-          <p>Rotation : {photo.rotationRadians.toFixed(2)} rad</p>
-        ) : (
-          <p>Rotation : —</p>
-        )}
-        <p>
-          LED : {photo.ledValue ? getLedValueLabel(photo.ledValue) : '—'}
-          {photo.ledPower ? ` (${Math.round(photo.ledPower * 100)} %)` : '—'}
-        </p>
-        <p>Temps d'exposition : {photo.shutterSpeedRelative ? `${'\u00d7'}${photo.shutterSpeedRelative}` : '—'}</p>
+      />
+      <div className="border-t border-gray-100 p-3">
+        <ScenarioMetadata
+          rotation={{
+            radians: photo.rotationRadians,
+            hasRotations: photo.rotationRadians !== null,
+          }}
+          led={{ value: photo.ledValue, power: photo.ledPower }}
+          shutter={{ relative: photo.shutterSpeedRelative }}
+        />
       </div>
     </div>
   );

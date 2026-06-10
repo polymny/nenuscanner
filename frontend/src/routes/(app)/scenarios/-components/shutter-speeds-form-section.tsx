@@ -32,8 +32,12 @@ const ShutterSpeedsFormSection = ({ disabled = false }: ShutterSpeedsFormSection
   });
 
   const valueById = useMemo(() => new Map(options.map((option) => [option.id, option.value])), [options]);
+  const sortShutterSpeedIdsByValue = (ids: Array<number>) =>
+    [...ids]
+      .filter((id) => valueById.has(id))
+      .sort((a, b) => (valueById.get(a) ?? 0) - (valueById.get(b) ?? 0));
   const sortedShutterSpeedIdsWatch = useMemo(
-    () => [...shutterSpeedIdsWatch].sort((a, b) => (valueById.get(a) ?? 0) - (valueById.get(b) ?? 0)),
+    () => sortShutterSpeedIdsByValue(shutterSpeedIdsWatch),
     [shutterSpeedIdsWatch, valueById]
   );
 
@@ -70,7 +74,9 @@ const ShutterSpeedsFormSection = ({ disabled = false }: ShutterSpeedsFormSection
             className="shrink-0"
             type="button"
             onClick={() => {
-              const next = Array.from(new Set([...shutterSpeedIdsWatch, selectedOption.id]));
+              const next = sortShutterSpeedIdsByValue(
+                Array.from(new Set([...shutterSpeedIdsWatch, selectedOption.id]))
+              );
               form.setValue('shutterSpeedIds', next, { shouldValidate: true, shouldDirty: true, shouldTouch: true });
             }}
           >
@@ -83,7 +89,7 @@ const ShutterSpeedsFormSection = ({ disabled = false }: ShutterSpeedsFormSection
             <BadgeWithAction
               variant="brand"
               key={id}
-              content={formatNumberAsFractionOrDecimal(valueById.get(id) ?? 0)}
+              content={formatNumberAsFractionOrDecimal(valueById.get(id)!)}
               Icon={XCircle}
               iconColor="text-brand-600"
               action={

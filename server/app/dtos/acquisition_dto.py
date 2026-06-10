@@ -1,5 +1,6 @@
 from marshmallow import EXCLUDE, Schema, fields, validate
 
+from .arms_position_dto import ArmsPositionEmojisSchema
 from .scenario_dto import ScenarioSummarySchema
 from ..models.acquisition import AcquisitionStatus
 
@@ -33,6 +34,7 @@ class AcquisitionReadSchema(Schema):
     artifactId = fields.Integer(required=True, allow_none=True)
     calibrationId = fields.Integer(required=True, allow_none=True)
     armsPositionId = fields.Integer(required=True)
+    armsPosition = fields.Nested(ArmsPositionEmojisSchema, required=True)
     profileId = fields.Integer(required=True, allow_none=True)
     withRotationAutofocus = fields.Boolean(required=True)
     status = fields.String(required=True)
@@ -81,6 +83,13 @@ class AcquisitionCreateSchema(Schema):
     scenarioId = fields.Integer(required=True, allow_none=True, validate=validate.Range(min=1))
     calibrationId = fields.Integer(required=True, allow_none=True, validate=validate.Range(min=1))
     withRotationAutofocus = fields.Boolean(required=True)
+
+
+class AcquisitionCreateReturnSchema(Schema):
+    class Meta:
+        ordered = True
+
+    id = fields.Integer(required=True)
 
 
 class CalibrationListQuerySchema(Schema):

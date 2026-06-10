@@ -1,8 +1,10 @@
 from flask import Response, stream_with_context
 from flask.views import MethodView
 from flask_smorest import Blueprint, abort
+from sqlalchemy.orm import joinedload
 
 from ..dtos.acquisition_dto import (
+    AcquisitionCreateReturnSchema,
     AcquisitionCreateSchema,
     AcquisitionDetailSchema,
     AcquisitionDownloadSchema,
@@ -22,7 +24,6 @@ from ..services.acquisition_service import (
     acquisition_thumbnail_url,
     delete_acquisition,
     delete_pending_acquisitions,
-    get_acquisition_with_photos,
     photo_path_to_url,
     run_acquisition,
 )
@@ -60,6 +61,10 @@ def _to_dto(row: Acquisition, *, scenario: Scenario | None = None, include_photo
         'artifactId': row.artifact_id,
         'calibrationId': row.calibration_id,
         'armsPositionId': row.arms_position_id,
+        'armsPosition': {
+            'emojiLeft': row.arms_position.emoji_left,
+            'emojiRight': row.arms_position.emoji_right,
+        },
         'profileId': row.profile_id,
         'withRotationAutofocus': row.with_rotation_autofocus,
         'status': row.status,
@@ -81,14 +86,18 @@ class AcquisitionController(MethodView):
     @blp.arguments(AcquisitionListQuerySchema, location='query')
     @blp.response(200, AcquisitionReadSchema(many=True))
     def get(self, query_args):
-        """Liste les acquisitions d'un artefact."""
+        """Liste les acquisitions d'un objet."""
         artifact_id = query_args['artifactId']
         if db_session.get(Artifact, artifact_id) is None:
             abort(404, message='artifact-not-found')
 
         rows = (
             db_session.query(Acquisition)
-            .options(*acquisition_photos_load_options(), *acquisition_scenario_load_options())
+            .options(
+                *acquisition_photos_load_options(),
+                *acquisition_scenario_load_options(),
+                joinedload(Acquisition.arms_position),
+            )
             .filter(
                 Acquisition.artifact_id == artifact_id,
                 Acquisition.is_calibration.is_(False),
@@ -99,9 +108,9 @@ class AcquisitionController(MethodView):
         return [_to_dto(a) for a in rows]
 
     @blp.arguments(AcquisitionCreateSchema)
-    @blp.response(201, AcquisitionReadSchema)
+    @blp.response(201, AcquisitionCreateReturnSchema)
     def post(self, payload):
-        """Crée une acquisition pour un artefact."""
+        """Crée une acquisition pour un objet."""
         artifact = db_session.get(Artifact, payload['artifactId'])
         if artifact is None:
             abort(404, message='artifact-not-found')
@@ -163,7 +172,7 @@ class AcquisitionController(MethodView):
         db_session.add(acquisition)
         db_session.commit()
 
-        return _to_dto(acquisition, scenario=scenario)
+        return {'id': acquisition.id}
 
 
 @blp.route('/calibrations')
@@ -171,7 +180,7 @@ class CalibrationController(MethodView):
     @blp.arguments(CalibrationListQuerySchema, location='query')
     @blp.response(200, AcquisitionReadSchema(many=True))
     def get(self, query_args):
-        """Liste toutes les calibrations."""
+        """Liste tous les étalonnages."""
         scenario_id = query_args['scenarioId']
         scenario = db_session.get(Scenario, scenario_id) if scenario_id is not None else None
         if scenario_id is not None and scenario is None:
@@ -179,7 +188,11 @@ class CalibrationController(MethodView):
 
         query = (
             db_session.query(Acquisition)
-            .options(*acquisition_photos_load_options(), *acquisition_scenario_load_options())
+            .options(
+                *acquisition_photos_load_options(),
+                *acquisition_scenario_load_options(),
+                joinedload(Acquisition.arms_position),
+            )
             .filter(Acquisition.is_calibration.is_(True))
         )
 
@@ -200,9 +213,9 @@ class CalibrationController(MethodView):
         return [_to_dto(a) for a in rows]
 
     @blp.arguments(CalibrationCreateSchema)
-    @blp.response(201, AcquisitionReadSchema)
+    @blp.response(201, AcquisitionCreateReturnSchema)
     def post(self, payload):
-        """Crée une calibration."""
+        """Crée un étalonnage."""
         scenario_id = payload['scenarioId']
         if scenario_id is None:
             abort(400, message='scenario-id-required')
@@ -239,7 +252,7 @@ class CalibrationController(MethodView):
         db_session.add(calibration)
         db_session.commit()
 
-        return _to_dto(calibration, scenario=scenario)
+        return {'id': calibration.id}
 
 
 @blp.route('/download')
@@ -272,7 +285,12 @@ class AcquisitionByIdController(MethodView):
     @blp.response(200, AcquisitionDetailSchema)
     def get(self, acquisition_id):
         """Détail d'une acquisition avec ses photos."""
-        acquisition = get_acquisition_with_photos(db_session, acquisition_id)
+        acquisition = (
+            db_session.query(Acquisition)
+            .options(*acquisition_photos_load_options(), *acquisition_scenario_load_options())
+            .filter(Acquisition.id == acquisition_id)
+            .one_or_none()
+        )
         if acquisition is None:
             abort(404, message='acquisition-not-found')
         return _to_dto(acquisition, include_photos=True)
