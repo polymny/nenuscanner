@@ -251,6 +251,12 @@ class AcquisitionDownloadController(MethodView):
             if acquisition.status != AcquisitionStatus.COMPLETED:
                 abort(400, message='acquisition-not-completed')
 
+        # if not EXTERNAL_DISK_PATH.is_dir():
+        #     abort(503, message='external-disk-not-mounted')
+
+        # dest_path = copy_acquisitions_data_to_disk(db_session, acquisitions)
+        # return {'path': str(dest_path)}
+
         return download_acquisitions_data(db_session, acquisitions)
 
 

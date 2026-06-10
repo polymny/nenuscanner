@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import shutil
 import tempfile
+from datetime import datetime
 from pathlib import Path
 
 from flask import Response
@@ -14,9 +15,12 @@ from ...archive import ZipSender
 
 SERVER_ROOT = Path(__file__).resolve().parents[2]
 
+# TODO(temp): disque externe Samsung T9 (label T9_B), monté dans le home de pi
+EXTERNAL_DISK_PATH = Path('/home/pi/mnt/T9_B')
+
 
 class _AcquisitionDownloadZipSender(ZipSender):
-    """Zip sender that removes temporary metadata files after the archive is streamed."""
+    """Zip sender that removes temporary metadata files after the archive is written."""
 
     def __init__(self, temp_dir: Path):
         super().__init__()
@@ -25,6 +29,12 @@ class _AcquisitionDownloadZipSender(ZipSender):
     def generator(self):
         try:
             yield from super().generator()
+        finally:
+            shutil.rmtree(self._temp_dir, ignore_errors=True)
+
+    def write_to_path(self, path: Path | str) -> None:
+        try:
+            super().write_to_path(path)
         finally:
             shutil.rmtree(self._temp_dir, ignore_errors=True)
 
@@ -98,8 +108,9 @@ def _build_acquisitions_zip(acquisitions: list[Acquisition], calibrations: list[
     return zip_sender
 
 
-def download_acquisitions_data(session: Session, acquisitions: list[Acquisition]) -> Response:
-    """Build a zip archive with acquisition and related calibration data."""
+def _load_acquisitions_for_download(
+    session: Session, acquisitions: list[Acquisition]
+) -> tuple[list[Acquisition], list[Acquisition]]:
     acquisition_ids = [acquisition.id for acquisition in acquisitions]
     acquisitions_with_photos = (
         session.query(Acquisition)
@@ -118,5 +129,22 @@ def download_acquisitions_data(session: Session, acquisitions: list[Acquisition]
             .all()
         )
 
+    return acquisitions_with_photos, calibrations
+
+
+def download_acquisitions_data(session: Session, acquisitions: list[Acquisition]) -> Response:
+    """Build a zip archive with acquisition and related calibration data."""
+    acquisitions_with_photos, calibrations = _load_acquisitions_for_download(session, acquisitions)
     zip_sender = _build_acquisitions_zip(acquisitions_with_photos, calibrations)
     return zip_sender.response()
+
+
+def copy_acquisitions_data_to_disk(session: Session, acquisitions: list[Acquisition]) -> Path:
+    """Build a zip archive and copy it to the external disk instead of streaming it."""
+    acquisitions_with_photos, calibrations = _load_acquisitions_for_download(session, acquisitions)
+    zip_sender = _build_acquisitions_zip(acquisitions_with_photos, calibrations)
+
+    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+    dest_path = EXTERNAL_DISK_PATH / f'acquisitions_{timestamp}.zip'
+    zip_sender.write_to_path(dest_path)
+    return dest_path

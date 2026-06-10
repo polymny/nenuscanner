@@ -1,6 +1,7 @@
 import builtins
 import functools
 import os
+import zipfile
 import zlib
 from datetime import datetime
 from typing import Optional
@@ -360,7 +361,16 @@ def zip_end_of_central_directory(items_number: int, central_directory_size: int,
 class ZipSender(ArchiveSender):
     """
     A sender for zip archives computed on the fly.
+
+    The streaming generator only supports archives smaller than 4 GiB (32-bit zip offsets).
+    Use write_to_path() for larger archives.
     """
+
+    def write_to_path(self, path: os.PathLike | str) -> None:
+        """Write the archive to disk. Supports ZIP64 for archives larger than 4 GiB."""
+        with zipfile.ZipFile(path, 'w', compression=zipfile.ZIP_STORED) as archive:
+            for name, file in self.files.items():
+                archive.write(file, name)
 
     def generator(self):
         def generate():
