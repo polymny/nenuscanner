@@ -4,12 +4,14 @@ import LedRow from './led-row';
 import type { UpsertScenarioPayload } from '@/schemas/scenario.schemas';
 import { FormLabel } from '@/components/ui/form';
 import { LED_VALUES } from '@/types/led.types';
+import { useGetLedPowerValues } from '@/api/queries/led-power-value.queries';
 
 interface LedsFormSectionProps {
   disabled?: boolean;
 }
 
 const LedsFormSection = ({ disabled = false }: LedsFormSectionProps) => {
+  const { data: powerOptions = [], isLoading } = useGetLedPowerValues();
   const form = useFormContext<UpsertScenarioPayload>();
   const ledsWatch = useWatch({
     control: form.control,
@@ -18,13 +20,24 @@ const LedsFormSection = ({ disabled = false }: LedsFormSectionProps) => {
   const { append: appendLed, remove: removeLed } = useFieldArray({ control: form.control, name: 'leds' });
 
   const selectedByLedValue = useMemo(() => {
-    const map = new Map<string, { index: number; power: number }>();
+    const map = new Map<string, { index: number; powerId: number }>();
     for (let i = 0; i < ledsWatch.length; i += 1) {
       const ledItem = ledsWatch[i];
-      map.set(ledItem.value, { index: i, power: ledItem.power });
+      map.set(ledItem.value, { index: i, powerId: ledItem.powerId });
     }
     return map;
   }, [ledsWatch]);
+
+  if (isLoading || powerOptions.length === 0) {
+    return (
+      <div className="flex w-3/4 flex-col gap-8 rounded-lg bg-white p-6 shadow-lg">
+        <h3 className="text-brand-600">Gestion des LEDs</h3>
+        <p className="text-muted-foreground text-sm">Chargement des puissances LED disponibles…</p>
+      </div>
+    );
+  }
+
+  const defaultPowerId = powerOptions[0].id;
 
   return (
     <div className="flex w-3/4 flex-col gap-8 rounded-lg bg-white p-6 shadow-lg">
@@ -40,13 +53,14 @@ const LedsFormSection = ({ disabled = false }: LedsFormSectionProps) => {
               <LedRow
                 key={ledValue}
                 ledValue={ledValue}
+                powerOptions={powerOptions}
                 disabled={disabled}
                 isSelected={selected !== undefined}
-                power={selected?.power ?? 0}
+                powerId={selected?.powerId ?? defaultPowerId}
                 fieldIndex={selected?.index}
-                onToggle={(checked, currentPower) => {
+                onToggle={(checked, currentPowerId) => {
                   if (checked) {
-                    appendLed({ value: ledValue, power: isNoLed ? 0 : currentPower });
+                    appendLed({ value: ledValue, powerId: isNoLed ? defaultPowerId : currentPowerId });
                     return;
                   }
                   if (selected) {

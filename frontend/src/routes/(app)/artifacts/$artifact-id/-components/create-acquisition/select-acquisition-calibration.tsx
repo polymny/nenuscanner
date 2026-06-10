@@ -78,7 +78,9 @@ const SelectAcquisitionCalibration = ({ setOpen, setCurrentStep }: SelectAcquisi
                               <div className="bg-brand-600 rounded-full p-2">
                                 <Camera className="size-4 text-white" />
                               </div>
-                              <div className="text-sm font-semibold text-gray-700">{calibration.name}</div>
+                              <div className="max-w-[300px] overflow-hidden text-sm font-semibold text-ellipsis text-gray-700">
+                                {calibration.name}
+                              </div>
                             </div>
                           </FlatRadioGroupItem>
                         );

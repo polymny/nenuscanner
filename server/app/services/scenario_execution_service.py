@@ -136,10 +136,10 @@ def _scenario_progress_payload(step: ScenarioCaptureStep) -> dict:
         'ledIndex': step.led_index,
         'ledTotal': step.led_total,
         'ledValue': step.led.led_value,
-        'ledPower': step.led.power,
+        'ledPower': step.led.led_power_value.value,
         'shutterSpeedIndex': step.shutter_speed_index,
         'shutterSpeedTotal': step.shutter_speed_total,
-        'shutterSpeedRelative': step.shutter_speed.relative_value,
+        'shutterSpeedRelative': step.shutter_speed.shutter_speed_value.value,
     }
 
 
@@ -155,8 +155,8 @@ def execute_scenario(
     scenario = (
         session.query(Scenario)
         .options(
-            joinedload(Scenario.leds),
-            joinedload(Scenario.shutter_speeds),
+            joinedload(Scenario.leds).joinedload(ScenarioLED.led_power_value),
+            joinedload(Scenario.shutter_speeds).joinedload(ScenarioShutterSpeed.shutter_speed_value),
             joinedload(Scenario.rotations),
         )
         .filter(Scenario.id == acquisition.scenario_id)
@@ -200,7 +200,9 @@ def execute_scenario(
 
         if config.CAMERA == 'real':
             cam = acquisition.camera_settings
-            target_shutter_speed = float(cam.absolute_shutter_speed_value) * float(step.shutter_speed.relative_value)
+            target_shutter_speed = float(cam.absolute_shutter_speed_value) * float(
+                step.shutter_speed.shutter_speed_value.value
+            )
             # TODO : temporary fix for ALL_LEDS
             if step.led.led_value == 'ALL_LEDS':
                 target_shutter_speed /= LEDS_COUNT

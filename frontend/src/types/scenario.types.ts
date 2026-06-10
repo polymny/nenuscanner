@@ -3,7 +3,7 @@ import type { LedValue } from './led.types';
 
 export interface ScenarioLed {
   value: LedValue;
-  power: number;
+  powerId: number;
 }
 
 export interface ScenarioSummary {
@@ -11,11 +11,12 @@ export interface ScenarioSummary {
   name: string;
   leds: Array<ScenarioLed>;
   rotationsCount: number;
-  shutterSpeeds: Array<number>;
+  shutterSpeedIds: Array<number>;
 }
 
 export interface Scenario extends ScenarioSummary {
   acquisitions: Array<{ id: number; name: string }>;
   calibrations: Array<{ id: number; name: string; armsPositionId: number; status: AcquisitionStatus }>;
+  isCalibrated: boolean;
   updatedAt: string;
 }

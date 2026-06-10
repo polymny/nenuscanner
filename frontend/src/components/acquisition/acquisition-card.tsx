@@ -1,14 +1,15 @@
-import { Camera, Clapperboard, Download, EllipsisVertical, Trash } from 'lucide-react';
-import { useNavigate } from '@tanstack/react-router';
+import { useMemo, useState } from 'react';
+import { Camera, ChevronDown, ChevronRight, Download, EllipsisVertical, Trash } from 'lucide-react';
 import type { Acquisition } from '@/types/acquisition.types';
 import { acquisitionStatusBadges } from '@/types/acquisition.types';
 import { toAbsoluteImageUrl } from '@/api/queries/acquisition.queries';
+import { useGetCompatibleScenarioIds, useGetScenarios } from '@/api/queries/scenario.queries';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 import { cn, formatDateFr } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
-import ScenarioSummaryStats from '@/components/scenario/scenario-summary-stats';
+import ScenarioSummaryRow from '@/components/scenario/scenario-summary-row';
 
 interface AcquisitionCardProps {
   acquisition: Acquisition;
@@ -27,7 +28,21 @@ export default function AcquisitionCard({
   onSelect,
   selected = false,
 }: AcquisitionCardProps) {
-  const navigate = useNavigate();
+  const [showCompatibleScenarios, setShowCompatibleScenarios] = useState(false);
+  const { data: compatibleScenarioIds = [] } = useGetCompatibleScenarioIds(
+    acquisition.scenario.id,
+    acquisition.isCalibration
+  );
+  const { data: scenarios = [] } = useGetScenarios({ enabled: acquisition.isCalibration });
+  const compatibleScenarios = useMemo(
+    () =>
+      scenarios
+        .filter((scenario) => compatibleScenarioIds.includes(scenario.id))
+        .sort((a, b) => a.name.localeCompare(b.name)),
+    [compatibleScenarioIds, scenarios]
+  );
+  const hasCompatibleScenarios = acquisition.isCalibration && compatibleScenarios.length > 0;
+
   return (
     <div
       className={cn(
@@ -112,23 +127,35 @@ export default function AcquisitionCard({
           {formatDateFr(acquisition.createdAt)}
         </div>
       </div>
-      <div
-        className="flex items-center gap-3 divide-x divide-gray-200 rounded-md bg-transparent py-1 hover:bg-gray-100"
-        onClick={(event) => {
-          event.stopPropagation();
-          navigate({ to: `/scenarios/${acquisition.scenario.id}` });
-          return false;
-        }}
-      >
-        <div className="inline-flex items-center gap-1 px-2">
-          <div className="bg-brand-600 flex items-center justify-center rounded-full p-2">
-            <Clapperboard className="size-3 text-white" />
-          </div>
-          <div className="wrap-break-words max-w-[300px] text-sm font-medium text-gray-700">
-            {acquisition.scenario.name}
-          </div>
+      <div className="flex flex-col gap-2">
+        <div className="flex items-center gap-1">
+          <ScenarioSummaryRow className="flex-1" scenario={acquisition.scenario} />
+          {hasCompatibleScenarios && (
+            <Button
+              className="shrink-0 px-2 text-gray-600"
+              onClick={(event) => {
+                event.stopPropagation();
+                setShowCompatibleScenarios((current) => !current);
+                return false;
+              }}
+              variant="link"
+            >
+              {showCompatibleScenarios ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
+            </Button>
+          )}
         </div>
-        <ScenarioSummaryStats scenario={acquisition.scenario} />
+        {hasCompatibleScenarios && showCompatibleScenarios && (
+          <div className="flex flex-col gap-2 rounded-md border border-gray-200 bg-gray-50 p-2">
+            <div className="text-xs font-semibold tracking-wide text-gray-500 uppercase">
+              Autres scénarios étalonnés
+            </div>
+            <div className="flex flex-col gap-1">
+              {compatibleScenarios.map((scenario) => (
+                <ScenarioSummaryRow key={scenario.id} scenario={scenario} />
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -42,11 +42,17 @@ def init_db() -> None:
         arms_position,  # noqa: F401
         artifact,  # noqa: F401
         camera_settings,  # noqa: F401
+        led_power_value,  # noqa: F401
         profile,  # noqa: F401
         scenario,  # noqa: F401
+        shutter_speed_value,  # noqa: F401
     )
 
     Base.metadata.create_all(bind=engine)
+
+    from .seeds import run_seeds
+
+    run_seeds(db_session)
 
 
 def main() -> None:
