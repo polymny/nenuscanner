@@ -2,6 +2,7 @@ import { memo, useEffect, useState } from 'react';
 import { useFormContext } from 'react-hook-form';
 import type { UpsertScenarioPayload } from '@/schemas/scenario.schemas';
 import type { LedValue } from '@/types/led.types';
+import type { LedPowerValueOption } from '@/types/led-power-value.types';
 import { FormLabel } from '@/components/ui/form';
 import { SliderWithLabels } from '@/components/ui/slider-with-labels';
 import { Switch } from '@/components/ui/switch';
@@ -10,23 +11,38 @@ import { getLedValueLabel } from '@/types/led.types';
 
 export interface LedRowProps {
   ledValue: LedValue;
+  powerOptions: Array<LedPowerValueOption>;
   disabled?: boolean;
   isSelected: boolean;
-  power: number;
+  powerId: number;
   fieldIndex?: number;
-  onToggle: (checked: boolean, power: number) => void;
+  onToggle: (checked: boolean, powerId: number) => void;
 }
 
-const LedRow = ({ ledValue, disabled = false, isSelected, power, fieldIndex, onToggle }: LedRowProps) => {
+const LedRow = ({
+  ledValue,
+  powerOptions,
+  disabled = false,
+  isSelected,
+  powerId,
+  fieldIndex,
+  onToggle,
+}: LedRowProps) => {
   const form = useFormContext<UpsertScenarioPayload>();
-  const [localPower, setLocalPower] = useState(power);
   const isNoLed = ledValue === 'NO_LED';
 
+  const [powerIndex, setPowerIndex] = useState<number | null>(null);
+  const activeIndex =
+    powerIndex ??
+    Math.max(
+      0,
+      powerOptions.findIndex((option) => option.id === powerId)
+    );
+  const selectedOption = powerOptions[activeIndex] ?? powerOptions[0];
+
   useEffect(() => {
-    if (isSelected) {
-      setLocalPower(power);
-    }
-  }, [isSelected, power]);
+    if (isSelected) setPowerIndex(powerOptions.findIndex((option) => option.id === powerId));
+  }, [isSelected, powerId, powerOptions]);
 
   return (
     <div
@@ -40,7 +56,7 @@ const LedRow = ({ ledValue, disabled = false, isSelected, power, fieldIndex, onT
           className="data-[state=checked]:bg-success-500"
           checked={isSelected}
           disabled={disabled}
-          onCheckedChange={(checked) => onToggle(checked, localPower)}
+          onCheckedChange={(checked) => onToggle(checked, selectedOption.id)}
         />
         <FormLabel className="text-lg!! font-medium!">{getLedValueLabel(ledValue)}</FormLabel>
       </div>
@@ -49,19 +65,19 @@ const LedRow = ({ ledValue, disabled = false, isSelected, power, fieldIndex, onT
         <SliderWithLabels
           rangeBgColor={isSelected ? 'bg-brand-600' : 'bg-brand-600/50'}
           wrapperClassName="w-4/5"
-          minLabel="0.00"
-          maxLabel="1.00"
-          currentLabel={Number(localPower).toFixed(2)}
-          max={1}
-          min={0.0}
-          step={0.1}
-          value={[localPower]}
+          minLabel={Number(powerOptions[0].value).toFixed(2)}
+          maxLabel={Number(powerOptions[powerOptions.length - 1].value).toFixed(2)}
+          currentLabel={Number(selectedOption.value).toFixed(2)}
+          max={powerOptions.length - 1}
+          min={0}
+          step={1}
+          value={[activeIndex]}
           disabled={disabled}
-          onValueChange={(v) => setLocalPower(v[0] ?? 0)}
+          onValueChange={(v) => setPowerIndex(v[0] ?? 0)}
           onValueCommit={(v) => {
-            const nextPower = v[0] ?? 0;
+            const nextOption = powerOptions[v[0] ?? 0];
             if (fieldIndex === undefined) return;
-            form.setValue(`leds.${fieldIndex}.power`, nextPower, {
+            form.setValue(`leds.${fieldIndex}.powerId`, nextOption.id, {
               shouldDirty: true,
               shouldValidate: true,
             });
@@ -76,8 +92,9 @@ export default memo(
   LedRow,
   (prev, next) =>
     prev.ledValue === next.ledValue &&
+    prev.powerOptions === next.powerOptions &&
     prev.disabled === next.disabled &&
     prev.isSelected === next.isSelected &&
-    prev.power === next.power &&
+    prev.powerId === next.powerId &&
     prev.fieldIndex === next.fieldIndex
 );

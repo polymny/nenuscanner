@@ -19,7 +19,7 @@ class ScenarioLEDSchema(Schema):
         validate=validate.OneOf(LED_VALUES),
         data_key='value',
     )
-    power = fields.Float(required=True, validate=validate.Range(min=0, max=1))
+    powerId = fields.Integer(required=True, data_key='powerId', validate=validate.Range(min=1))
 
 
 class ScenarioSummarySchema(Schema):
@@ -30,7 +30,7 @@ class ScenarioSummarySchema(Schema):
     name = fields.String(required=True)
     leds = fields.List(fields.Nested(ScenarioLEDSchema), required=True)
     rotationsCount = fields.Integer(required=True, data_key='rotationsCount')
-    shutterSpeeds = fields.List(fields.Float(), required=True, data_key='shutterSpeeds')
+    shutterSpeedIds = fields.List(fields.Integer(), required=True, data_key='shutterSpeedIds')
 
 
 class ScenarioReadSchema(Schema):
@@ -42,7 +42,7 @@ class ScenarioReadSchema(Schema):
     updatedAt = fields.DateTime(required=True)
     leds = fields.List(fields.Nested(ScenarioLEDSchema), required=True)
     rotationsCount = fields.Integer(required=True, data_key='rotationsCount')
-    shutterSpeeds = fields.List(fields.Float(), required=True, data_key='shutterSpeeds')
+    shutterSpeedIds = fields.List(fields.Integer(), required=True, data_key='shutterSpeedIds')
     acquisitions = fields.List(fields.Dict(), required=True)
     calibrations = fields.List(fields.Dict(), required=True)
 
@@ -55,10 +55,10 @@ class ScenarioCreateSchema(Schema):
     name = fields.String(required=True, validate=_NAME_VALIDATE, pre_load=str.strip)
     leds = fields.List(fields.Nested(ScenarioLEDSchema), required=True, validate=validate.Length(min=1))
     rotationsCount = fields.Integer(required=True, validate=validate.Range(min=0, max=12), data_key='rotationsCount')
-    shutterSpeeds = fields.List(
-        fields.Float(validate=validate.Range(min=0, min_inclusive=False)),
+    shutterSpeedIds = fields.List(
+        fields.Integer(validate=validate.Range(min=1)),
         required=True,
-        data_key='shutterSpeeds',
+        data_key='shutterSpeedIds',
         validate=validate.Length(min=1),
     )
 

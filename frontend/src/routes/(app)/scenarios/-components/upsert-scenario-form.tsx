@@ -1,19 +1,20 @@
+import { useMemo } from 'react';
 import { useForm, useFormContext, useFormState, useWatch } from 'react-hook-form';
 import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useNavigate } from '@tanstack/react-router';
 import { vineResolver } from '@hookform/resolvers/vine';
-import { useMemo } from 'react';
 import ShutterSpeedsFormSection from './shutter-speeds-form-section';
 import LedsFormSection from './leds-form-section';
 import type { UpsertScenarioPayload } from '@/schemas/scenario.schemas';
 import { upsertScenarioSchema } from '@/schemas/scenario.schemas';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Button } from '@/components/ui/button';
-import { SHUTTER_SPEED_REFERENCE_VALUE } from '@/lib/shutter-speed-utils';
 import { SliderWithLabels } from '@/components/ui/slider-with-labels';
 import { useUpsertScenario } from '@/api/mutations/scenario.mutations';
 import { useGetScenarios } from '@/api/queries/scenario.queries';
+import { useGetShutterSpeedValues } from '@/api/queries/shutter-speed-value.queries';
+import { SHUTTER_SPEED_REFERENCE } from '@/types/shutter-speed-value.types';
 import { Input } from '@/components/ui/input';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { cn } from '@/lib/utils';
@@ -29,9 +30,7 @@ const RotationsCountAlert = () => {
   const rotationsCount = useWatch({ control, name: 'rotationsCount' });
 
   return (
-    <Alert
-      className={cn('border-success-200 bg-success-50 text-success-800', rotationsCount === 0 ? '' : 'opacity-0')}
-    >
+    <Alert className={cn('border-success-200 bg-success-50 text-success-800', rotationsCount === 0 ? '' : 'opacity-0')}>
       <AlertTitle>Compatible sans plateau tournant</AlertTitle>
       <AlertDescription>
         Avec 0 rotation, votre configuration est compatible avec un setup sans plateau tournant.
@@ -59,11 +58,16 @@ const ScenarioFormSubmitButton = ({ isUpserting }: ScenarioFormSubmitButtonProps
 const UpsertScenarioForm = ({ mode, scenarioId, onRequestDuplicate }: UpsertScenarioFormProps) => {
   const navigate = useNavigate();
   const { data: scenarios } = useGetScenarios();
+  const { data: shutterSpeedOptions = [] } = useGetShutterSpeedValues();
+  const defaultShutterSpeedId = useMemo(
+    () => shutterSpeedOptions.find((option) => option.value === SHUTTER_SPEED_REFERENCE)?.id ?? 0,
+    [shutterSpeedOptions]
+  );
   const existingScenario = scenarios?.find((scenario) => scenario.id === scenarioId);
 
   const isLockedForEdition = useMemo(() => {
     if (mode !== 'update') return false;
-    return (existingScenario?.acquisitions.length ?? 0) > 0;
+    return (existingScenario?.acquisitions.length ?? 0) > 0 || (existingScenario?.calibrations.length ?? 0) > 0;
   }, [existingScenario?.acquisitions.length, mode]);
 
   const { isPending: isUpsertingScenario, mutate: upsertScenarioMutate } = useUpsertScenario(mode, {
@@ -80,7 +84,7 @@ const UpsertScenarioForm = ({ mode, scenarioId, onRequestDuplicate }: UpsertScen
       id: existingScenario?.id ?? undefined,
       leds: existingScenario?.leds ?? [],
       rotationsCount: existingScenario?.rotationsCount ?? 0,
-      shutterSpeeds: existingScenario?.shutterSpeeds ?? (mode === 'create' ? [SHUTTER_SPEED_REFERENCE_VALUE] : []),
+      shutterSpeedIds: existingScenario?.shutterSpeedIds ?? (mode === 'create' ? [defaultShutterSpeedId] : []),
     },
     mode: 'onChange',
   });

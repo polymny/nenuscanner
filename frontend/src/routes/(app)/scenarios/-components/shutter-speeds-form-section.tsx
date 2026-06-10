@@ -4,28 +4,47 @@ import { XCircle } from 'lucide-react';
 import type { UpsertScenarioPayload } from '@/schemas/scenario.schemas';
 import { FormLabel } from '@/components/ui/form';
 import { Button } from '@/components/ui/button';
-import { SHUTTER_SPEED_REFERENCE_VALUE, SHUTTER_SPEED_VALUES } from '@/lib/shutter-speed-utils';
 import { SliderWithLabels } from '@/components/ui/slider-with-labels';
 import { BadgeWithAction } from '@/components/ui/badge-with-action';
 import { formatNumberAsFractionOrDecimal } from '@/lib/utils';
+import { useGetShutterSpeedValues } from '@/api/queries/shutter-speed-value.queries';
+import { SHUTTER_SPEED_REFERENCE } from '@/types/shutter-speed-value.types';
 
 interface ShutterSpeedsFormSectionProps {
   disabled?: boolean;
 }
 
 const ShutterSpeedsFormSection = ({ disabled = false }: ShutterSpeedsFormSectionProps) => {
-  const [shutterSpeedIndex, setShutterSpeedIndex] = useState(
-    SHUTTER_SPEED_VALUES.indexOf(SHUTTER_SPEED_REFERENCE_VALUE)
-  );
+  const { data: options = [], isLoading } = useGetShutterSpeedValues();
 
-  const selectedShutterSpeed = useMemo(() => SHUTTER_SPEED_VALUES[shutterSpeedIndex], [shutterSpeedIndex]);
+  const [shutterSpeedIndex, setShutterSpeedIndex] = useState<number | null>(null);
+  const referenceIndex = Math.max(
+    0,
+    options.findIndex((option) => option.value === SHUTTER_SPEED_REFERENCE)
+  );
+  const activeIndex = shutterSpeedIndex ?? referenceIndex;
+  const selectedOption = options[activeIndex];
 
   const form = useFormContext<UpsertScenarioPayload>();
-  const shutterSpeedsWatch = useWatch({
+  const shutterSpeedIdsWatch = useWatch({
     control: form.control,
-    name: 'shutterSpeeds',
+    name: 'shutterSpeedIds',
   });
-  const sortedShutterSpeedsWatch = useMemo(() => [...shutterSpeedsWatch].sort(), [shutterSpeedsWatch]);
+
+  const valueById = useMemo(() => new Map(options.map((option) => [option.id, option.value])), [options]);
+  const sortedShutterSpeedIdsWatch = useMemo(
+    () => [...shutterSpeedIdsWatch].sort((a, b) => (valueById.get(a) ?? 0) - (valueById.get(b) ?? 0)),
+    [shutterSpeedIdsWatch, valueById]
+  );
+
+  if (isLoading || options.length === 0) {
+    return (
+      <div className="flex w-3/4 flex-col gap-8 rounded-lg bg-white p-6 shadow-lg">
+        <h3 className="text-brand-600">Gestion des temps de pose</h3>
+        <p className="text-muted-foreground text-sm">Chargement des temps de pose disponibles…</p>
+      </div>
+    );
+  }
 
   return (
     <div className="flex w-3/4 flex-col gap-8 rounded-lg bg-white p-6 shadow-lg">
@@ -35,24 +54,24 @@ const ShutterSpeedsFormSection = ({ disabled = false }: ShutterSpeedsFormSection
         <div className="flex items-start gap-4">
           <SliderWithLabels
             wrapperClassName="flex-1"
-            minLabel={formatNumberAsFractionOrDecimal(SHUTTER_SPEED_VALUES[0])}
-            maxLabel={formatNumberAsFractionOrDecimal(SHUTTER_SPEED_VALUES[SHUTTER_SPEED_VALUES.length - 1])}
-            currentLabel={formatNumberAsFractionOrDecimal(selectedShutterSpeed)}
-            max={SHUTTER_SPEED_VALUES.length - 1}
+            minLabel={formatNumberAsFractionOrDecimal(options[0].value)}
+            maxLabel={formatNumberAsFractionOrDecimal(options[options.length - 1].value)}
+            currentLabel={formatNumberAsFractionOrDecimal(selectedOption.value)}
+            max={options.length - 1}
             min={0}
             step={1}
-            value={[shutterSpeedIndex]}
+            value={[activeIndex]}
             disabled={disabled}
             onValueChange={(v) => setShutterSpeedIndex(v[0] ?? 0)}
           />
           <Button
-            disabled={disabled || shutterSpeedsWatch.includes(selectedShutterSpeed)}
+            disabled={disabled || shutterSpeedIdsWatch.includes(selectedOption.id)}
             size="sm"
             className="shrink-0"
             type="button"
             onClick={() => {
-              const next = Array.from(new Set([...shutterSpeedsWatch, selectedShutterSpeed]));
-              form.setValue('shutterSpeeds', next, { shouldValidate: true, shouldDirty: true, shouldTouch: true });
+              const next = Array.from(new Set([...shutterSpeedIdsWatch, selectedOption.id]));
+              form.setValue('shutterSpeedIds', next, { shouldValidate: true, shouldDirty: true, shouldTouch: true });
             }}
           >
             Ajouter
@@ -60,19 +79,19 @@ const ShutterSpeedsFormSection = ({ disabled = false }: ShutterSpeedsFormSection
         </div>
 
         <div className="flex flex-wrap gap-2">
-          {sortedShutterSpeedsWatch.map((v) => (
+          {sortedShutterSpeedIdsWatch.map((id) => (
             <BadgeWithAction
               variant="brand"
-              key={v}
-              content={formatNumberAsFractionOrDecimal(v)}
+              key={id}
+              content={formatNumberAsFractionOrDecimal(valueById.get(id) ?? 0)}
               Icon={XCircle}
               iconColor="text-brand-600"
               action={
-                !disabled && shutterSpeedsWatch.length > 1
+                !disabled && shutterSpeedIdsWatch.length > 1
                   ? () => {
                       form.setValue(
-                        'shutterSpeeds',
-                        shutterSpeedsWatch.filter((s) => s !== v),
+                        'shutterSpeedIds',
+                        shutterSpeedIdsWatch.filter((currentId) => currentId !== id),
                         { shouldValidate: true, shouldDirty: true, shouldTouch: true }
                       );
                     }

@@ -3,7 +3,7 @@ import type { ScenarioSummary } from '@/types/scenario.types';
 import { cn, pluralize } from '@/lib/utils';
 
 interface ScenarioSummaryStatsProps {
-  scenario: Pick<ScenarioSummary, 'leds' | 'shutterSpeeds' | 'rotationsCount'>;
+  scenario: Pick<ScenarioSummary, 'leds' | 'shutterSpeedIds' | 'rotationsCount'>;
   className?: string;
 }
 
@@ -12,7 +12,7 @@ export default function ScenarioSummaryStats({ scenario, className }: ScenarioSu
   const hasNoLed = ledValues.includes('NO_LED');
   const hasAllLeds = ledValues.includes('ALL_LEDS');
   const ledsCount = ledValues.length;
-  const shutterSpeedsCount = scenario.shutterSpeeds.length;
+  const shutterSpeedsCount = scenario.shutterSpeedIds.length;
   const rotationsCount = scenario.rotationsCount;
 
   return (

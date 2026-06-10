@@ -14,12 +14,12 @@ export const upsertScenarioSchema = vine.create(
       .array(
         vine.object({
           value: vine.enum(LED_VALUES),
-          power: vine.number().min(0).max(1),
+          powerId: vine.number().withoutDecimals().positive(),
         })
       )
       .minLength(1),
     rotationsCount: vine.number().withoutDecimals().min(0).max(12),
-    shutterSpeeds: vine.array(vine.number().positive()).minLength(1),
+    shutterSpeedIds: vine.array(vine.number().withoutDecimals().positive()).minLength(1),
   })
 );
 

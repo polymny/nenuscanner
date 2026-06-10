@@ -46,8 +46,8 @@ def _photo_to_dto(photo) -> dict:
         'acquisitionId': photo.acquisition_id,
         'rotationRadians': rotation.radians_value if rotation is not None else None,
         'ledValue': led.led_value if led is not None else None,
-        'ledPower': led.power if led is not None else None,
-        'shutterSpeedRelative': shutter_speed.relative_value if shutter_speed is not None else None,
+        'ledPower': led.led_power_value.value if led is not None else None,
+        'shutterSpeedRelative': shutter_speed.shutter_speed_value.value if shutter_speed is not None else None,
     }
 
 

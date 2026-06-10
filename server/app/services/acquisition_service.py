@@ -11,7 +11,7 @@ from .scenario_execution_service import execute_scenario
 from .sse_job_runner import SseJobContext
 from ..models.acquisition import Acquisition, AcquisitionStatus
 from ..models.acquisition_photo import AcquisitionPhoto
-from ..models.scenario import Scenario
+from ..models.scenario import Scenario, ScenarioLED, ScenarioShutterSpeed
 from ...sa_db import db_session
 
 _THUMBNAIL_TARGET_SHUTTER_RELATIVE = 1.0
@@ -31,17 +31,21 @@ def photo_path_to_url(path: str) -> str:
 
 def acquisition_photos_load_options():
     return (
-        joinedload(Acquisition.photos).joinedload(AcquisitionPhoto.scenario_led),
+        joinedload(Acquisition.photos).joinedload(AcquisitionPhoto.scenario_led).joinedload(ScenarioLED.led_power_value),
         joinedload(Acquisition.photos).joinedload(AcquisitionPhoto.scenario_rotation),
-        joinedload(Acquisition.photos).joinedload(AcquisitionPhoto.scenario_shutter_speed),
+        joinedload(Acquisition.photos)
+        .joinedload(AcquisitionPhoto.scenario_shutter_speed)
+        .joinedload(ScenarioShutterSpeed.shutter_speed_value),
     )
 
 
 def acquisition_scenario_load_options():
     return (
-        joinedload(Acquisition.scenario).joinedload(Scenario.leds),
+        joinedload(Acquisition.scenario).joinedload(Scenario.leds).joinedload(ScenarioLED.led_power_value),
         joinedload(Acquisition.scenario).joinedload(Scenario.rotations),
-        joinedload(Acquisition.scenario).joinedload(Scenario.shutter_speeds),
+        joinedload(Acquisition.scenario)
+        .joinedload(Scenario.shutter_speeds)
+        .joinedload(ScenarioShutterSpeed.shutter_speed_value),
     )
 
 
@@ -63,7 +67,7 @@ def acquisition_thumbnail_url(photos: list[AcquisitionPhoto]) -> str | None:
     best = min(
         pool,
         key=lambda p: (
-            abs(p.scenario_shutter_speed.relative_value - _THUMBNAIL_TARGET_SHUTTER_RELATIVE)
+            abs(p.scenario_shutter_speed.shutter_speed_value.value - _THUMBNAIL_TARGET_SHUTTER_RELATIVE)
             if p.scenario_shutter_speed
             else float('inf')
         ),

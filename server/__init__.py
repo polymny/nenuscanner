@@ -10,8 +10,10 @@ from .app.controllers.acquisition_rest_controller import blp as acquisition_blp
 from .app.controllers.arms_position_controller import blp as arms_position_blp
 from .app.controllers.artifact_controller import blp as artifact_blp
 from .app.controllers.camera_rest_controller import blp as camera_blp
+from .app.controllers.led_power_value_controller import blp as led_power_value_blp
 from .app.controllers.profile_controller import blp as profile_blp
 from .app.controllers.scenario_controller import blp as scenario_blp
+from .app.controllers.shutter_speed_value_controller import blp as shutter_speed_value_blp
 from .app.controllers.web_controller import blueprint as web_blueprint
 from .sa_db import db_session
 
@@ -87,6 +89,8 @@ app.register_blueprint(web_blueprint)
 api.register_blueprint(acquisition_blp, url_prefix='/acquisition')
 api.register_blueprint(artifact_blp, url_prefix='/artifact')
 api.register_blueprint(camera_blp, url_prefix='/camera')
+api.register_blueprint(led_power_value_blp, url_prefix='/led-power-value')
+api.register_blueprint(shutter_speed_value_blp, url_prefix='/shutter-speed-value')
 api.register_blueprint(profile_blp, url_prefix='/profile')
 api.register_blueprint(scenario_blp, url_prefix='/scenario')
 api.register_blueprint(arms_position_blp, url_prefix='/arms-position')
