@@ -18,7 +18,10 @@ from ..dtos.acquisition_dto import (
 from ..models.acquisition import Acquisition, AcquisitionStatus
 from ..models.artifact import Artifact
 from ..models.scenario import Scenario
-from ..services.acquisition_download_service import download_acquisitions_data
+from ..services.acquisition_download_service import (
+    EXTERNAL_DISK_PATH,
+    copy_acquisitions_data_to_disk,
+)
 from ..services.acquisition_service import (
     acquisition_photos_load_options,
     acquisition_scenario_load_options,
@@ -272,13 +275,13 @@ class AcquisitionDownloadController(MethodView):
             if acquisition.status != AcquisitionStatus.COMPLETED:
                 abort(400, message='acquisition-not-completed')
 
-        # if not EXTERNAL_DISK_PATH.is_dir():
-        #     abort(503, message='external-disk-not-mounted')
+        if not EXTERNAL_DISK_PATH.is_dir():
+            abort(503, message='external-disk-not-mounted')
 
-        # dest_path = copy_acquisitions_data_to_disk(db_session, acquisitions)
-        # return {'path': str(dest_path)}
+        dest_path = copy_acquisitions_data_to_disk(db_session, acquisitions)
+        return {'path': str(dest_path)}
 
-        return download_acquisitions_data(db_session, acquisitions)
+        # return download_acquisitions_data(db_session, acquisitions)
 
 
 @blp.route('/<int:acquisition_id>')
