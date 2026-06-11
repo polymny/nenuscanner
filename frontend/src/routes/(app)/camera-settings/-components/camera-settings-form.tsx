@@ -1,9 +1,11 @@
 import { memo } from 'react';
+import { Focus } from 'lucide-react';
 import { toast } from 'sonner';
-import CameraSettingSelect from './camera-setting-select';
+import CameraSettingSlider from './camera-setting-slider';
 import type { CameraSettings } from '@/types/camera.types';
 import { useTriggerCameraAutofocus, useUpdateCameraSetting } from '@/api/mutations/camera.mutations';
 import { Button } from '@/components/ui/button';
+import { Separator } from '@/components/ui/separator';
 
 interface CameraSettingsFormProps {
   isPending: boolean;
@@ -33,14 +35,34 @@ const CameraSettingsForm = memo(function CameraSettingsForm({ isPending, isError
   const isBusy = isUpdatingSetting || isAutofocusing;
 
   return (
-    <div className="flex w-1/2 flex-col gap-6 p-10">
+    <div className="flex w-1/2 flex-col gap-8 p-10">
+      <div className="flex items-center justify-between gap-6">
+        <div className="flex flex-col gap-1">
+          <p className="text-sm font-medium text-gray-950">Mise au point</p>
+          <p className="text-xs text-gray-500">Déclencher l&apos;autofocus manuellement</p>
+        </div>
+        <Button
+          className="shrink-0"
+          disabled={isBusy}
+          onClick={() => triggerAutofocus()}
+          size="sm"
+          type="button"
+          variant="outline"
+        >
+          <Focus className="size-4" />
+          {isAutofocusing ? 'En cours…' : 'Autofocus'}
+        </Button>
+      </div>
+
+      <Separator />
+
       {isPending ? (
         <p className="text-sm text-gray-600">Chargement des réglages…</p>
       ) : isError ? (
         <p className="text-sm text-red-600">Impossible de charger les réglages de la caméra.</p>
       ) : (
         <>
-          <CameraSettingSelect
+          <CameraSettingSlider
             currentValue={settings.currentIsoValue}
             disabled={isBusy}
             label="ISO"
@@ -48,7 +70,8 @@ const CameraSettingsForm = memo(function CameraSettingsForm({ isPending, isError
             setting="iso"
             values={settings.isoValues}
           />
-          <CameraSettingSelect
+          <Separator />
+          <CameraSettingSlider
             currentValue={settings.currentShutterSpeedValue}
             disabled={isBusy}
             label="Temps de pose"
@@ -56,7 +79,8 @@ const CameraSettingsForm = memo(function CameraSettingsForm({ isPending, isError
             setting="shutterspeed"
             values={settings.shutterSpeedValues}
           />
-          <CameraSettingSelect
+          <Separator />
+          <CameraSettingSlider
             currentValue={settings.currentApertureValue}
             disabled={isBusy}
             label="Ouverture"
@@ -66,10 +90,6 @@ const CameraSettingsForm = memo(function CameraSettingsForm({ isPending, isError
           />
         </>
       )}
-
-      <Button disabled={isBusy} onClick={() => triggerAutofocus()} type="button">
-        {isAutofocusing ? 'Autofocus en cours…' : 'Autofocus'}
-      </Button>
     </div>
   );
 });

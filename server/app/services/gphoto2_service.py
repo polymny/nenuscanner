@@ -199,7 +199,6 @@ def set_camera_setting(setting: str, value: float) -> None:
         raise ValueError('invalid-camera-setting-value')
 
     _run_gphoto2_set_config(config_name, str(choice_index))
-    _flush_preview_buffer()
 
 
 def trigger_autofocus() -> None:
@@ -244,15 +243,6 @@ def _capture_preview_bytes() -> bytes:
         last_error = (result.stderr or b'').decode('utf-8', errors='replace').strip()
 
     raise RuntimeError(last_error or 'capture-preview-failed')
-
-
-def _flush_preview_buffer() -> None:
-    """Jette les trames liveview en cache (après changement de réglage, autofocus, etc.)."""
-    with _gphoto2_lock:
-        for index in range(PREVIEW_FLUSH_AFTER_SETTING):
-            _capture_preview_bytes()
-            if index + 1 < PREVIEW_FLUSH_AFTER_SETTING:
-                time.sleep(PREVIEW_FLUSH_SLEEP_SEC)
 
 
 def capture_preview() -> str:
