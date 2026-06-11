@@ -5,12 +5,13 @@ from flask import Response, stream_with_context
 from flask.views import MethodView
 from flask_smorest import Blueprint, abort
 
-from ..dtos.camera_dto import CameraSettingsSchema, CameraSettingUpdateSchema
+from ..dtos.camera_dto import CameraFocusAreaUpdateSchema, CameraSettingsSchema, CameraSettingUpdateSchema
 from ..services.camera_settings_service import persist_current_camera_settings
 from ..services.gphoto2_service import (
     capture_preview,
     get_camera_settings,
     set_camera_setting,
+    set_focus_area,
     trigger_autofocus,
 )
 from ...sa_db import db_session
@@ -47,6 +48,15 @@ class CameraAutofocusController(MethodView):
     def post(self):
         """Déclenche l'autofocus de la caméra."""
         trigger_autofocus()
+
+
+@blp.route('/focus-area')
+class CameraFocusAreaController(MethodView):
+    @blp.arguments(CameraFocusAreaUpdateSchema)
+    @blp.response(204)
+    def post(self, payload):
+        """Déplace la zone AF (format 3:2) puis déclenche l'autofocus."""
+        set_focus_area(payload['x'], payload['y'])
 
 
 def _format_sse(event_type: str, payload: dict) -> str:

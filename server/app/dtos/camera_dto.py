@@ -1,6 +1,10 @@
 from marshmallow import EXCLUDE, Schema, fields, validate
 
-from ..services.gphoto2_service import CAMERA_SETTING_NAMES
+# Repère normalisé exposé par l'API (cadre 3:2)
+FOCUS_AREA_NORM_WIDTH = 6966
+FOCUS_AREA_NORM_HEIGHT = 4644
+
+CAMERA_SETTING_NAMES = ('shutterspeed', 'iso', 'aperture')
 
 
 class CameraSettingsSchema(Schema):
@@ -19,3 +23,12 @@ class CameraSettingUpdateSchema(Schema):
 
     setting = fields.String(required=True, validate=validate.OneOf(CAMERA_SETTING_NAMES))
     value = fields.Float(required=True)
+
+
+class CameraFocusAreaUpdateSchema(Schema):
+    class Meta:
+        unknown = EXCLUDE
+        ordered = True
+
+    x = fields.Integer(required=True, validate=validate.Range(min=0, max=FOCUS_AREA_NORM_WIDTH))
+    y = fields.Integer(required=True, validate=validate.Range(min=0, max=FOCUS_AREA_NORM_HEIGHT))

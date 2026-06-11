@@ -5,6 +5,12 @@ import time
 from collections.abc import Callable
 from pathlib import Path
 
+from server.app.dtos.camera_dto import (
+    CAMERA_SETTING_NAMES,
+    FOCUS_AREA_NORM_HEIGHT,
+    FOCUS_AREA_NORM_WIDTH,
+)
+
 # Nikon Z : le buffer liveview renvoie parfois d'anciennes trames après un réglage ou un mouvement.
 # Voir camera.py, gphoto2 #60 (--capture-movie) et libgphoto2 #846 (file d'événements PTP).
 PREVIEW_FLUSH_AFTER_SETTING = 2
@@ -30,13 +36,11 @@ def _parse_shutter_label(label: str) -> float:
     return float(value)
 
 
-_SETTING_CONFIGS: dict[str, tuple[str, Callable[[str], float]]] = {
+_SETTING_CONFIGS: dict[CAMERA_SETTING_NAMES, tuple[str, Callable[[str], float]]] = {
     'shutterspeed': ('shutterspeed', _parse_shutter_label),
     'iso': ('iso', _parse_iso_label),
     'aperture': ('f-number', _parse_aperture_label),
 }
-
-CAMERA_SETTING_NAMES = tuple(_SETTING_CONFIGS.keys())
 
 
 def parse_gphoto2_config_output(output: str) -> dict:
@@ -200,7 +204,30 @@ def set_camera_setting(setting: str, value: float) -> None:
 
 def trigger_autofocus() -> None:
     _run_gphoto2_set_config('autofocusdrive', '1')
-    _flush_preview_buffer()
+
+
+def set_focus_area(norm_x: int, norm_y: int) -> None:
+    """Active le viewfinder, déplace la zone AF Nikon puis déclenche l'autofocus."""
+    from ... import config
+
+    camera_width = int(config.CAMERA_FOCUS_AREA_WIDTH)
+    camera_x = round(norm_x * camera_width / FOCUS_AREA_NORM_WIDTH)
+    camera_y = round(norm_y * (camera_width * 2 / 3) / FOCUS_AREA_NORM_HEIGHT)
+
+    with _gphoto2_lock:
+        subprocess.run(
+            [
+                'gphoto2',
+                '--set-config',
+                'viewfinder=1',
+                '--set-config',
+                f'changeafarea={camera_x}x{camera_y}',
+            ],
+            capture_output=True,
+            encoding='utf-8',
+            check=False,
+        )
+    trigger_autofocus()
 
 
 def _capture_preview_bytes() -> bytes:

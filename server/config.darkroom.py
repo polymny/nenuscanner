@@ -14,3 +14,5 @@ LEDS_UUIDS = [17, 27, 22, 5, 6, 13, 19, 26, 21, 20, 16, 12]
 FAN_UUID = 10
 CAMERA = 'real'
 CAMERA_RAW_EXTENSION = 'nef'
+# Largeur du repère AF Nikon (changeafarea), capteur FX 3:2.
+CAMERA_FOCUS_AREA_WIDTH = 8256

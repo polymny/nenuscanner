@@ -1,9 +1,10 @@
 import { createFileRoute } from '@tanstack/react-router';
+import { useMemo } from 'react';
+import CameraLivePreview from './-components/camera-live-preview';
 import CameraSettingsForm from './-components/camera-settings-form';
 import { useGetCameraSettings } from '@/api/queries/camera.queries';
 import { Separator } from '@/components/ui/separator';
 import { buildMediamtxPlayerUrl } from '@/lib/mediamtx';
-import { useMemo } from 'react';
 
 export const Route = createFileRoute('/(app)/camera-settings/')({
   component: RouteComponent,
@@ -28,13 +29,8 @@ function RouteComponent() {
         <CameraSettingsForm isPending={isPending} isError={isError} settings={settings} />
         <Separator orientation="vertical" />
 
-        <div className="flex w-1/2 flex-col items-center justify-center gap-4 p-10">
-          <iframe
-            allow="autoplay; fullscreen"
-            className="aspect-video w-full border-0"
-            src={playerUrl}
-            title="Flux live MediaMTX"
-          />
+        <div className="flex w-1/2 flex-col items-center justify-center p-10">
+          <CameraLivePreview playerUrl={playerUrl} />
         </div>
       </div>
     </div>
