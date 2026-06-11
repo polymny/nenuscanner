@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session, joinedload
 from server import leds
 
 from .scenario_execution_service import execute_scenario
-from .sse_job_runner import SseJobContext
+from .sse_job_runner import JobCancelled, SseJobContext
 from ..models.acquisition import Acquisition, AcquisitionStatus
 from ..models.acquisition_photo import AcquisitionPhoto
 from ..models.scenario import Scenario, ScenarioLED, ScenarioShutterSpeed
@@ -96,12 +96,17 @@ def run_acquisition(context: SseJobContext, acquisition_id: int) -> None:
         )
 
         acquisition = session.get(Acquisition, acquisition_id)
-        if acquisition is not None:
+        if acquisition is not None and acquisition.status == AcquisitionStatus.RUNNING:
             acquisition.status = AcquisitionStatus.COMPLETED
             session.commit()
 
         context.set_status(AcquisitionStatus.COMPLETED)
         context.emit('completed', {'acquisitionId': acquisition_id})
+    except JobCancelled:
+        session.rollback()
+        _reset_acquisition_to_pending(session, acquisition_id)
+        context.set_status('CANCELLED')
+        context.emit('cancelled', {'acquisitionId': acquisition_id})
     except Exception as exc:
         session.rollback()
         _mark_acquisition_failed(session, acquisition_id)
@@ -126,6 +131,14 @@ def delete_acquisition_photos(session: Session, acquisition_id: int) -> None:
 
 def delete_acquisition(session: Session, acquisition: Acquisition) -> None:
     session.delete(acquisition)
+
+
+def _reset_acquisition_to_pending(session: Session, acquisition_id: int) -> None:
+    acquisition = session.get(Acquisition, acquisition_id)
+    if acquisition is not None:
+        delete_acquisition_photos(session, acquisition_id)
+        acquisition.status = AcquisitionStatus.PENDING
+        session.commit()
 
 
 def _mark_acquisition_failed(session: Session, acquisition_id: int) -> None:

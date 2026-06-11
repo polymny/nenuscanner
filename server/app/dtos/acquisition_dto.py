@@ -73,6 +73,13 @@ class AcquisitionRunStartSchema(Schema):
     acquisitionId = fields.Integer(required=True)
 
 
+class AcquisitionRunCancelSchema(Schema):
+    class Meta:
+        ordered = True
+
+    jobId = fields.String(required=True)
+
+
 class AcquisitionCreateSchema(Schema):
     class Meta:
         unknown = EXCLUDE

@@ -15,11 +15,16 @@ from ... import leds
 JobTask = Callable[['SseJobContext'], None]
 
 
+class JobCancelled(Exception):
+    """Raised when a running job is cancelled cooperatively."""
+
+
 @dataclass
 class SseJob:
     id: str
     status: str = 'PENDING'
     events: Queue = field(default_factory=Queue)
+    cancel_requested: bool = False
 
 
 class SseJobContext:
@@ -34,6 +39,9 @@ class SseJobContext:
 
     def set_status(self, status: str) -> None:
         self._job.status = status
+
+    def is_cancelled(self) -> bool:
+        return self._job.cancel_requested
 
 
 class SseJobRegistry:
@@ -61,6 +69,14 @@ class SseJobRegistry:
         )
         thread.start()
         return job_id
+
+    def request_cancel(self, job_id: str) -> bool:
+        with self._lock:
+            job = self._jobs.get(job_id)
+            if job is None or job.status != 'RUNNING':
+                return False
+            job.cancel_requested = True
+            return True
 
     def _run_task(self, job_id: str, task: JobTask) -> None:
         job = self.get(job_id)

@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session, joinedload
 
 from .exiftool_service import write_jpeg_preview_from_raw
 from .gphoto2_service import capture_raw_to_file
-from .sse_job_runner import SseJobContext
+from .sse_job_runner import JobCancelled, SseJobContext
 from ..constants.leds import LEDS_COUNT
 from ..models.acquisition import Acquisition
 from ..models.acquisition_photo import AcquisitionPhoto
@@ -197,6 +197,9 @@ def execute_scenario(
     # gpio_leds.off()
 
     for step in steps:
+        if context.is_cancelled():
+            raise JobCancelled()
+
         _apply_led_value(gpio_leds, step.led.led_value, led_state)
 
         base = (

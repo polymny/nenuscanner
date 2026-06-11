@@ -4,6 +4,7 @@ import type { AcquisitionStatus, ScenarioProgressEvent } from '@/types/acquisiti
 import {
   acquisitionRunEventsUrl,
   acquisitionsKeyFactory,
+  cancelAcquisitionRun,
   startAcquisitionRun,
   toAbsoluteImageUrl,
 } from '@/api/queries/acquisition.queries';
@@ -18,6 +19,7 @@ export function useAcquisitionRun(acquisitionId: number, status?: AcquisitionSta
   const [progress, setProgress] = useState<ScenarioProgressEvent | null>(null);
   const [lastImageUrl, setLastImageUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [isCancelling, setIsCancelling] = useState(false);
 
   const clearStoredJob = useCallback(() => {
     localStorage.removeItem(jobStorageKey(acquisitionId));
@@ -61,6 +63,18 @@ export function useAcquisitionRun(acquisitionId: number, status?: AcquisitionSta
         const data = JSON.parse(event.data) as { message: string };
         setError(data.message);
         completedRef.current = true;
+        setIsCancelling(false);
+        clearStoredJob();
+        closeEventSource();
+        void queryClient.invalidateQueries({ queryKey: acquisitionsKeyFactory.base() });
+        void queryClient.invalidateQueries({ queryKey: scenariosKeyFactory.base() });
+      });
+
+      es.addEventListener('cancelled', () => {
+        completedRef.current = true;
+        setIsCancelling(false);
+        setProgress(null);
+        setLastImageUrl(null);
         clearStoredJob();
         closeEventSource();
         void queryClient.invalidateQueries({ queryKey: acquisitionsKeyFactory.base() });
@@ -88,6 +102,7 @@ export function useAcquisitionRun(acquisitionId: number, status?: AcquisitionSta
   const start = useCallback(async () => {
     closeEventSource();
     setError(null);
+    setIsCancelling(false);
     setLastImageUrl(null);
     setProgress(null);
 
@@ -100,5 +115,21 @@ export function useAcquisitionRun(acquisitionId: number, status?: AcquisitionSta
     }
   }, [acquisitionId, closeEventSource, subscribeToJob]);
 
-  return { start, progress, lastImageUrl, error };
+  const cancel = useCallback(async () => {
+    const jobId = localStorage.getItem(jobStorageKey(acquisitionId));
+    if (!jobId) {
+      setError("Impossible d'annuler l'acquisition.");
+      return;
+    }
+
+    setIsCancelling(true);
+    try {
+      await cancelAcquisitionRun(jobId);
+    } catch {
+      setIsCancelling(false);
+      setError("Impossible d'annuler l'acquisition.");
+    }
+  }, [acquisitionId]);
+
+  return { start, cancel, progress, lastImageUrl, error, isCancelling };
 }
