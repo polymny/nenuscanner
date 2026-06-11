@@ -19,7 +19,14 @@ function RouteComponent() {
   const acquisitionId = Number(acquisitionIdParam);
 
   const { data: acquisition, isPending, isError } = useGetAcquisitionById(acquisitionId);
-  const { start, progress, lastImageUrl, error: runError } = useAcquisitionRun(acquisitionId, acquisition?.status);
+  const {
+    start,
+    cancel,
+    progress,
+    lastImageUrl,
+    error: runError,
+    isCancelling,
+  } = useAcquisitionRun(acquisitionId, acquisition?.status);
 
   const progressPercent = progress && progress.total > 0 ? Math.round((progress.step / progress.total) * 100) : 0;
 
@@ -68,6 +75,17 @@ function RouteComponent() {
           ) : (
             <>
               {progress && <ScenarioProgressWidget progress={progress} />}
+              <div className="absolute top-4 left-4 z-10">
+                <Button
+                  type="button"
+                  size="sm"
+                  disabled={isCancelling}
+                  onClick={() => void cancel()}
+                  variant="destructive"
+                >
+                  {isCancelling ? 'Annulation en cours…' : 'Annuler'}
+                </Button>
+              </div>
               <div className="absolute inset-0 flex flex-col">
                 {lastImageUrl ? (
                   <img alt={`Photo ${progress?.step ?? 0}`} className="size-full object-contain" src={lastImageUrl} />

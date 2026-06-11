@@ -10,6 +10,7 @@ from ..dtos.acquisition_dto import (
     AcquisitionDownloadSchema,
     AcquisitionListQuerySchema,
     AcquisitionReadSchema,
+    AcquisitionRunCancelSchema,
     AcquisitionRunStartSchema,
     CalibrationCreateSchema,
     CalibrationListQuerySchema,
@@ -301,6 +302,8 @@ class AcquisitionByIdController(MethodView):
         acquisition = db_session.get(Acquisition, acquisition_id)
         if acquisition is None:
             abort(404, message='acquisition-not-found')
+        if acquisition.status == AcquisitionStatus.RUNNING:
+            abort(409, message='acquisition-is-running')
         delete_acquisition(db_session, acquisition)
         db_session.commit()
 
@@ -324,6 +327,19 @@ class AcquisitionRunStartController(MethodView):
             thread_name_prefix='acquisition',
         )
         return {'jobId': job_id, 'acquisitionId': acquisition_id}
+
+
+@blp.route('/run/<string:job_id>/cancel')
+class AcquisitionRunCancelController(MethodView):
+    @blp.response(202, AcquisitionRunCancelSchema)
+    def post(self, job_id):
+        """Annule un job d'exécution en cours."""
+        if sse_job_registry.get(job_id) is None:
+            abort(404, message='job-not-found')
+        if not sse_job_registry.request_cancel(job_id):
+            abort(409, message='job-not-cancellable')
+
+        return {'jobId': job_id}
 
 
 @blp.route('/run/<string:job_id>/events')
