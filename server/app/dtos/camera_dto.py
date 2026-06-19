@@ -8,6 +8,9 @@ CAMERA_SETTING_NAMES = ('shutterspeed', 'iso', 'aperture')
 
 
 class CameraSettingsSchema(Schema):
+    class Meta:
+        ordered = True
+
     shutterSpeedValues = fields.List(fields.Float(), required=True)
     currentShutterSpeedValue = fields.Float(required=True)
     apertureValues = fields.List(fields.Float(), required=True)

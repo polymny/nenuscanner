@@ -1,12 +1,7 @@
 from marshmallow import EXCLUDE, Schema, fields, validate
 
+from .base import ACQUISITION_STATUSES, NAME_VALIDATE
 from ..constants.leds import LED_VALUES
-
-_SCENARIO_NAME_PATTERN = r'^[a-zA-ZÀ-ÿ0-9\s\-_()]+$'
-_NAME_VALIDATE = (
-    validate.Length(min=1, max=255),
-    validate.Regexp(_SCENARIO_NAME_PATTERN),
-)
 
 
 class ScenarioLEDSchema(Schema):
@@ -14,12 +9,8 @@ class ScenarioLEDSchema(Schema):
         unknown = EXCLUDE
         ordered = True
 
-    value = fields.String(
-        required=True,
-        validate=validate.OneOf(LED_VALUES),
-        data_key='value',
-    )
-    powerId = fields.Integer(required=True, data_key='powerId', validate=validate.Range(min=1))
+    value = fields.String(required=True, validate=validate.OneOf(LED_VALUES))
+    powerId = fields.Integer(required=True, validate=validate.Range(min=1))
 
 
 class ScenarioSummarySchema(Schema):
@@ -29,8 +20,26 @@ class ScenarioSummarySchema(Schema):
     id = fields.Integer(required=True)
     name = fields.String(required=True)
     leds = fields.List(fields.Nested(ScenarioLEDSchema), required=True)
-    rotationsCount = fields.Integer(required=True, data_key='rotationsCount')
-    shutterSpeedIds = fields.List(fields.Integer(), required=True, data_key='shutterSpeedIds')
+    rotationsCount = fields.Integer(required=True)
+    shutterSpeedIds = fields.List(fields.Integer(), required=True)
+
+
+class ScenarioLinkedAcquisitionSchema(Schema):
+    class Meta:
+        ordered = True
+
+    id = fields.Integer(required=True)
+    name = fields.String(required=True)
+
+
+class ScenarioLinkedCalibrationSchema(Schema):
+    class Meta:
+        ordered = True
+
+    id = fields.Integer(required=True)
+    name = fields.String(required=True)
+    armsPositionId = fields.Integer(required=True)
+    status = fields.String(required=True, validate=validate.OneOf(ACQUISITION_STATUSES))
 
 
 class ScenarioReadSchema(Schema):
@@ -41,11 +50,11 @@ class ScenarioReadSchema(Schema):
     name = fields.String(required=True)
     updatedAt = fields.DateTime(required=True)
     leds = fields.List(fields.Nested(ScenarioLEDSchema), required=True)
-    rotationsCount = fields.Integer(required=True, data_key='rotationsCount')
-    shutterSpeedIds = fields.List(fields.Integer(), required=True, data_key='shutterSpeedIds')
-    acquisitions = fields.List(fields.Dict(), required=True)
-    calibrations = fields.List(fields.Dict(), required=True)
-    isCalibrated = fields.Boolean(required=True, data_key='isCalibrated')
+    rotationsCount = fields.Integer(required=True)
+    shutterSpeedIds = fields.List(fields.Integer(), required=True)
+    acquisitions = fields.List(fields.Nested(ScenarioLinkedAcquisitionSchema), required=True)
+    calibrations = fields.List(fields.Nested(ScenarioLinkedCalibrationSchema), required=True)
+    isCalibrated = fields.Boolean(required=True)
 
 
 class ScenarioCreateSchema(Schema):
@@ -53,13 +62,12 @@ class ScenarioCreateSchema(Schema):
         unknown = EXCLUDE
         ordered = True
 
-    name = fields.String(required=True, validate=_NAME_VALIDATE, pre_load=str.strip)
+    name = fields.String(required=True, validate=NAME_VALIDATE, pre_load=str.strip)
     leds = fields.List(fields.Nested(ScenarioLEDSchema), required=True, validate=validate.Length(min=1))
-    rotationsCount = fields.Integer(required=True, validate=validate.Range(min=0, max=12), data_key='rotationsCount')
+    rotationsCount = fields.Integer(required=True, validate=validate.Range(min=0, max=12))
     shutterSpeedIds = fields.List(
         fields.Integer(validate=validate.Range(min=1)),
         required=True,
-        data_key='shutterSpeedIds',
         validate=validate.Length(min=1),
     )
 
@@ -73,10 +81,16 @@ class ScenarioUpdateSchema(ScenarioCreateSchema):
 
 
 class ScenarioIdSchema(Schema):
+    class Meta:
+        ordered = True
+
     id = fields.Integer(required=True)
 
 
 class CompatibleScenarioIdsSchema(Schema):
+    class Meta:
+        ordered = True
+
     ids = fields.List(fields.Integer(), required=True)
 
 
@@ -85,5 +99,5 @@ class ScenarioDuplicateSchema(Schema):
         unknown = EXCLUDE
         ordered = True
 
-    sourceScenarioId = fields.Integer(required=True, data_key='sourceScenarioId')
-    name = fields.String(required=True, validate=_NAME_VALIDATE, pre_load=str.strip)
+    sourceScenarioId = fields.Integer(required=True)
+    name = fields.String(required=True, validate=NAME_VALIDATE, pre_load=str.strip)

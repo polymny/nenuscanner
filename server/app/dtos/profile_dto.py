@@ -1,10 +1,6 @@
-from marshmallow import EXCLUDE, Schema, fields, validate
+from marshmallow import EXCLUDE, Schema, fields
 
-_PROFILE_NAME_PATTERN = r'^[a-zA-ZÀ-ÿ0-9\s\-_()]+$'
-_NAME_VALIDATE = (
-    validate.Length(min=1, max=255),
-    validate.Regexp(_PROFILE_NAME_PATTERN),
-)
+from .base import NAME_VALIDATE
 
 
 class ProfileReadSchema(Schema):
@@ -25,7 +21,7 @@ class ProfileCreateSchema(Schema):
         unknown = EXCLUDE
         ordered = True
 
-    name = fields.String(required=True, validate=_NAME_VALIDATE, pre_load=str.strip)
+    name = fields.String(required=True, validate=NAME_VALIDATE, pre_load=str.strip)
     ownerName = fields.String(required=True, allow_none=True)
     employer = fields.String(required=True, allow_none=True)
     contact = fields.String(required=True, allow_none=True)

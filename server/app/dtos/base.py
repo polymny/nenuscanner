@@ -1,9 +1,16 @@
-from marshmallow_sqlalchemy import SQLAlchemySchema
+from marshmallow import validate
 
-from ...sa_db import db_session
+from ..models.acquisition import AcquisitionStatus
 
+NAME_PATTERN = r'^[a-zA-ZÀ-ÿ0-9\s\-_()]+$'
+NAME_VALIDATE = (
+    validate.Length(min=1, max=255),
+    validate.Regexp(NAME_PATTERN),
+)
 
-class BaseSchema(SQLAlchemySchema):
-    class Meta:
-        sqla_session = db_session
-
+ACQUISITION_STATUSES = (
+    AcquisitionStatus.PENDING,
+    AcquisitionStatus.RUNNING,
+    AcquisitionStatus.COMPLETED,
+    AcquisitionStatus.FAILED,
+)

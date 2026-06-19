@@ -1,20 +1,8 @@
 from marshmallow import EXCLUDE, Schema, fields, validate
 
 from .arms_position_dto import ArmsPositionEmojisSchema
+from .base import ACQUISITION_STATUSES, NAME_VALIDATE
 from .scenario_dto import ScenarioSummarySchema
-from ..models.acquisition import AcquisitionStatus
-
-_ACQUISITION_NAME_PATTERN = r'^[a-zA-ZÀ-ÿ0-9\s\-_()]+$'
-_ACQUISITION_STATUSES = (
-    AcquisitionStatus.PENDING,
-    AcquisitionStatus.RUNNING,
-    AcquisitionStatus.COMPLETED,
-    AcquisitionStatus.FAILED,
-)
-_NAME_VALIDATE = (
-    validate.Length(min=1, max=255),
-    validate.Regexp(_ACQUISITION_NAME_PATTERN),
-)
 
 
 class AcquisitionListQuerySchema(Schema):
@@ -37,7 +25,7 @@ class AcquisitionReadSchema(Schema):
     armsPosition = fields.Nested(ArmsPositionEmojisSchema, required=True)
     profileId = fields.Integer(required=True, allow_none=True)
     withRotationAutofocus = fields.Boolean(required=True)
-    status = fields.String(required=True)
+    status = fields.String(required=True, validate=validate.OneOf(ACQUISITION_STATUSES))
     isoValue = fields.Float(required=True)
     absoluteShutterSpeedValue = fields.Float(required=True)
     apertureValue = fields.Float(required=True)
@@ -85,7 +73,7 @@ class AcquisitionCreateSchema(Schema):
         unknown = EXCLUDE
         ordered = True
 
-    name = fields.String(required=True, validate=_NAME_VALIDATE, pre_load=str.strip)
+    name = fields.String(required=True, validate=NAME_VALIDATE, pre_load=str.strip)
     artifactId = fields.Integer(required=True, validate=validate.Range(min=1))
     scenarioId = fields.Integer(required=True, allow_none=True, validate=validate.Range(min=1))
     calibrationId = fields.Integer(required=True, allow_none=True, validate=validate.Range(min=1))
@@ -106,7 +94,7 @@ class CalibrationListQuerySchema(Schema):
 
     onlyCurrentArmsPosition = fields.Boolean(load_default=False)
     scenarioId = fields.Integer(load_default=None, allow_none=True, validate=validate.Range(min=1))
-    status = fields.String(load_default=None, allow_none=True, validate=validate.OneOf(_ACQUISITION_STATUSES))
+    status = fields.String(load_default=None, allow_none=True, validate=validate.OneOf(ACQUISITION_STATUSES))
 
 
 class CalibrationCreateSchema(Schema):
@@ -114,7 +102,7 @@ class CalibrationCreateSchema(Schema):
         unknown = EXCLUDE
         ordered = True
 
-    name = fields.String(required=True, validate=_NAME_VALIDATE, pre_load=str.strip)
+    name = fields.String(required=True, validate=NAME_VALIDATE, pre_load=str.strip)
     scenarioId = fields.Integer(required=True, allow_none=True, validate=validate.Range(min=1))
     withRotationAutofocus = fields.Boolean(required=True)
 

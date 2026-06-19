@@ -1,24 +1,14 @@
-from marshmallow import EXCLUDE, Schema, fields, validate
-from marshmallow_sqlalchemy import auto_field
+from marshmallow import EXCLUDE, Schema, fields
 
-from .base import BaseSchema
-from ..models.artifact import Artifact
-
-_ARTIFACT_NAME_PATTERN = r'^[a-zA-ZÀ-ÿ0-9\s\-_()]+$'
-_NAME_VALIDATE = (
-    validate.Length(min=1, max=255),
-    validate.Regexp(_ARTIFACT_NAME_PATTERN),
-)
+from .base import NAME_VALIDATE
 
 
-class ArtifactReadSchema(BaseSchema):
+class ArtifactReadSchema(Schema):
     class Meta:
-        sqla_session = BaseSchema.Meta.sqla_session
-        model = Artifact
         ordered = True
 
-    id = auto_field(dump_only=True)
-    name = auto_field()
+    id = fields.Integer(required=True)
+    name = fields.String(required=True)
 
 
 class ArtifactCreateSchema(Schema):
@@ -26,13 +16,12 @@ class ArtifactCreateSchema(Schema):
         unknown = EXCLUDE
         ordered = True
 
-    name = fields.String(required=True, validate=_NAME_VALIDATE, pre_load=str.strip)
+    name = fields.String(required=True, validate=NAME_VALIDATE, pre_load=str.strip)
 
 
-class ArtifactUpdateSchema(Schema):
+class ArtifactUpdateSchema(ArtifactCreateSchema):
     class Meta:
         unknown = EXCLUDE
         ordered = True
 
     id = fields.Integer(required=True)
-    name = fields.String(required=True, validate=_NAME_VALIDATE, pre_load=str.strip)
