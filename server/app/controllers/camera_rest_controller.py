@@ -11,7 +11,7 @@ from ..services.gphoto2_service import (
 )
 from ...sa_db import db_session
 
-blp = Blueprint('camera', __name__, description='Camera endpoints')
+blp = Blueprint('camera', __name__, description='Réglages caméra')
 
 
 @blp.route('/settings')

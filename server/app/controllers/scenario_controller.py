@@ -21,10 +21,10 @@ from ..services.scenario_service import (
 )
 from ...sa_db import db_session
 
-blp = Blueprint('scenario', __name__, description='Scenario endpoints')
+blp = Blueprint('scenario', __name__, description='Gestion des scénarios')
 
 
-def _scenario_to_details_dto(
+def _scenario_to_dto(
     scenario: Scenario,
     *,
     acquisitions_by_scenario_id: dict[int, list[dict]] | None = None,
@@ -89,13 +89,15 @@ class ScenarioController(MethodView):
                 scenario_ids_with_completed_calibration.add(scenario_id)
 
         return [
-            _scenario_to_details_dto(
-                s,
+            _scenario_to_dto(
+                scenario,
                 acquisitions_by_scenario_id=acquisitions_by_scenario_id,
                 calibrations_by_scenario_id=calibrations_by_scenario_id,
-                is_calibrated=is_scenario_calibrated(s, scenarios, scenario_ids_with_completed_calibration),
+                is_calibrated=is_scenario_calibrated(
+                    scenario, scenarios, scenario_ids_with_completed_calibration
+                ),
             )
-            for s in scenarios
+            for scenario in scenarios
         ]
 
     @blp.arguments(ScenarioCreateSchema)

@@ -5,43 +5,51 @@ from ..dtos.artifact_dto import ArtifactCreateSchema, ArtifactReadSchema, Artifa
 from ..models.artifact import Artifact
 from ...sa_db import db_session
 
-blp = Blueprint('artifact', __name__, description='Artifact endpoints')
+blp = Blueprint('artifact', __name__, description='Gestion des objets')
+
+
+def _artifact_to_dto(artifact: Artifact) -> dict:
+    return {
+        'id': artifact.id,
+        'name': artifact.name,
+    }
 
 
 @blp.route('/')
 class ArtifactController(MethodView):
     @blp.response(200, ArtifactReadSchema(many=True))
     def get(self):
-        """Liste tous les artefacts (identifiant et nom), triés par id croissant."""
-        return db_session.query(Artifact).order_by(Artifact.id.asc()).all()
+        """Liste tous les objets (identifiant et nom), triés par id croissant."""
+        artifacts = db_session.query(Artifact).order_by(Artifact.id.asc()).all()
+        return [_artifact_to_dto(artifact) for artifact in artifacts]
 
     @blp.arguments(ArtifactCreateSchema)
     @blp.response(201, ArtifactReadSchema)
-    def post(self, body):
-        """Crée un artefact à partir d'un nom."""
-        artifact = Artifact(name=body['name'])
+    def post(self, payload):
+        """Crée un objet à partir d'un nom."""
+        artifact = Artifact(name=payload['name'])
         db_session.add(artifact)
         db_session.commit()
-        return artifact
+        return _artifact_to_dto(artifact)
 
     @blp.arguments(ArtifactUpdateSchema)
     @blp.response(200, ArtifactReadSchema)
-    def patch(self, body):
-        """Met à jour le nom d'un artefact."""
-        artifact_id = body['id']
+    def patch(self, payload):
+        """Met à jour le nom d'un objet."""
+        artifact_id = payload['id']
         artifact = db_session.get(Artifact, artifact_id)
         if artifact is None:
             abort(404, message='artifact-not-found')
-        artifact.name = body['name']
+        artifact.name = payload['name']
         db_session.commit()
-        return artifact
+        return _artifact_to_dto(artifact)
 
 
 @blp.route('/<int:artifact_id>')
 class ArtifactByIdController(MethodView):
     @blp.response(204)
     def delete(self, artifact_id):
-        """Supprime un artefact par identifiant."""
+        """Supprime un objet par identifiant."""
         artifact = db_session.get(Artifact, artifact_id)
         if artifact is None:
             abort(404, message='artifact-not-found')

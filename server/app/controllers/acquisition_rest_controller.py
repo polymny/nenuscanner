@@ -38,7 +38,7 @@ from ..services.scenario_service import compatible_scenario_ids, scenario_summar
 from ..services.sse_job_runner import sse_job_registry
 from ...sa_db import db_session
 
-blp = Blueprint('acquisition', __name__, description='Acquisition endpoints')
+blp = Blueprint('acquisition', __name__, description='Gestion des acquisitions')
 
 
 def _photo_to_dto(photo) -> dict:
@@ -56,32 +56,37 @@ def _photo_to_dto(photo) -> dict:
     }
 
 
-def _to_dto(row: Acquisition, *, scenario: Scenario | None = None, include_photos: bool = False) -> dict:
-    cam = row.camera_settings
+def _acquisition_to_dto(
+    acquisition: Acquisition,
+    *,
+    scenario: Scenario | None = None,
+    include_photos: bool = False,
+) -> dict:
+    camera_settings = acquisition.camera_settings
     payload = {
-        'id': row.id,
-        'name': row.name,
-        'thumbnail': acquisition_thumbnail_url(row.photos),
-        'artifactId': row.artifact_id,
-        'calibrationId': row.calibration_id,
-        'armsPositionId': row.arms_position_id,
+        'id': acquisition.id,
+        'name': acquisition.name,
+        'thumbnail': acquisition_thumbnail_url(acquisition.photos),
+        'artifactId': acquisition.artifact_id,
+        'calibrationId': acquisition.calibration_id,
+        'armsPositionId': acquisition.arms_position_id,
         'armsPosition': {
-            'emojiLeft': row.arms_position.emoji_left,
-            'emojiRight': row.arms_position.emoji_right,
+            'emojiLeft': acquisition.arms_position.emoji_left,
+            'emojiRight': acquisition.arms_position.emoji_right,
         },
-        'profileId': row.profile_id,
-        'withRotationAutofocus': row.with_rotation_autofocus,
-        'status': row.status,
-        'isoValue': cam.iso_value,
-        'absoluteShutterSpeedValue': cam.absolute_shutter_speed_value,
-        'apertureValue': cam.aperture_value,
-        'isCalibration': row.is_calibration,
-        'createdAt': row.created_at,
-        'updatedAt': row.updated_at,
-        'scenario': scenario_summary_dto(scenario if scenario is not None else row.scenario),
+        'profileId': acquisition.profile_id,
+        'withRotationAutofocus': acquisition.with_rotation_autofocus,
+        'status': acquisition.status,
+        'isoValue': camera_settings.iso_value,
+        'absoluteShutterSpeedValue': camera_settings.absolute_shutter_speed_value,
+        'apertureValue': camera_settings.aperture_value,
+        'isCalibration': acquisition.is_calibration,
+        'createdAt': acquisition.created_at,
+        'updatedAt': acquisition.updated_at,
+        'scenario': scenario_summary_dto(scenario if scenario is not None else acquisition.scenario),
     }
     if include_photos:
-        payload['photos'] = [_photo_to_dto(photo) for photo in row.photos]
+        payload['photos'] = [_photo_to_dto(photo) for photo in acquisition.photos]
     return payload
 
 
@@ -95,7 +100,7 @@ class AcquisitionController(MethodView):
         if db_session.get(Artifact, artifact_id) is None:
             abort(404, message='artifact-not-found')
 
-        rows = (
+        acquisitions = (
             db_session.query(Acquisition)
             .options(
                 *acquisition_photos_load_options(),
@@ -109,7 +114,7 @@ class AcquisitionController(MethodView):
             .order_by(Acquisition.id.asc())
             .all()
         )
-        return [_to_dto(a) for a in rows]
+        return [_acquisition_to_dto(acquisition) for acquisition in acquisitions]
 
     @blp.arguments(AcquisitionCreateSchema)
     @blp.response(201, AcquisitionCreateReturnSchema)
@@ -213,8 +218,8 @@ class CalibrationController(MethodView):
         if status is not None:
             query = query.filter(Acquisition.status == status)
 
-        rows = query.order_by(Acquisition.id.asc()).all()
-        return [_to_dto(a) for a in rows]
+        calibrations = query.order_by(Acquisition.id.asc()).all()
+        return [_acquisition_to_dto(calibration) for calibration in calibrations]
 
     @blp.arguments(CalibrationCreateSchema)
     @blp.response(201, AcquisitionCreateReturnSchema)
@@ -297,7 +302,7 @@ class AcquisitionByIdController(MethodView):
         )
         if acquisition is None:
             abort(404, message='acquisition-not-found')
-        return _to_dto(acquisition, include_photos=True)
+        return _acquisition_to_dto(acquisition, include_photos=True)
 
     @blp.response(204)
     def delete(self, acquisition_id):

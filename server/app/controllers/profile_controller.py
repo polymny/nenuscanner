@@ -6,7 +6,7 @@ from ..models.profile import Profile
 from ..services.profile_service import apply_profile_payload, select_profile
 from ...sa_db import db_session
 
-blp = Blueprint('profile', __name__, description='Profile endpoints')
+blp = Blueprint('profile', __name__, description='Gestion des profils')
 
 
 def _profile_to_dto(profile: Profile) -> dict:
@@ -27,7 +27,7 @@ class ProfileController(MethodView):
     def get(self):
         """Liste tous les profils."""
         profiles = db_session.query(Profile).order_by(Profile.id.asc()).all()
-        return [_profile_to_dto(p) for p in profiles]
+        return [_profile_to_dto(profile) for profile in profiles]
 
     @blp.arguments(ProfileCreateSchema)
     @blp.response(201, ProfileReadSchema)

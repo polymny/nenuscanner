@@ -6,20 +6,20 @@ from ..models.arms_position import ArmsPosition
 from ..services.emoji_service import random_two_simple_emojis
 from ...sa_db import db_session
 
-blp = Blueprint('arms-position', __name__, description='Arms position endpoints')
+blp = Blueprint('arms-position', __name__, description='Positions des bras')
 
 
 def _get_last_by_index() -> ArmsPosition | None:
     return db_session.query(ArmsPosition).order_by(ArmsPosition.index.desc()).limit(1).one_or_none()
 
 
-def _to_dto(ap: ArmsPosition) -> dict:
+def _arms_position_to_dto(arms_position: ArmsPosition) -> dict:
     return {
-        'id': ap.id,
-        'index': ap.index,
-        'emojiLeft': ap.emoji_left,
-        'emojiRight': ap.emoji_right,
-        'createdAt': ap.created_at,
+        'id': arms_position.id,
+        'index': arms_position.index,
+        'emojiLeft': arms_position.emoji_left,
+        'emojiRight': arms_position.emoji_right,
+        'createdAt': arms_position.created_at,
     }
 
 
@@ -31,12 +31,12 @@ class ArmsPositionLastController(MethodView):
         last = _get_last_by_index()
         if last is None:
             left, right = random_two_simple_emojis()
-            ap = ArmsPosition(index=1, emoji_left=left, emoji_right=right)
+            arms_position = ArmsPosition(index=1, emoji_left=left, emoji_right=right)
 
-            db_session.add(ap)
+            db_session.add(arms_position)
             db_session.commit()
-            return _to_dto(ap)
-        return _to_dto(last)
+            return _arms_position_to_dto(arms_position)
+        return _arms_position_to_dto(last)
 
 
 @blp.route('/increase')
@@ -48,8 +48,8 @@ class ArmsPositionIncreaseController(MethodView):
         next_index = 0 if last is None else last.index + 1
 
         left, right = random_two_simple_emojis()
-        ap = ArmsPosition(index=next_index, emoji_left=left, emoji_right=right)
+        arms_position = ArmsPosition(index=next_index, emoji_left=left, emoji_right=right)
 
-        db_session.add(ap)
+        db_session.add(arms_position)
         db_session.commit()
-        return _to_dto(ap)
+        return _arms_position_to_dto(arms_position)

@@ -39,6 +39,14 @@ Depuis le dossier `server/` du projet
 poetry run flask --app . run --debug
 ```
 
+### Consulter la documentation de l'API
+
+Se rendre à l'URL suivante une fois le serveur lancé
+
+```bash
+http://localhost:5000/swagger-ui
+```
+
 ## Frontend (mode dev)
 
 Pré-requis : le **backend doit tourner sur le port 5000** (ex: `http://localhost:5000`).  
