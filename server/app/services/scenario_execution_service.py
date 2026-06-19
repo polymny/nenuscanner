@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import time
 import urllib.request
+from collections.abc import Callable
 from dataclasses import dataclass
-from pathlib import Path
 
 from sqlalchemy.orm import Session, joinedload
 
@@ -14,11 +14,11 @@ from ..constants.leds import LEDS_COUNT
 from ..models.acquisition import Acquisition
 from ..models.acquisition_photo import AcquisitionPhoto
 from ..models.scenario import Scenario, ScenarioLED, ScenarioRotation, ScenarioShutterSpeed
+from ..paths import SERVER_ROOT
 from ... import config, leds
 
 STEP_DELAY_SECONDS = 1
 POC_IMAGE_SIZE = '800/600'
-SERVER_ROOT = Path(__file__).resolve().parents[2]
 
 
 @dataclass
@@ -35,12 +35,12 @@ def _led_index_to_uuid(led_index: int) -> int:
 
 def _apply_led_value(gpio_leds: leds.Leds, led_value: str, state: _LedState) -> None:
     """
-    Apply scenario LED value to hardware, with minimal switching.
+    Applique la valeur LED du scénario au matériel, avec un minimum de commutations.
 
-    `led_value` is either:
-    - 'NO_LED' (turn off all)
-    - 'ALL_LEDS' (turn on all)
-    - a numeric index '1'..'N' (index into config.LEDS_UUIDS)
+    `led_value` est soit :
+    - 'NO_LED' (tout éteindre)
+    - 'ALL_LEDS' (tout allumer)
+    - un index numérique '1'..'N' (index dans config.LEDS_UUIDS)
     """
     if led_value == 'NO_LED':
         if state.all_leds or state.current_led_uuid is not None:
@@ -89,10 +89,10 @@ class ScenarioCaptureStep:
 
 def build_scenario_capture_steps(scenario: Scenario) -> list[ScenarioCaptureStep]:
     """
-    Order: for each rotation (or one fixed position if none), for each LED, for each shutter speed.
+    Ordre : pour chaque rotation (ou une position fixe si aucune), pour chaque LED, pour chaque temps de pose.
 
-    LEDs are applied as NO_LED, then numeric values ascending, then ALL_LEDS.
-    Shutter speeds are applied in ascending relative value order.
+    Les LEDs sont appliquées dans l'ordre NO_LED, puis les valeurs numériques croissantes, puis ALL_LEDS.
+    Les temps de pose sont appliqués par valeur relative croissante.
     """
     rotations = sorted(scenario.rotations, key=lambda row: row.radians_value)
     rotation_slots = rotations if rotations else [None]
@@ -157,10 +157,13 @@ def execute_scenario(
     session: Session,
     acquisition: Acquisition,
     *,
-    photo_relative_path,
-    photo_path_to_url,
+    photo_relative_path: Callable[[int, str], str],
+    photo_path_to_url: Callable[[str], str],
 ) -> list[str]:
-    """Run all scenario steps; persist photos and emit SSE events. Returns image URLs."""
+    """
+    Exécute toutes les étapes du scénario ;
+    persiste les photos et émet des événements SSE. Retourne les URLs des images.
+    """
     scenario = (
         session.query(Scenario)
         .options(
@@ -191,7 +194,7 @@ def execute_scenario(
     led_state = _LedState()
     gpio_leds.off()
 
-    # TODO : temporary trigger autofocus on start acquisition
+    # TODO : déclenchement autofocus temporaire au démarrage de l'acquisition
     # gpio_leds.on()
     # trigger_autofocus()
     # gpio_leds.off()
@@ -207,7 +210,7 @@ def execute_scenario(
             f'-l{step.led.id}-s{step.shutter_speed.id}-{step.step_index:04d}'
         )
         preview_relative_path = photo_relative_path(acquisition_id, f'{base}.jpg')
-        raw_ext = getattr(config, 'CAMERA_RAW_EXTENSION', 'nef')  # fallback on Nikon RAW extension
+        raw_ext = getattr(config, 'CAMERA_RAW_EXTENSION', 'nef')  # repli sur l'extension RAW Nikon
         raw_relative_path = photo_relative_path(acquisition_id, f'{base}.{raw_ext}')
 
         if config.CAMERA == 'real':
@@ -215,7 +218,7 @@ def execute_scenario(
             target_shutter_speed = float(cam.absolute_shutter_speed_value) * float(
                 step.shutter_speed.shutter_speed_value.value
             )
-            # TODO : temporary fix for ALL_LEDS
+            # TODO : correction temporaire pour ALL_LEDS
             if step.led.led_value == 'ALL_LEDS':
                 target_shutter_speed /= LEDS_COUNT
             raw_file_path = str(SERVER_ROOT / raw_relative_path)

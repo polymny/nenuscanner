@@ -11,16 +11,15 @@ from sqlalchemy.orm import Session, joinedload
 from .acquisition_service import acquisition_photos_load_options
 from ..models.acquisition import Acquisition
 from ..models.acquisition_photo import AcquisitionPhoto
+from ..paths import SERVER_ROOT
 from ...archive import ZipSender
-
-SERVER_ROOT = Path(__file__).resolve().parents[2]
 
 # TODO(temp): disque externe Samsung T9 (label T9_B), monté dans le home de pi
 EXTERNAL_DISK_PATH = Path('/home/pi/mnt/T9_B')
 
 
 class _AcquisitionDownloadZipSender(ZipSender):
-    """Zip sender that removes temporary metadata files after the archive is written."""
+    """Envoi zip qui supprime les fichiers de métadonnées temporaires après écriture de l'archive."""
 
     def __init__(self, temp_dir: Path):
         super().__init__()
@@ -133,14 +132,14 @@ def _load_acquisitions_for_download(
 
 
 def download_acquisitions_data(session: Session, acquisitions: list[Acquisition]) -> Response:
-    """Build a zip archive with acquisition and related calibration data."""
+    """Construit une archive zip avec les données d'acquisition et d'étalonnage associées."""
     acquisitions_with_photos, calibrations = _load_acquisitions_for_download(session, acquisitions)
     zip_sender = _build_acquisitions_zip(acquisitions_with_photos, calibrations)
     return zip_sender.response()
 
 
 def copy_acquisitions_data_to_disk(session: Session, acquisitions: list[Acquisition]) -> Path:
-    """Build a zip archive and copy it to the external disk instead of streaming it."""
+    """Construit une archive zip et la copie sur le disque externe au lieu de la streamer."""
     acquisitions_with_photos, calibrations = _load_acquisitions_for_download(session, acquisitions)
     zip_sender = _build_acquisitions_zip(acquisitions_with_photos, calibrations)
 

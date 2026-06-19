@@ -64,7 +64,7 @@ class ScenarioController(MethodView):
             acquisitions_by_scenario_id[scenario_id].append({'id': acq_id, 'name': acq_name})
 
         calibrations_by_scenario_id: dict[int, list[dict]] = {sid: [] for sid in scenario_ids}
-        arms_position = get_last_arms_position()
+        arms_position = get_last_arms_position(db_session)
         scenario_ids_with_completed_calibration: set[int] = set()
         cal_rows = (
             db_session.query(

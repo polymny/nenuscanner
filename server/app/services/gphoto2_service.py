@@ -4,7 +4,7 @@ import threading
 from collections.abc import Callable
 from pathlib import Path
 
-from server.app.dtos.camera_dto import (
+from ..dtos.camera_dto import (
     CAMERA_SETTING_NAMES,
     FOCUS_AREA_NORM_HEIGHT,
     FOCUS_AREA_NORM_WIDTH,
@@ -119,7 +119,7 @@ def capture_raw_to_file(
     iso_value: float | None = None,
     aperture_value: float | None = None,
 ) -> None:
-    """Capture one RAW file via gphoto2 CLI (camera in RAW mode only)."""
+    """Capture un fichier RAW via la CLI gphoto2 (caméra en mode RAW uniquement)."""
 
     def _set_config_args(setting: str, value: float) -> list[str]:
         if setting not in _SETTING_CONFIGS:

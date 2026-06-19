@@ -1,4 +1,4 @@
-"""Generic in-process SSE job runner (thread + queue per job)."""
+"""Exécuteur de jobs SSE générique en mémoire (thread + file par job)."""
 
 from __future__ import annotations
 
@@ -10,13 +10,11 @@ from dataclasses import dataclass, field
 from queue import Empty, Queue
 from typing import Any
 
-from ... import leds
-
 JobTask = Callable[['SseJobContext'], None]
 
 
 class JobCancelled(Exception):
-    """Raised when a running job is cancelled cooperatively."""
+    """Levée lorsqu'un job en cours est annulé de manière coopérative."""
 
 
 @dataclass
@@ -28,7 +26,7 @@ class SseJob:
 
 
 class SseJobContext:
-    """Passed to domain tasks so they can emit SSE events without knowing about queues."""
+    """Passé aux tâches métier pour émettre des événements SSE sans connaître les files d'attente."""
 
     def __init__(self, job: SseJob) -> None:
         self.job_id = job.id
@@ -45,7 +43,7 @@ class SseJobContext:
 
 
 class SseJobRegistry:
-    """In-memory job registry for a single server process."""
+    """Registre de jobs en mémoire pour un seul processus serveur."""
 
     def __init__(self) -> None:
         self._jobs: dict[str, SseJob] = {}
@@ -89,7 +87,6 @@ class SseJobRegistry:
         except Exception:
             job.status = 'FAILED'
         finally:
-            leds.guard_off()
             job.events.put(None)
 
     def iter_sse_events(self, job_id: str):

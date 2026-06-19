@@ -132,7 +132,7 @@ class AcquisitionController(MethodView):
         if scenario is None:
             abort(404, message='scenario-not-found')
 
-        arms_position = get_last_arms_position()
+        arms_position = get_last_arms_position(db_session)
 
         calibration_id = payload['calibrationId']
         if calibration_id is not None:
@@ -206,7 +206,7 @@ class CalibrationController(MethodView):
         )
 
         if query_args['onlyCurrentArmsPosition']:
-            arms_position = get_last_arms_position()
+            arms_position = get_last_arms_position(db_session)
             query = query.filter(Acquisition.arms_position_id == arms_position.id)
 
         if scenario is not None:
@@ -233,7 +233,7 @@ class CalibrationController(MethodView):
         if scenario is None:
             abort(404, message='scenario-not-found')
 
-        arms_position = get_last_arms_position()
+        arms_position = get_last_arms_position(db_session)
         active_profile = get_first_active_profile(db_session)
 
         delete_pending_acquisitions(

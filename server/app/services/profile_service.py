@@ -5,12 +5,7 @@ from ..models.profile import Profile
 
 def get_first_active_profile(session: Session) -> Profile | None:
     """Retourne le premier profil actif (ordre croissant par id)."""
-    return (
-        session.query(Profile)
-        .filter(Profile.is_active.is_(True))
-        .order_by(Profile.id.asc())
-        .first()
-    )
+    return session.query(Profile).filter(Profile.is_active.is_(True)).order_by(Profile.id.asc()).first()
 
 
 def select_profile(session: Session, profile: Profile) -> Profile:

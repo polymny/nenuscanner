@@ -1,22 +1,19 @@
 from __future__ import annotations
 
 import shutil
-from pathlib import Path
 
 from sqlalchemy.orm import Session, joinedload
-
-from server import leds
 
 from .scenario_execution_service import execute_scenario
 from .sse_job_runner import JobCancelled, SseJobContext
 from ..models.acquisition import Acquisition, AcquisitionStatus
 from ..models.acquisition_photo import AcquisitionPhoto
 from ..models.scenario import Scenario, ScenarioLED, ScenarioShutterSpeed
+from ..paths import SERVER_ROOT
+from ... import leds
 from ...sa_db import db_session
 
 _THUMBNAIL_TARGET_SHUTTER_RELATIVE = 1.0
-
-SERVER_ROOT = Path(__file__).resolve().parents[2]
 
 
 def photo_relative_path(acquisition_id: int, filename: str) -> str:
@@ -52,7 +49,12 @@ def acquisition_scenario_load_options():
 
 
 def acquisition_thumbnail_url(photos: list[AcquisitionPhoto]) -> str | None:
-    """Pick a representative photo URL: first rotation, ALL_LEDS (or first LED), shutter nearest 1."""
+    """
+    Choisit une URL de photo représentative :
+    - première rotation,
+    - ALL_LEDS (ou première LED),
+    - temps de pose le plus proche de 1.
+    """
     if not photos:
         return None
 
@@ -78,7 +80,7 @@ def acquisition_thumbnail_url(photos: list[AcquisitionPhoto]) -> str | None:
 
 
 def run_acquisition(context: SseJobContext, acquisition_id: int) -> None:
-    """Run acquisition for the given id following its scenario."""
+    """Exécute l'acquisition pour l'identifiant donné en suivant son scénario."""
     session = db_session()
     try:
         acquisition = session.get(Acquisition, acquisition_id)
@@ -124,19 +126,20 @@ def delete_acquisition_files(acquisition_id: int) -> None:
         shutil.rmtree(photos_dir)
 
 
-def delete_acquisition_photos(session: Session, acquisition_id: int) -> None:
+def clear_acquisition_photos(session: Session, acquisition_id: int) -> None:
     session.query(AcquisitionPhoto).filter(AcquisitionPhoto.acquisition_id == acquisition_id).delete()
     delete_acquisition_files(acquisition_id)
 
 
 def delete_acquisition(session: Session, acquisition: Acquisition) -> None:
+    clear_acquisition_photos(session, acquisition.id)
     session.delete(acquisition)
 
 
 def _reset_acquisition_to_pending(session: Session, acquisition_id: int) -> None:
     acquisition = session.get(Acquisition, acquisition_id)
     if acquisition is not None:
-        delete_acquisition_photos(session, acquisition_id)
+        clear_acquisition_photos(session, acquisition_id)
         acquisition.status = AcquisitionStatus.PENDING
         session.commit()
 
@@ -144,7 +147,7 @@ def _reset_acquisition_to_pending(session: Session, acquisition_id: int) -> None
 def _mark_acquisition_failed(session: Session, acquisition_id: int) -> None:
     acquisition = session.get(Acquisition, acquisition_id)
     if acquisition is not None:
-        delete_acquisition_photos(session, acquisition_id)
+        clear_acquisition_photos(session, acquisition_id)
         acquisition.status = AcquisitionStatus.FAILED
         session.commit()
 
@@ -160,7 +163,7 @@ def delete_pending_acquisitions(
     artifact_filter = (
         Acquisition.artifact_id.is_(None) if artifact_id is None else Acquisition.artifact_id == artifact_id
     )
-    pending_rows = (
+    pending_acquisitions = (
         session.query(Acquisition)
         .filter(
             artifact_filter,
@@ -171,5 +174,5 @@ def delete_pending_acquisitions(
         )
         .all()
     )
-    for row in pending_rows:
-        delete_acquisition(session, row)
+    for pending_acquisition in pending_acquisitions:
+        delete_acquisition(session, pending_acquisition)

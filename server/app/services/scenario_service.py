@@ -28,7 +28,7 @@ def apply_scenario_payload(scenario: Scenario, payload: dict) -> None:
         ScenarioShutterSpeed(shutter_speed_value_id=shutter_speed_id) for shutter_speed_id in payload['shutterSpeedIds']
     ]
 
-    # Rotations stored as radians (2π / N)
+    # Rotations stockées en radians (2π / N)
     rotations_count = payload['rotationsCount']
     if rotations_count > 0:
         step = (2 * math.pi) / rotations_count
@@ -44,7 +44,7 @@ def is_scenario_calibrated(
     all_scenarios: list[Scenario],
     scenario_ids_with_completed_calibration: set[int],
 ) -> bool:
-    """True if target_scenario has a completed calibration, or is compatible with one that does."""
+    """Vrai si le scénario cible a un étalonnage terminé, ou est compatible avec un scénario qui en a un."""
     if target_scenario.id in scenario_ids_with_completed_calibration:
         return True
 
