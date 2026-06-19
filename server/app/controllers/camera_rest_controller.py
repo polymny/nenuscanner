@@ -1,14 +1,9 @@
-import json
-import time
-
-from flask import Response, stream_with_context
 from flask.views import MethodView
 from flask_smorest import Blueprint, abort
 
 from ..dtos.camera_dto import CameraFocusAreaUpdateSchema, CameraSettingsSchema, CameraSettingUpdateSchema
 from ..services.camera_settings_service import persist_current_camera_settings
 from ..services.gphoto2_service import (
-    capture_preview,
     get_camera_settings,
     set_camera_setting,
     set_focus_area,
@@ -57,38 +52,3 @@ class CameraFocusAreaController(MethodView):
     def post(self, payload):
         """Déplace la zone AF (format 3:2) puis déclenche l'autofocus."""
         set_focus_area(payload['x'], payload['y'])
-
-
-def _format_sse(event_type: str, payload: dict) -> str:
-    return f'event: {event_type}\ndata: {json.dumps(payload)}\n\n'
-
-
-@blp.route('/preview')
-class CameraPreviewController(MethodView):
-    def get(self):
-        """Capture une prévisualisation et notifie le client via SSE."""
-
-        def generate():
-            yield _format_sse('started', {})
-            while True:
-                try:
-                    path = capture_preview()
-                    yield _format_sse(
-                        'preview_ready',
-                        {'path': path},
-                    )
-                    time.sleep(0.1)
-                except GeneratorExit:
-                    return
-                except Exception as error:
-                    yield _format_sse('failed', {'message': str(error)})
-                    return
-
-        return Response(
-            stream_with_context(generate()),
-            mimetype='text/event-stream',
-            headers={
-                'Cache-Control': 'no-cache',
-                'X-Accel-Buffering': 'no',
-            },
-        )

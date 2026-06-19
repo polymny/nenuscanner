@@ -1,7 +1,6 @@
 import json
 import subprocess
 import threading
-import time
 from collections.abc import Callable
 from pathlib import Path
 
@@ -10,12 +9,6 @@ from server.app.dtos.camera_dto import (
     FOCUS_AREA_NORM_HEIGHT,
     FOCUS_AREA_NORM_WIDTH,
 )
-
-# Nikon Z : le buffer liveview renvoie parfois d'anciennes trames après un réglage ou un mouvement.
-# Voir camera.py, gphoto2 #60 (--capture-movie) et libgphoto2 #846 (file d'événements PTP).
-PREVIEW_FLUSH_AFTER_SETTING = 2
-PREVIEW_FLUSH_FRAMES = 1
-PREVIEW_FLUSH_SLEEP_SEC = 0.05
 
 _gphoto2_lock = threading.Lock()
 
@@ -227,36 +220,3 @@ def set_focus_area(norm_x: int, norm_y: int) -> None:
             check=False,
         )
     trigger_autofocus()
-
-
-def _capture_preview_bytes() -> bytes:
-    """Lit une frame liveview ; --capture-movie=0 est plus fiable que --capture-preview sur Nikon Z."""
-    commands = (
-        ['gphoto2', '--capture-movie=1', '--stdout', '--force-overwrite'],
-        ['gphoto2', '--capture-preview', '--stdout', '--force-overwrite'],
-    )
-    last_error = ''
-    for command in commands:
-        result = subprocess.run(command, capture_output=True, check=False)
-        if result.returncode == 0 and result.stdout:
-            return result.stdout
-        last_error = (result.stderr or b'').decode('utf-8', errors='replace').strip()
-
-    raise RuntimeError(last_error or 'capture-preview-failed')
-
-
-def capture_preview() -> str:
-    with _gphoto2_lock:
-        data = b''
-        for index in range(PREVIEW_FLUSH_FRAMES):
-            data = _capture_preview_bytes()
-            if index + 1 < PREVIEW_FLUSH_FRAMES:
-                time.sleep(PREVIEW_FLUSH_SLEEP_SEC)
-
-    if not data:
-        raise RuntimeError('capture-preview-empty')
-
-    PREVIEW_PATH = '/tmp/camera-preview.jpg'
-    preview_path = Path(PREVIEW_PATH)
-    preview_path.write_bytes(data)
-    return PREVIEW_PATH
