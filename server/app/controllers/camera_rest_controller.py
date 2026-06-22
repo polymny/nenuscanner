@@ -1,14 +1,20 @@
+from datetime import datetime
+
 from flask.views import MethodView
 from flask_smorest import Blueprint, abort
 
 from ..dtos.camera_dto import CameraFocusAreaUpdateSchema, CameraSettingsSchema, CameraSettingUpdateSchema
+from ..paths import SERVER_ROOT
 from ..services.camera_settings_service import persist_current_camera_settings
+from ..services.exiftool_service import write_jpeg_preview_from_raw
 from ..services.gphoto2_service import (
+    capture_raw_to_file,
     get_camera_settings,
     set_camera_setting,
     set_focus_area,
     trigger_autofocus,
 )
+from ... import config
 from ...sa_db import db_session
 
 blp = Blueprint('camera', __name__, description='Réglages caméra')
@@ -52,3 +58,51 @@ class CameraFocusAreaController(MethodView):
     def post(self, payload):
         """Déplace la zone AF (format 3:2) puis déclenche l'autofocus."""
         set_focus_area(payload['x'], payload['y'])
+
+
+@blp.route('/calibration-capture')
+class CameraCalibrationCaptureController(MethodView):
+    @blp.response(200)
+    def post(self):
+        """Capture une photo pour chaque temps de pose disponible sur la caméra."""
+        if config.CAMERA == 'dummy':
+            abort(400, 'camera-not-available')
+
+        settings = get_camera_settings()
+        shutter_speeds = settings['shutterSpeedValues']
+        iso_value = float(settings['currentIsoValue'])
+        aperture_value = float(settings['currentApertureValue'])
+
+        session_dir = SERVER_ROOT / 'data' / 'camera_calibration' / datetime.now().strftime('%Y%m%d-%H%M%S')
+        session_dir.mkdir(parents=True, exist_ok=True)
+
+        raw_ext = getattr(config, 'CAMERA_RAW_EXTENSION', 'nef')
+        photos: list[dict] = []
+
+        for index, shutter_speed in enumerate(shutter_speeds, start=1):
+            label = f'{float(shutter_speed):g}'.replace('.', '_')
+            base = f'{index:03d}-shutter-{label}'
+            raw_path = session_dir / f'{base}.{raw_ext}'
+            preview_path = session_dir / f'{base}.jpg'
+
+            capture_raw_to_file(
+                str(raw_path),
+                shutterspeed_value=float(shutter_speed),
+                iso_value=iso_value,
+                aperture_value=aperture_value,
+            )
+            write_jpeg_preview_from_raw(str(raw_path), str(preview_path))
+            saved_raw_path = raw_path
+
+            photos.append(
+                {
+                    'shutterSpeed': float(shutter_speed),
+                    'rawPath': str(saved_raw_path.relative_to(SERVER_ROOT)),
+                    'previewPath': str(preview_path.relative_to(SERVER_ROOT)),
+                }
+            )
+
+        return {
+            'directory': str(session_dir.relative_to(SERVER_ROOT)),
+            'photos': photos,
+        }
