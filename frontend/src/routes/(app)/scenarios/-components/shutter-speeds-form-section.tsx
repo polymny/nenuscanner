@@ -1,12 +1,14 @@
 import { useMemo, useState } from 'react';
 import { useFormContext, useWatch } from 'react-hook-form';
 import { XCircle } from 'lucide-react';
+import TestModeToggle from './test-mode-toggle';
+import { useScenarioTestModeTarget } from './scenario-test-mode-context';
 import type { UpsertScenarioPayload } from '@/schemas/scenario.schemas';
 import { FormLabel } from '@/components/ui/form';
 import { Button } from '@/components/ui/button';
 import { SliderWithLabels } from '@/components/ui/slider-with-labels';
 import { BadgeWithAction } from '@/components/ui/badge-with-action';
-import { formatNumberAsFractionOrDecimal } from '@/lib/utils';
+import { cn, formatNumberAsFractionOrDecimal } from '@/lib/utils';
 import { useGetShutterSpeedValues } from '@/api/queries/shutter-speed-value.queries';
 import { SHUTTER_SPEED_REFERENCE } from '@/types/shutter-speed-value.types';
 
@@ -16,6 +18,7 @@ interface ShutterSpeedsFormSectionProps {
 
 const ShutterSpeedsFormSection = ({ disabled = false }: ShutterSpeedsFormSectionProps) => {
   const { data: options = [], isLoading } = useGetShutterSpeedValues();
+  const { isTestMode, toggleTestMode } = useScenarioTestModeTarget('shutter-speeds');
 
   const [shutterSpeedIndex, setShutterSpeedIndex] = useState<number | null>(null);
   const referenceIndex = Math.max(
@@ -33,9 +36,7 @@ const ShutterSpeedsFormSection = ({ disabled = false }: ShutterSpeedsFormSection
 
   const valueById = useMemo(() => new Map(options.map((option) => [option.id, option.value])), [options]);
   const sortShutterSpeedIdsByValue = (ids: Array<number>) =>
-    [...ids]
-      .filter((id) => valueById.has(id))
-      .sort((a, b) => (valueById.get(a) ?? 0) - (valueById.get(b) ?? 0));
+    [...ids].filter((id) => valueById.has(id)).sort((a, b) => (valueById.get(a) ?? 0) - (valueById.get(b) ?? 0));
   const sortedShutterSpeedIdsWatch = useMemo(
     () => sortShutterSpeedIdsByValue(shutterSpeedIdsWatch),
     [shutterSpeedIdsWatch, valueById]
@@ -51,8 +52,16 @@ const ShutterSpeedsFormSection = ({ disabled = false }: ShutterSpeedsFormSection
   }
 
   return (
-    <div className="flex w-3/4 flex-col gap-8 rounded-lg bg-white p-6 shadow-lg">
-      <h3 className="text-brand-600">Gestion des temps de pose</h3>
+    <div
+      className={cn(
+        'flex w-3/4 flex-col gap-8 rounded-lg border border-transparent bg-white p-6 shadow-lg transition-colors',
+        isTestMode && 'border-warning-400 bg-warning-50/50'
+      )}
+    >
+      <div className="flex items-center justify-between gap-4">
+        <h3 className="text-brand-600">Gestion des temps de pose</h3>
+        <TestModeToggle active={isTestMode} onToggle={toggleTestMode} />
+      </div>
       <div className="flex flex-col gap-3">
         <FormLabel>Veuillez sélectionner au moins un temps de pose</FormLabel>
         <div className="flex items-start gap-4">

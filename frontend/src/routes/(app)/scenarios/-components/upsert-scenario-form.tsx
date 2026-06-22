@@ -1,16 +1,17 @@
 import { useEffect, useMemo } from 'react';
-import { useForm, useFormContext, useFormState, useWatch } from 'react-hook-form';
+import { useForm, useFormContext, useFormState } from 'react-hook-form';
 import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useNavigate } from '@tanstack/react-router';
 import { vineResolver } from '@hookform/resolvers/vine';
 import ShutterSpeedsFormSection from './shutter-speeds-form-section';
 import LedsFormSection from './leds-form-section';
+import RotationsFormSection from './rotations-form-section';
+import { ScenarioTestModeProvider } from './scenario-test-mode-context';
 import type { UpsertScenarioPayload } from '@/schemas/scenario.schemas';
 import { upsertScenarioSchema } from '@/schemas/scenario.schemas';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Button } from '@/components/ui/button';
-import { SliderWithLabels } from '@/components/ui/slider-with-labels';
 import { useUpsertScenario } from '@/api/mutations/scenario.mutations';
 import { useGetScenarios } from '@/api/queries/scenario.queries';
 import { useGetLedPowerValues } from '@/api/queries/led-power-value.queries';
@@ -18,7 +19,6 @@ import { useGetShutterSpeedValues } from '@/api/queries/shutter-speed-value.quer
 import { SHUTTER_SPEED_REFERENCE } from '@/types/shutter-speed-value.types';
 import { Input } from '@/components/ui/input';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { cn } from '@/lib/utils';
 import { LED_VALUES } from '@/types/led.types';
 
 interface UpsertScenarioFormProps {
@@ -26,20 +26,6 @@ interface UpsertScenarioFormProps {
   scenarioId?: number;
   onRequestDuplicate?: () => void;
 }
-
-const RotationsCountAlert = () => {
-  const { control } = useFormContext<UpsertScenarioPayload>();
-  const rotationsCount = useWatch({ control, name: 'rotationsCount' });
-
-  return (
-    <Alert className={cn('border-success-200 bg-success-50 text-success-800', rotationsCount === 0 ? '' : 'opacity-0')}>
-      <AlertTitle>Compatible sans plateau tournant</AlertTitle>
-      <AlertDescription>
-        Avec 0 rotation, votre configuration est compatible avec un setup sans plateau tournant.
-      </AlertDescription>
-    </Alert>
-  );
-};
 
 interface ScenarioFormSubmitButtonProps {
   isUpserting: boolean;
@@ -57,7 +43,7 @@ const ScenarioFormSubmitButton = ({ isUpserting }: ScenarioFormSubmitButtonProps
   );
 };
 
-const UpsertScenarioForm = ({ mode, scenarioId, onRequestDuplicate }: UpsertScenarioFormProps) => {
+const UpsertScenarioFormContent = ({ mode, scenarioId, onRequestDuplicate }: UpsertScenarioFormProps) => {
   const navigate = useNavigate();
   const { data: scenarios } = useGetScenarios();
   const { data: powerOptions = [] } = useGetLedPowerValues();
@@ -158,36 +144,7 @@ const UpsertScenarioForm = ({ mode, scenarioId, onRequestDuplicate }: UpsertScen
 
         <ShutterSpeedsFormSection disabled={isLockedForEdition} />
 
-        <div className="flex w-3/4 flex-col gap-8 rounded-lg bg-white p-6 shadow-lg">
-          <h3 className="text-brand-600">Gestion des rotations</h3>
-          <div className="flex flex-col gap-3">
-            <FormField
-              control={form.control}
-              name="rotationsCount"
-              render={({ field }) => (
-                <FormItem className="w-full">
-                  <FormLabel>Nombre de rotations</FormLabel>
-                  <FormControl>
-                    <SliderWithLabels
-                      wrapperClassName="w-full"
-                      minLabel="0"
-                      maxLabel="12"
-                      currentLabel={String(field.value)}
-                      min={0}
-                      max={12}
-                      step={1}
-                      value={[field.value]}
-                      disabled={isLockedForEdition}
-                      onValueChange={(v) => field.onChange(v[0] ?? 0)}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <RotationsCountAlert />
-          </div>
-        </div>
+        <RotationsFormSection disabled={isLockedForEdition} />
 
         {isLockedForEdition ? (
           <Button size="lg" type="button" onClick={onRequestDuplicate}>
@@ -200,5 +157,11 @@ const UpsertScenarioForm = ({ mode, scenarioId, onRequestDuplicate }: UpsertScen
     </Form>
   );
 };
+
+const UpsertScenarioForm = (props: UpsertScenarioFormProps) => (
+  <ScenarioTestModeProvider>
+    <UpsertScenarioFormContent {...props} />
+  </ScenarioTestModeProvider>
+);
 
 export default UpsertScenarioForm;

@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { useFieldArray, useFormContext, useWatch } from 'react-hook-form';
 import LedRow from './led-row';
+import { ledTestModeTarget, useScenarioTestMode } from './scenario-test-mode-context';
 import type { UpsertScenarioPayload } from '@/schemas/scenario.schemas';
 import { FormLabel } from '@/components/ui/form';
 import { LED_VALUES } from '@/types/led.types';
@@ -12,6 +13,7 @@ interface LedsFormSectionProps {
 
 const LedsFormSection = ({ disabled = false }: LedsFormSectionProps) => {
   const { data: powerOptions = [], isLoading } = useGetLedPowerValues();
+  const { clearTestMode, activeTestMode } = useScenarioTestMode();
   const form = useFormContext<UpsertScenarioPayload>();
   const ledsWatch = useWatch({
     control: form.control,
@@ -59,6 +61,9 @@ const LedsFormSection = ({ disabled = false }: LedsFormSectionProps) => {
                 powerId={selected?.powerId ?? minPowerId}
                 fieldIndex={selected?.index}
                 onToggle={(checked, currentPowerId) => {
+                  if (!checked && activeTestMode === ledTestModeTarget(ledValue)) {
+                    clearTestMode();
+                  }
                   if (checked) {
                     appendLed({ value: ledValue, powerId: isNoLed ? minPowerId : currentPowerId });
                     return;

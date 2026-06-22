@@ -1,5 +1,7 @@
 import { memo, useEffect, useState } from 'react';
 import { useFormContext } from 'react-hook-form';
+import TestModeToggle from './test-mode-toggle';
+import { ledTestModeTarget, useScenarioTestModeTarget } from './scenario-test-mode-context';
 import type { UpsertScenarioPayload } from '@/schemas/scenario.schemas';
 import type { LedValue } from '@/types/led.types';
 import type { LedPowerValueOption } from '@/types/led-power-value.types';
@@ -29,6 +31,8 @@ const LedRow = ({
   onToggle,
 }: LedRowProps) => {
   const form = useFormContext<UpsertScenarioPayload>();
+  const testModeTarget = ledTestModeTarget(ledValue);
+  const { isTestMode, toggleTestMode } = useScenarioTestModeTarget(testModeTarget);
   const isNoLed = ledValue === 'NO_LED';
 
   const [powerIndex, setPowerIndex] = useState<number | null>(null);
@@ -47,18 +51,27 @@ const LedRow = ({
   return (
     <div
       className={cn(
-        'flex flex-col gap-3 rounded-lg border border-gray-200 p-4',
-        isSelected ? 'border-brand-600 bg-brand-50' : 'border-gray-200'
+        'flex flex-col gap-3 rounded-lg border p-4 transition-colors',
+        !isSelected && 'border-gray-200',
+        isSelected && !isTestMode && 'border-brand-600 bg-brand-50',
+        isSelected && isTestMode && 'border-warning-400 bg-warning-50/50'
       )}
     >
-      <div className="flex items-center gap-4">
-        <Switch
-          className="data-[state=checked]:bg-success-500"
-          checked={isSelected}
-          disabled={disabled}
-          onCheckedChange={(checked) => onToggle(checked, selectedOption.id)}
-        />
-        <FormLabel className="text-lg!! font-medium!">{getLedValueLabel(ledValue)}</FormLabel>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <Switch
+            className="data-[state=checked]:bg-success-500"
+            checked={isSelected}
+            disabled={disabled}
+            onCheckedChange={(checked) => onToggle(checked, selectedOption.id)}
+          />
+          <FormLabel className="text-lg!! font-medium!">{getLedValueLabel(ledValue)}</FormLabel>
+        </div>
+        {isSelected && (
+          <div className="flex justify-end">
+            <TestModeToggle active={isTestMode} onToggle={toggleTestMode} />
+          </div>
+        )}
       </div>
 
       {isNoLed ? null : (
