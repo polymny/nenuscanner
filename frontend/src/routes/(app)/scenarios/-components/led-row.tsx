@@ -1,7 +1,7 @@
 import { memo, useEffect, useState } from 'react';
 import { useFormContext } from 'react-hook-form';
-import TestModeToggle from './test-mode-toggle';
-import { ledTestModeTarget, useScenarioTestModeTarget } from './scenario-test-mode-context';
+import { ledInspectModeTarget, useScenarioInspectModeTarget } from './scenario-inspect-mode-context';
+import InspectModeToggle from './inspect-mode-toggle';
 import type { UpsertScenarioPayload } from '@/schemas/scenario.schemas';
 import type { LedValue } from '@/types/led.types';
 import type { LedPowerValueOption } from '@/types/led-power-value.types';
@@ -31,8 +31,8 @@ const LedRow = ({
   onToggle,
 }: LedRowProps) => {
   const form = useFormContext<UpsertScenarioPayload>();
-  const testModeTarget = ledTestModeTarget(ledValue);
-  const { isTestMode, toggleTestMode } = useScenarioTestModeTarget(testModeTarget);
+  const inspectModeTarget = ledInspectModeTarget(ledValue);
+  const { isInspectMode, toggleInspectMode } = useScenarioInspectModeTarget(inspectModeTarget);
   const isNoLed = ledValue === 'NO_LED';
 
   const [powerIndex, setPowerIndex] = useState<number | null>(null);
@@ -53,8 +53,8 @@ const LedRow = ({
       className={cn(
         'flex flex-col gap-3 rounded-lg border p-4 transition-colors',
         !isSelected && 'border-gray-200',
-        isSelected && !isTestMode && 'border-brand-600 bg-brand-50',
-        isSelected && isTestMode && 'border-warning-400 bg-warning-50/50'
+        isSelected && !isInspectMode && 'border-brand-600 bg-brand-50',
+        isSelected && isInspectMode && 'border-warning-400 bg-warning-50/50'
       )}
     >
       <div className="flex items-center justify-between">
@@ -69,7 +69,7 @@ const LedRow = ({
         </div>
         {isSelected && (
           <div className="flex justify-end">
-            <TestModeToggle active={isTestMode} onToggle={toggleTestMode} />
+            <InspectModeToggle active={isInspectMode} onToggle={toggleInspectMode} />
           </div>
         )}
       </div>

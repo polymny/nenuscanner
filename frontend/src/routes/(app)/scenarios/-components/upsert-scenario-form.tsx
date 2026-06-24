@@ -7,8 +7,8 @@ import { vineResolver } from '@hookform/resolvers/vine';
 import ShutterSpeedsFormSection from './shutter-speeds-form-section';
 import LedsFormSection from './leds-form-section';
 import RotationsFormSection from './rotations-form-section';
-import ScenarioTestModeSync from './scenario-test-mode-sync';
-import { ScenarioTestModeProvider } from './scenario-test-mode-context';
+import { ScenarioInspectModeProvider } from './scenario-inspect-mode-context';
+import ScenarioInspectModeSync from './scenario-inspect-mode-sync';
 import type { UpsertScenarioPayload } from '@/schemas/scenario.schemas';
 import { upsertScenarioSchema } from '@/schemas/scenario.schemas';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
@@ -106,7 +106,7 @@ const UpsertScenarioFormContent = ({ mode, scenarioId, onRequestDuplicate }: Ups
 
   return (
     <Form {...form}>
-      <ScenarioTestModeSync />
+      <ScenarioInspectModeSync />
       <form
         className="flex w-full flex-col items-center gap-8"
         onSubmit={form.handleSubmit((data) => upsertScenarioMutate(data))}
@@ -161,9 +161,9 @@ const UpsertScenarioFormContent = ({ mode, scenarioId, onRequestDuplicate }: Ups
 };
 
 const UpsertScenarioForm = (props: UpsertScenarioFormProps) => (
-  <ScenarioTestModeProvider>
+  <ScenarioInspectModeProvider>
     <UpsertScenarioFormContent {...props} />
-  </ScenarioTestModeProvider>
+  </ScenarioInspectModeProvider>
 );
 
 export default UpsertScenarioForm;

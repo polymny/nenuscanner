@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useFormContext, useWatch } from 'react-hook-form';
 import { XCircle } from 'lucide-react';
-import TestModeToggle from './test-mode-toggle';
-import { useScenarioTestMode, useScenarioTestModeTarget } from './scenario-test-mode-context';
+import { useScenarioInspectMode, useScenarioInspectModeTarget } from './scenario-inspect-mode-context';
+import InspectModeToggle from './inspect-mode-toggle';
 import type { UpsertScenarioPayload } from '@/schemas/scenario.schemas';
 import { FormLabel } from '@/components/ui/form';
 import { Button } from '@/components/ui/button';
@@ -18,8 +18,8 @@ interface ShutterSpeedsFormSectionProps {
 
 const ShutterSpeedsFormSection = ({ disabled = false }: ShutterSpeedsFormSectionProps) => {
   const { data: options = [], isLoading } = useGetShutterSpeedValues();
-  const { setShutterSpeedPreviewValue } = useScenarioTestMode();
-  const { isTestMode, toggleTestMode } = useScenarioTestModeTarget('shutter-speeds');
+  const { setShutterSpeedPreviewValue } = useScenarioInspectMode();
+  const { isInspectMode, toggleInspectMode } = useScenarioInspectModeTarget('shutter-speeds');
 
   const [shutterSpeedIndex, setShutterSpeedIndex] = useState<number | null>(null);
   const referenceIndex = Math.max(
@@ -61,12 +61,12 @@ const ShutterSpeedsFormSection = ({ disabled = false }: ShutterSpeedsFormSection
     <div
       className={cn(
         'flex w-3/4 flex-col gap-8 rounded-lg border border-transparent bg-white p-6 shadow-lg transition-colors',
-        isTestMode && 'border-warning-400 bg-warning-50/50'
+        isInspectMode && 'border-warning-400 bg-warning-50/50'
       )}
     >
       <div className="flex items-center justify-between gap-4">
         <h3 className="text-brand-600">Gestion des temps de pose</h3>
-        <TestModeToggle active={isTestMode} onToggle={toggleTestMode} />
+        <InspectModeToggle active={isInspectMode} onToggle={toggleInspectMode} />
       </div>
       <div className="flex flex-col gap-3">
         <FormLabel>Veuillez sélectionner au moins un temps de pose</FormLabel>

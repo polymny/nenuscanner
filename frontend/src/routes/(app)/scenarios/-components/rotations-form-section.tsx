@@ -1,6 +1,6 @@
 import { useFormContext, useWatch } from 'react-hook-form';
-import TestModeToggle from './test-mode-toggle';
-import { useScenarioTestModeTarget } from './scenario-test-mode-context';
+import { useScenarioInspectModeTarget } from './scenario-inspect-mode-context';
+import InspectModeToggle from './inspect-mode-toggle';
 import type { UpsertScenarioPayload } from '@/schemas/scenario.schemas';
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { SliderWithLabels } from '@/components/ui/slider-with-labels';
@@ -27,18 +27,18 @@ const RotationsCountAlert = () => {
 
 const RotationsFormSection = ({ disabled = false }: RotationsFormSectionProps) => {
   const form = useFormContext<UpsertScenarioPayload>();
-  const { isTestMode, toggleTestMode } = useScenarioTestModeTarget('rotations');
+  const { isInspectMode, toggleInspectMode } = useScenarioInspectModeTarget('rotations');
 
   return (
     <div
       className={cn(
         'flex w-3/4 flex-col gap-8 rounded-lg border border-transparent bg-white p-6 shadow-lg transition-colors',
-        isTestMode && 'border-warning-400 bg-warning-50/50'
+        isInspectMode && 'border-warning-400 bg-warning-50/50'
       )}
     >
       <div className="flex items-center justify-between gap-4">
         <h3 className="text-brand-600">Gestion des rotations</h3>
-        <TestModeToggle active={isTestMode} onToggle={toggleTestMode} />
+        <InspectModeToggle active={isInspectMode} onToggle={toggleInspectMode} />
       </div>
       <div className="flex flex-col gap-3">
         <FormField
@@ -58,7 +58,7 @@ const RotationsFormSection = ({ disabled = false }: RotationsFormSectionProps) =
                   step={1}
                   value={[field.value]}
                   disabled={disabled}
-                  rangeBgColor={isTestMode ? 'bg-warning-500' : undefined}
+                  rangeBgColor={isInspectMode ? 'bg-warning-500' : undefined}
                   onValueChange={(v) => field.onChange(v[0] ?? 0)}
                 />
               </FormControl>

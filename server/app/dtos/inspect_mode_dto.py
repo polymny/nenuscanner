@@ -4,7 +4,7 @@ from ..constants.leds import LED_VALUES
 from ..constants.shutter_speeds import SHUTTER_SPEED_MAX, SHUTTER_SPEED_MIN
 
 
-class TestModeLedSchema(Schema):
+class InspectModeLedSchema(Schema):
     class Meta:
         ordered = True
 
@@ -12,7 +12,7 @@ class TestModeLedSchema(Schema):
     powerId = fields.Integer(required=True, validate=validate.Range(min=1))
 
 
-class TestModeShutterSpeedSchema(Schema):
+class InspectModeShutterSpeedSchema(Schema):
     class Meta:
         ordered = True
 

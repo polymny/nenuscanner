@@ -16,7 +16,7 @@ def _assert_no_running_acquisition(session: Session) -> None:
         raise AcquisitionRunningError('acquisition-running')
 
 
-def set_led_test_mode(session: Session, led_value: str) -> None:
+def set_led_inspect_mode(session: Session, led_value: str) -> None:
     _assert_no_running_acquisition(session)
     if config.CAMERA == 'real':
         set_camera_setting('shutterspeed', SHUTTER_SPEED_REFERENCE_VALUE)
@@ -35,9 +35,9 @@ def set_led_test_mode(session: Session, led_value: str) -> None:
     gpio_leds.get_by_uuid(led_uuid).on()
 
 
-def set_shutter_speed_test_mode(session: Session, relative_value: float) -> None:
+def set_shutter_speed_inspect_mode(session: Session, relative_value: float) -> None:
     _assert_no_running_acquisition(session)
-    set_led_test_mode(session, 'NO_LED')
+    set_led_inspect_mode(session, 'NO_LED')
 
     if config.CAMERA == 'real':
         camera_settings = get_current_camera_settings(session)
@@ -45,7 +45,7 @@ def set_shutter_speed_test_mode(session: Session, relative_value: float) -> None
         set_camera_setting('shutterspeed', target_shutter_speed)
 
 
-def leave_test_mode(session: Session) -> None:
+def leave_inspect_mode(session: Session) -> None:
     leds.get().off()
 
     if config.CAMERA == 'real':
