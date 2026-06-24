@@ -37,7 +37,8 @@ def set_led_inspect_mode(session: Session, led_value: str) -> None:
 
 def set_shutter_speed_inspect_mode(session: Session, relative_value: float) -> None:
     _assert_no_running_acquisition(session)
-    set_led_inspect_mode(session, 'NO_LED')
+    gpio_leds = leds.get()
+    gpio_leds.off()
 
     if config.CAMERA == 'real':
         camera_settings = get_current_camera_settings(session)
