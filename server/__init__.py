@@ -14,6 +14,7 @@ from .app.controllers.led_power_value_controller import blp as led_power_value_b
 from .app.controllers.profile_controller import blp as profile_blp
 from .app.controllers.scenario_controller import blp as scenario_blp
 from .app.controllers.shutter_speed_value_controller import blp as shutter_speed_value_blp
+from .app.controllers.test_mode_controller import blp as test_mode_blp
 from .app.controllers.web_controller import blueprint as web_blueprint
 from .sa_db import db_session
 
@@ -89,6 +90,7 @@ app.register_blueprint(web_blueprint)
 api.register_blueprint(acquisition_blp, url_prefix='/acquisition')
 api.register_blueprint(artifact_blp, url_prefix='/artifact')
 api.register_blueprint(camera_blp, url_prefix='/camera')
+api.register_blueprint(test_mode_blp, url_prefix='/test-mode')
 api.register_blueprint(led_power_value_blp, url_prefix='/led-power-value')
 api.register_blueprint(shutter_speed_value_blp, url_prefix='/shutter-speed-value')
 api.register_blueprint(profile_blp, url_prefix='/profile')

@@ -1,8 +1,8 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useFormContext, useWatch } from 'react-hook-form';
 import { XCircle } from 'lucide-react';
 import TestModeToggle from './test-mode-toggle';
-import { useScenarioTestModeTarget } from './scenario-test-mode-context';
+import { useScenarioTestMode, useScenarioTestModeTarget } from './scenario-test-mode-context';
 import type { UpsertScenarioPayload } from '@/schemas/scenario.schemas';
 import { FormLabel } from '@/components/ui/form';
 import { Button } from '@/components/ui/button';
@@ -18,6 +18,7 @@ interface ShutterSpeedsFormSectionProps {
 
 const ShutterSpeedsFormSection = ({ disabled = false }: ShutterSpeedsFormSectionProps) => {
   const { data: options = [], isLoading } = useGetShutterSpeedValues();
+  const { setShutterSpeedPreviewValue } = useScenarioTestMode();
   const { isTestMode, toggleTestMode } = useScenarioTestModeTarget('shutter-speeds');
 
   const [shutterSpeedIndex, setShutterSpeedIndex] = useState<number | null>(null);
@@ -41,6 +42,11 @@ const ShutterSpeedsFormSection = ({ disabled = false }: ShutterSpeedsFormSection
     () => sortShutterSpeedIdsByValue(shutterSpeedIdsWatch),
     [shutterSpeedIdsWatch, valueById]
   );
+
+  useEffect(() => {
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+    if (selectedOption) setShutterSpeedPreviewValue(selectedOption.value);
+  }, [selectedOption, setShutterSpeedPreviewValue]);
 
   if (isLoading || options.length === 0) {
     return (
