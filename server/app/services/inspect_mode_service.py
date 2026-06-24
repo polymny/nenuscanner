@@ -2,7 +2,6 @@ from sqlalchemy.orm import Session
 
 from .camera_settings_service import get_current_camera_settings
 from .gphoto2_service import set_camera_setting
-from ..constants.shutter_speeds import SHUTTER_SPEED_REFERENCE_VALUE
 from ..models.acquisition import Acquisition, AcquisitionStatus
 from ... import config, leds
 
@@ -19,7 +18,8 @@ def _assert_no_running_acquisition(session: Session) -> None:
 def set_led_inspect_mode(session: Session, led_value: str) -> None:
     _assert_no_running_acquisition(session)
     if config.CAMERA == 'real':
-        set_camera_setting('shutterspeed', SHUTTER_SPEED_REFERENCE_VALUE)
+        camera_settings = get_current_camera_settings(session)
+        set_camera_setting('shutterspeed', float(camera_settings.absolute_shutter_speed_value))
 
     gpio_leds = leds.get()
     gpio_leds.off()
