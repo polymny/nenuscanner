@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useFormContext, useWatch } from 'react-hook-form';
 import { XCircle } from 'lucide-react';
 import { useScenarioInspectMode, useScenarioInspectModeTarget } from './scenario-inspect-mode-context';
@@ -20,6 +20,7 @@ const ShutterSpeedsFormSection = ({ disabled = false }: ShutterSpeedsFormSection
   const { data: options = [], isLoading } = useGetShutterSpeedValues();
   const { setShutterSpeedPreviewValue } = useScenarioInspectMode();
   const { isInspectMode, toggleInspectMode } = useScenarioInspectModeTarget('shutter-speeds');
+  const prevIsInspectMode = useRef(isInspectMode);
 
   const [shutterSpeedIndex, setShutterSpeedIndex] = useState<number | null>(null);
   const referenceIndex = Math.max(
@@ -45,8 +46,11 @@ const ShutterSpeedsFormSection = ({ disabled = false }: ShutterSpeedsFormSection
 
   useEffect(() => {
     // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-    if (selectedOption) setShutterSpeedPreviewValue(selectedOption.value);
-  }, [selectedOption, setShutterSpeedPreviewValue]);
+    if (isInspectMode && !prevIsInspectMode.current && selectedOption) {
+      setShutterSpeedPreviewValue(selectedOption.value);
+    }
+    prevIsInspectMode.current = isInspectMode;
+  }, [isInspectMode, selectedOption, setShutterSpeedPreviewValue]);
 
   if (isLoading || options.length === 0) {
     return (
@@ -82,6 +86,10 @@ const ShutterSpeedsFormSection = ({ disabled = false }: ShutterSpeedsFormSection
             value={[activeIndex]}
             disabled={disabled}
             onValueChange={(v) => setShutterSpeedIndex(v[0] ?? 0)}
+            onValueCommit={(v) => {
+              const option = options[v[0] ?? 0];
+              setShutterSpeedPreviewValue(option.value);
+            }}
           />
           <Button
             disabled={disabled || shutterSpeedIdsWatch.includes(selectedOption.id)}
