@@ -51,7 +51,7 @@ const LedRow = ({
   return (
     <div
       className={cn(
-        'flex flex-col gap-3 rounded-lg border p-4 transition-colors',
+        'flex flex-col gap-3 rounded-lg border p-4',
         !isSelected && 'border-gray-200',
         isSelected && !isInspectMode && 'border-brand-600 bg-brand-50',
         isSelected && isInspectMode && 'border-warning-400 bg-warning-50/50'
@@ -67,11 +67,9 @@ const LedRow = ({
           />
           <FormLabel className="text-lg!! font-medium!">{getLedValueLabel(ledValue)}</FormLabel>
         </div>
-        {isSelected && (
-          <div className="flex justify-end">
-            <InspectModeToggle active={isInspectMode} onToggle={toggleInspectMode} />
-          </div>
-        )}
+        <div className="flex justify-end">
+          <InspectModeToggle active={isInspectMode} hidden={!isSelected} onToggle={toggleInspectMode} />
+        </div>
       </div>
 
       {isNoLed ? null : (
