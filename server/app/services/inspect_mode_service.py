@@ -21,16 +21,20 @@ def set_led_inspect_mode(session: Session, led_value: str) -> None:
     _assert_no_running_acquisition(session)
     if config.CAMERA == 'real':
         camera_settings = get_current_camera_settings(session)
-        set_camera_setting('shutterspeed', float(camera_settings.absolute_shutter_speed_value))
+
+        # TODO : correction temporaire
+        target_shutter_speed = float(camera_settings.absolute_shutter_speed_value) / LEDS_COUNT
+        set_camera_setting('shutterspeed', target_shutter_speed)
 
     gpio_leds = leds.get()
-    gpio_leds.off()
-
-    if led_value == 'NO_LED':
-        return
 
     if led_value == 'ALL_LEDS':
         gpio_leds.on()
+        return
+
+    gpio_leds.off()
+
+    if led_value == 'NO_LED':
         return
 
     led_uuid = int(config.LEDS_UUIDS[int(led_value) - 1])
@@ -57,4 +61,8 @@ def leave_inspect_mode(session: Session) -> None:
 
     if config.CAMERA == 'real':
         camera_settings = get_current_camera_settings(session)
-        set_camera_setting('shutterspeed', float(camera_settings.absolute_shutter_speed_value))
+
+        # TODO : correction temporaire
+        target_shutter_speed = float(camera_settings.absolute_shutter_speed_value) / LEDS_COUNT
+
+        set_camera_setting('shutterspeed', target_shutter_speed)

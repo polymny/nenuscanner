@@ -35,6 +35,7 @@ class CameraSettingsController(MethodView):
             set_camera_setting(payload['setting'], payload['value'])
             persist_current_camera_settings(db_session)
             db_session.commit()
+
         except ValueError as error:
             db_session.rollback()
             abort(400, message=str(error))

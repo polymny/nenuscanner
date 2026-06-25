@@ -1,9 +1,14 @@
-import { memo } from 'react';
+import { memo, useEffect } from 'react';
 import { Focus } from 'lucide-react';
 import { toast } from 'sonner';
 import CameraSettingSlider from './camera-setting-slider';
 import type { CameraSettings } from '@/types/camera.types';
 import { useTriggerCameraAutofocus, useUpdateCameraSetting } from '@/api/mutations/camera.mutations';
+import {
+  leaveInspectMode,
+  sendLeaveInspectModeOnPageExit,
+  useSetInspectModeLed,
+} from '@/api/mutations/inspect-mode.mutations';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 
@@ -14,9 +19,16 @@ interface CameraSettingsFormProps {
 }
 
 const CameraSettingsForm = memo(function CameraSettingsForm({ isPending, isError, settings }: CameraSettingsFormProps) {
+  const { mutate: setLedMutation } = useSetInspectModeLed();
+
   const { mutate: updateSetting, isPending: isUpdatingSetting } = useUpdateCameraSetting({
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
       toast.success('Réglage appliqué.');
+
+      // TODO : comportement temporaire de patch pour réappliquer le temps de pose à 1/12 après chaque changement
+      if (variables.setting === 'shutterspeed') {
+        setLedMutation({ value: 'ALL_LEDS', powerId: 1 });
+      }
     },
     onError: () => {
       toast.error('Impossible de modifier ce réglage.');
@@ -31,6 +43,22 @@ const CameraSettingsForm = memo(function CameraSettingsForm({ isPending, isError
       toast.error("Impossible de déclencher l'autofocus.");
     },
   });
+
+  useEffect(() => {
+    setLedMutation({ value: 'ALL_LEDS', powerId: 1 });
+
+    const handlePageHide = (event: PageTransitionEvent) => {
+      if (event.persisted) return;
+      sendLeaveInspectModeOnPageExit();
+    };
+
+    window.addEventListener('pagehide', handlePageHide);
+
+    return () => {
+      window.removeEventListener('pagehide', handlePageHide);
+      void leaveInspectMode();
+    };
+  }, [setLedMutation]);
 
   const isBusy = isUpdatingSetting || isAutofocusing;
 
