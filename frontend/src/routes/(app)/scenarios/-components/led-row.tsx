@@ -65,7 +65,7 @@ const LedRow = ({
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Switch
-            className="data-[state=checked]:bg-success-500"
+            className="data-[state=checked]:bg-brand-600"
             checked={isSelected}
             disabled={disabled}
             onCheckedChange={(checked) => {

@@ -117,10 +117,13 @@ const ShutterSpeedsFormSection = ({ disabled = false }: ShutterSpeedsFormSection
                 aria-label={formatNumberAsFractionOrDecimal(option.value)}
                 aria-pressed={isSelected}
                 className={cn(
-                  'flex flex-1 items-center justify-center border-r border-gray-200 px-2 py-3 text-xs font-medium transition-colors last:border-r-0',
+                  'flex flex-1 items-center justify-center border-r border-gray-200 px-2 py-3 text-xs font-medium last:border-r-0',
                   'focus-visible:ring-brand-600 focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:outline-none',
                   'disabled:cursor-not-allowed disabled:opacity-50',
-                  isInspectPreview && 'bg-warning-500 text-white disabled:opacity-100',
+                  isSelected && isInspectPreview && 'bg-[#8d5893] text-white',
+                  !isSelected && isInspectPreview && 'bg-warning-200',
+                  isInspectPreview &&
+                    'ring-warning-600 ring-5 ring-inset first:rounded-l-xl last:rounded-r-xl disabled:opacity-100',
                   !isInspectPreview && isSelected && 'bg-brand-600 text-white',
                   !isInspectPreview && !isSelected && 'bg-white text-gray-600 hover:bg-gray-100'
                 )}
