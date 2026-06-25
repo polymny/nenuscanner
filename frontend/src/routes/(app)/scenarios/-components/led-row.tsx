@@ -1,5 +1,11 @@
 import { memo, useEffect, useState } from 'react';
 import { useFormContext } from 'react-hook-form';
+import {
+  ledInspectModeTarget,
+  useScenarioInspectMode,
+  useScenarioInspectModeTarget,
+} from './scenario-inspect-mode-context';
+import InspectModeToggle from './inspect-mode-toggle';
 import type { UpsertScenarioPayload } from '@/schemas/scenario.schemas';
 import type { LedValue } from '@/types/led.types';
 import type { LedPowerValueOption } from '@/types/led-power-value.types';
@@ -29,6 +35,9 @@ const LedRow = ({
   onToggle,
 }: LedRowProps) => {
   const form = useFormContext<UpsertScenarioPayload>();
+  const inspectModeTarget = ledInspectModeTarget(ledValue);
+  const { clearInspectMode } = useScenarioInspectMode();
+  const { isInspectMode, toggleInspectMode } = useScenarioInspectModeTarget(inspectModeTarget);
   const isNoLed = ledValue === 'NO_LED';
 
   const [powerIndex, setPowerIndex] = useState<number | null>(null);
@@ -47,18 +56,30 @@ const LedRow = ({
   return (
     <div
       className={cn(
-        'flex flex-col gap-3 rounded-lg border border-gray-200 p-4',
-        isSelected ? 'border-brand-600 bg-brand-50' : 'border-gray-200'
+        'flex flex-col gap-3 rounded-lg border p-4',
+        !isSelected && 'border-gray-200',
+        isSelected && !isInspectMode && 'border-brand-600 bg-brand-50',
+        isSelected && isInspectMode && 'border-warning-400 bg-warning-50/50'
       )}
     >
-      <div className="flex items-center gap-4">
-        <Switch
-          className="data-[state=checked]:bg-success-500"
-          checked={isSelected}
-          disabled={disabled}
-          onCheckedChange={(checked) => onToggle(checked, selectedOption.id)}
-        />
-        <FormLabel className="text-lg!! font-medium!">{getLedValueLabel(ledValue)}</FormLabel>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <Switch
+            className="data-[state=checked]:bg-brand-600"
+            checked={isSelected}
+            disabled={disabled}
+            onCheckedChange={(checked) => {
+              if (!checked && isInspectMode) {
+                clearInspectMode();
+              }
+              onToggle(checked, selectedOption.id);
+            }}
+          />
+          <FormLabel className="text-lg!! font-medium!">{getLedValueLabel(ledValue)}</FormLabel>
+        </div>
+        <div className="flex justify-end">
+          <InspectModeToggle active={isInspectMode} hidden={!isSelected} onToggle={toggleInspectMode} />
+        </div>
       </div>
 
       {isNoLed ? null : (

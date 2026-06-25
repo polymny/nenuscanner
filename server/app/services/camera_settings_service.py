@@ -31,6 +31,11 @@ def _get_or_create_current(session: Session) -> CameraSettings:
     return current
 
 
+def get_current_camera_settings(session: Session) -> CameraSettings:
+    """Retourne la ligne courante des réglages caméra en DB."""
+    return _get_or_create_current(session)
+
+
 def persist_current_camera_settings(session: Session) -> None:
     """Met à jour la ligne courante en DB depuis la caméra (crée la ligne si besoin)."""
     current = _get_or_create_current(session)
