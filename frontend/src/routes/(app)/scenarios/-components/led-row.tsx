@@ -1,6 +1,10 @@
 import { memo, useEffect, useState } from 'react';
 import { useFormContext } from 'react-hook-form';
-import { ledInspectModeTarget, useScenarioInspectModeTarget } from './scenario-inspect-mode-context';
+import {
+  ledInspectModeTarget,
+  useScenarioInspectMode,
+  useScenarioInspectModeTarget,
+} from './scenario-inspect-mode-context';
 import InspectModeToggle from './inspect-mode-toggle';
 import type { UpsertScenarioPayload } from '@/schemas/scenario.schemas';
 import type { LedValue } from '@/types/led.types';
@@ -32,6 +36,7 @@ const LedRow = ({
 }: LedRowProps) => {
   const form = useFormContext<UpsertScenarioPayload>();
   const inspectModeTarget = ledInspectModeTarget(ledValue);
+  const { clearInspectMode } = useScenarioInspectMode();
   const { isInspectMode, toggleInspectMode } = useScenarioInspectModeTarget(inspectModeTarget);
   const isNoLed = ledValue === 'NO_LED';
 
@@ -63,7 +68,12 @@ const LedRow = ({
             className="data-[state=checked]:bg-success-500"
             checked={isSelected}
             disabled={disabled}
-            onCheckedChange={(checked) => onToggle(checked, selectedOption.id)}
+            onCheckedChange={(checked) => {
+              if (!checked && isInspectMode) {
+                clearInspectMode();
+              }
+              onToggle(checked, selectedOption.id);
+            }}
           />
           <FormLabel className="text-lg!! font-medium!">{getLedValueLabel(ledValue)}</FormLabel>
         </div>
