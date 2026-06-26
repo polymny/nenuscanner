@@ -44,6 +44,8 @@ const SelectAcquisitionScenario = ({
     [compatibleScenarioIds, scenarios]
   );
   const showSkeleton = useMinimumLoadingDuration(isLoadingScenarios);
+  const selectedScenario = scenarios?.find((scenario) => scenario.id === selectedScenarioId);
+  const hasRotations = (selectedScenario?.rotationsCount ?? 0) > 0;
 
   return (
     <>
@@ -60,8 +62,8 @@ const SelectAcquisitionScenario = ({
           <AlertOctagon className="text-warning-800! size-5" />
           <AlertTitle>Plateau tournant déconnecté</AlertTitle>
           <AlertDescription>
-            Le plateau tournant de votre NeNuScanner n'est pas connecté. Vous ne pourrez utiliser que les scénarios sans
-            rotation.
+            Le plateau tournant de votre NeNuScanner n'est pas connecté. Vous devrez effectuer les rotations
+            manuellement.
           </AlertDescription>
         </Alert>
         <div className="text-sm font-bold text-gray-500">Scénarios disponibles</div>
@@ -88,7 +90,12 @@ const SelectAcquisitionScenario = ({
                     <RadioGroup
                       className="h-max grid-cols-2 gap-5"
                       onValueChange={(newValue) => {
-                        field.onChange(Number(newValue));
+                        const scenarioId = Number(newValue);
+                        field.onChange(scenarioId);
+                        const scenario = scenarios.find((item) => item.id === scenarioId);
+                        if (!scenario?.rotationsCount) {
+                          form.setValue('withManualRotations', false);
+                        }
                       }}
                       value={field.value?.toString() ?? ''}
                     >
@@ -144,6 +151,25 @@ const SelectAcquisitionScenario = ({
             <Separator />
             <FormField
               control={form.control}
+              name="withManualRotations"
+              render={({ field }) => (
+                <FormItem className="flex w-full flex-row items-center gap-2">
+                  <FormControl>
+                    <Switch
+                      className="data-[state=checked]:bg-success-500"
+                      checked={field.value}
+                      disabled={!hasRotations}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                  <span className="text-sm font-medium text-gray-700">
+                    Je souhaite effectuer les rotations manuellement
+                  </span>
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
               name="withRotationAutofocus"
               render={({ field }) => (
                 <FormItem className="flex w-full flex-row items-center gap-2">
@@ -155,7 +181,7 @@ const SelectAcquisitionScenario = ({
                     />
                   </FormControl>
                   <span className="text-sm font-medium text-gray-700">
-                    Je souhaite refaire l'autofocus après chaque rotation du plateau tournant
+                    Je souhaite faire l'autofocus pour chaque pose de l'objet
                   </span>
                 </FormItem>
               )}

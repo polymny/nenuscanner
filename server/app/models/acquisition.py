@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Boolean, DateTime, ForeignKey, String, event, func
+from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, event, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .arms_position import ArmsPosition
@@ -20,6 +20,7 @@ from ...sa_db import Base
 class AcquisitionStatus:
     PENDING = 'PENDING'
     RUNNING = 'RUNNING'
+    PAUSED = 'PAUSED'
     COMPLETED = 'COMPLETED'
     FAILED = 'FAILED'
 
@@ -60,6 +61,8 @@ class Acquisition(Base):
         index=True,
     )
     with_rotation_autofocus: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    with_manual_rotations: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    current_step: Mapped[int | None] = mapped_column(Integer, nullable=True)
     status: Mapped[str] = mapped_column(String(255), nullable=False)
     is_calibration: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     created_at: Mapped[datetime] = mapped_column(

@@ -4,7 +4,7 @@ import type { LedValue } from './led.types';
 import type { ScenarioSummary } from './scenario.types';
 import type { badgeVariants } from '@/components/ui/badge';
 
-export const ACQUISITION_STATUSES = ['PENDING', 'RUNNING', 'COMPLETED', 'FAILED'] as const;
+export const ACQUISITION_STATUSES = ['PENDING', 'RUNNING', 'PAUSED', 'COMPLETED', 'FAILED'] as const;
 export type AcquisitionStatus = (typeof ACQUISITION_STATUSES)[number];
 
 export const acquisitionStatusBadges: Record<
@@ -13,6 +13,7 @@ export const acquisitionStatusBadges: Record<
 > = {
   FAILED: { badgeVariant: { variant: 'error' }, label: 'Échoué' },
   RUNNING: { badgeVariant: { variant: 'warning' }, label: 'En cours' },
+  PAUSED: { badgeVariant: { variant: 'warning' }, label: 'En pause' },
   PENDING: { badgeVariant: { variant: 'default' }, label: 'En attente' },
   COMPLETED: { badgeVariant: { variant: 'success' }, label: 'Terminée' },
 };
@@ -27,6 +28,7 @@ export interface Acquisition {
   armsPositionId: number;
   armsPosition: ArmsPositionEmojis;
   withRotationAutofocus: boolean;
+  withManualRotations: boolean;
   status: AcquisitionStatus;
   isoValue: number;
   absoluteShutterSpeedValue: number;
@@ -50,7 +52,7 @@ export interface AcquisitionDetail extends Acquisition {
   photos: Array<AcquisitionPhoto>;
 }
 
-export interface AcquisitionRunStartResponse {
+export interface AcquisitionRunStartOrResumeResponse {
   jobId: string;
   acquisitionId: number;
 }

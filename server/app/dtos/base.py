@@ -11,6 +11,7 @@ NAME_VALIDATE = (
 ACQUISITION_STATUSES = (
     AcquisitionStatus.PENDING,
     AcquisitionStatus.RUNNING,
+    AcquisitionStatus.PAUSED,
     AcquisitionStatus.COMPLETED,
     AcquisitionStatus.FAILED,
 )

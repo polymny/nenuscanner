@@ -5,7 +5,7 @@ import {
   acquisitionRunEventsUrl,
   acquisitionsKeyFactory,
   cancelAcquisitionRun,
-  startAcquisitionRun,
+  startOrResumeAcquisitionRun,
   toAbsoluteImageUrl,
 } from '@/api/queries/acquisition.queries';
 import { scenariosKeyFactory } from '@/api/queries/scenario.queries';
@@ -15,7 +15,7 @@ const jobStorageKey = (acquisitionId: number) => `acquisition-run-job:${acquisit
 export function useAcquisitionRun(acquisitionId: number, status?: AcquisitionStatus) {
   const queryClient = useQueryClient();
   const eventSourceRef = useRef<EventSource | null>(null);
-  const completedRef = useRef(false);
+  const jobEndedRef = useRef(false);
   const [progress, setProgress] = useState<ScenarioProgressEvent | null>(null);
   const [lastImageUrl, setLastImageUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -34,7 +34,7 @@ export function useAcquisitionRun(acquisitionId: number, status?: AcquisitionSta
     (jobId: string) => {
       if (eventSourceRef.current) return;
 
-      completedRef.current = false;
+      jobEndedRef.current = false;
       const es = new EventSource(acquisitionRunEventsUrl(jobId));
       eventSourceRef.current = es;
 
@@ -51,8 +51,16 @@ export function useAcquisitionRun(acquisitionId: number, status?: AcquisitionSta
         if (data.imageUrl) setLastImageUrl(toAbsoluteImageUrl(data.imageUrl));
       });
 
+      es.addEventListener('paused', () => {
+        jobEndedRef.current = true;
+        clearStoredJob();
+        closeEventSource();
+        void queryClient.invalidateQueries({ queryKey: acquisitionsKeyFactory.base() });
+        void queryClient.invalidateQueries({ queryKey: scenariosKeyFactory.base() });
+      });
+
       es.addEventListener('completed', () => {
-        completedRef.current = true;
+        jobEndedRef.current = true;
         clearStoredJob();
         closeEventSource();
         void queryClient.invalidateQueries({ queryKey: acquisitionsKeyFactory.base() });
@@ -62,7 +70,7 @@ export function useAcquisitionRun(acquisitionId: number, status?: AcquisitionSta
       es.addEventListener('failed', (event) => {
         const data = JSON.parse(event.data) as { message: string };
         setError(data.message);
-        completedRef.current = true;
+        jobEndedRef.current = true;
         setIsCancelling(false);
         clearStoredJob();
         closeEventSource();
@@ -71,7 +79,7 @@ export function useAcquisitionRun(acquisitionId: number, status?: AcquisitionSta
       });
 
       es.addEventListener('cancelled', () => {
-        completedRef.current = true;
+        jobEndedRef.current = true;
         setIsCancelling(false);
         setProgress(null);
         setLastImageUrl(null);
@@ -82,7 +90,7 @@ export function useAcquisitionRun(acquisitionId: number, status?: AcquisitionSta
       });
 
       es.onerror = () => {
-        if (eventSourceRef.current === es && !completedRef.current) {
+        if (eventSourceRef.current === es && !jobEndedRef.current) {
           setError('Connexion SSE interrompue.');
           closeEventSource();
         }
@@ -99,7 +107,7 @@ export function useAcquisitionRun(acquisitionId: number, status?: AcquisitionSta
 
   useEffect(() => () => closeEventSource(), [closeEventSource]);
 
-  const start = useCallback(async () => {
+  const startOrResume = useCallback(async () => {
     closeEventSource();
     setError(null);
     setIsCancelling(false);
@@ -107,11 +115,11 @@ export function useAcquisitionRun(acquisitionId: number, status?: AcquisitionSta
     setProgress(null);
 
     try {
-      const { jobId } = await startAcquisitionRun(acquisitionId);
+      const { jobId } = await startOrResumeAcquisitionRun(acquisitionId);
       localStorage.setItem(jobStorageKey(acquisitionId), jobId);
       subscribeToJob(jobId);
     } catch {
-      setError("Impossible de démarrer l'acquisition.");
+      setError("Impossible de démarrer ou de reprendre l'acquisition.");
     }
   }, [acquisitionId, closeEventSource, subscribeToJob]);
 
@@ -131,5 +139,5 @@ export function useAcquisitionRun(acquisitionId: number, status?: AcquisitionSta
     }
   }, [acquisitionId]);
 
-  return { start, cancel, progress, lastImageUrl, error, isCancelling };
+  return { startOrResume, cancel, progress, lastImageUrl, error, isCancelling };
 }

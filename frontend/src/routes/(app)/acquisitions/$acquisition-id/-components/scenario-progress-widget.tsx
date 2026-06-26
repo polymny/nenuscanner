@@ -3,9 +3,10 @@ import type { ScenarioProgressEvent } from '@/types/acquisition.types';
 
 interface ScenarioProgressWidgetProps {
   progress: ScenarioProgressEvent;
+  manualRotations?: boolean;
 }
 
-export default function ScenarioProgressWidget({ progress }: ScenarioProgressWidgetProps) {
+export default function ScenarioProgressWidget({ progress, manualRotations = false }: ScenarioProgressWidgetProps) {
   return (
     <div className="absolute top-4 right-4 z-10 max-w-xs min-w-[300px] rounded-xl border border-gray-200 bg-white p-4 text-sm shadow-md">
       <p className="mb-3 font-medium text-gray-900">
@@ -13,6 +14,7 @@ export default function ScenarioProgressWidget({ progress }: ScenarioProgressWid
       </p>
       <ScenarioMetadata
         showProgress
+        manualRotations={manualRotations}
         rotation={{
           index: progress.rotationIndex,
           total: progress.rotationTotal,
