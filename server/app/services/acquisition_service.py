@@ -4,7 +4,7 @@ import shutil
 
 from sqlalchemy.orm import Session, joinedload
 
-from .scenario_execution_service import execute_scenario
+from .scenario_execution_service import AcquisitionPaused, execute_scenario
 from .sse_job_runner import JobCancelled, SseJobContext
 from ..models.acquisition import Acquisition, AcquisitionStatus
 from ..models.acquisition_photo import AcquisitionPhoto
@@ -100,10 +100,13 @@ def run_acquisition(context: SseJobContext, acquisition_id: int) -> None:
         acquisition = session.get(Acquisition, acquisition_id)
         if acquisition is not None and acquisition.status == AcquisitionStatus.RUNNING:
             acquisition.status = AcquisitionStatus.COMPLETED
+            acquisition.current_step = None
             session.commit()
 
-        context.set_status(AcquisitionStatus.COMPLETED)
+        context.set_status('COMPLETED')
         context.emit('completed', {'acquisitionId': acquisition_id})
+    except AcquisitionPaused:
+        context.set_status('PAUSED')
     except JobCancelled:
         session.rollback()
         _reset_acquisition_to_pending(session, acquisition_id)
@@ -141,6 +144,7 @@ def _reset_acquisition_to_pending(session: Session, acquisition_id: int) -> None
     if acquisition is not None:
         clear_acquisition_photos(session, acquisition_id)
         acquisition.status = AcquisitionStatus.PENDING
+        acquisition.current_step = None
         session.commit()
 
 
@@ -149,6 +153,7 @@ def _mark_acquisition_failed(session: Session, acquisition_id: int) -> None:
     if acquisition is not None:
         clear_acquisition_photos(session, acquisition_id)
         acquisition.status = AcquisitionStatus.FAILED
+        acquisition.current_step = None
         session.commit()
 
 

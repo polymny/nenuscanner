@@ -34,6 +34,7 @@ const CreateCalibrationDialog = ({ open, setOpen }: CreateCalibrationDialogProps
     defaultValues: {
       name: '',
       scenarioId: null,
+      withManualRotations: false,
       withRotationAutofocus: false,
     },
   });

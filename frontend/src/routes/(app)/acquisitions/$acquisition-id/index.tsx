@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { Camera, Loader2 } from 'lucide-react';
 import AcquisitionPhotoCard from './-components/acquisition-photo-card';
 import ScenarioProgressWidget from './-components/scenario-progress-widget';
-import { useGetAcquisitionById } from '@/api/queries/acquisition.queries';
+import { toAbsoluteImageUrl, useGetAcquisitionById } from '@/api/queries/acquisition.queries';
 import { useAcquisitionRun } from '@/hooks/use-acquisition-run';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -20,7 +20,7 @@ function RouteComponent() {
 
   const { data: acquisition, isPending, isError } = useGetAcquisitionById(acquisitionId);
   const {
-    start,
+    startOrResume,
     cancel,
     progress,
     lastImageUrl,
@@ -36,6 +36,14 @@ function RouteComponent() {
     navigate({ to: '/artifacts' });
     return null;
   }
+
+  const lastPhoto = acquisition.photos.at(-1);
+  const displayImageUrl = lastImageUrl ?? (lastPhoto ? toAbsoluteImageUrl(lastPhoto.imageUrl) : null);
+  const rotationRadiansList = [
+    ...new Set(
+      acquisition.photos.map((photo) => photo.rotationRadians).filter((radians): radians is number => radians !== null)
+    ),
+  ].sort((a, b) => a - b);
 
   return (
     <div className="bg-gray-25 flex h-full flex-col gap-6 px-20 py-8">
@@ -58,7 +66,7 @@ function RouteComponent() {
         </Badge>
       </div>
 
-      {(acquisition.status === 'PENDING' || acquisition.status === 'RUNNING') && (
+      {(acquisition.status === 'PENDING' || acquisition.status === 'RUNNING' || acquisition.status === 'PAUSED') && (
         <div className="bg-brand-50 relative flex min-h-[420px] w-full max-w-4xl flex-col items-center justify-center overflow-hidden rounded-xl border-2 border-dashed border-gray-300">
           {acquisition.status === 'PENDING' ? (
             <div className="flex flex-col items-center gap-4 p-12">
@@ -68,45 +76,71 @@ function RouteComponent() {
               <p className="text-center text-gray-600">
                 {acquisition.isCalibration ? 'Étalonnage prêt à être lancé' : 'Acquisition prête à être lancée'}
               </p>
-              <Button onClick={() => void start()} size="lg">
+              <Button onClick={() => void startOrResume()} size="lg">
                 Démarrer
               </Button>
             </div>
           ) : (
             <>
-              {progress && <ScenarioProgressWidget progress={progress} />}
-              <div className="absolute top-4 left-4 z-10">
-                <Button
-                  type="button"
-                  size="sm"
-                  disabled={isCancelling}
-                  onClick={() => void cancel()}
-                  variant="destructive"
-                >
-                  {isCancelling ? 'Annulation en cours…' : 'Annuler'}
-                </Button>
-              </div>
+              {progress && (
+                <ScenarioProgressWidget progress={progress} manualRotations={acquisition.withManualRotations} />
+              )}
+              {acquisition.status === 'RUNNING' && (
+                <div className="absolute top-4 left-4 z-10">
+                  <Button
+                    type="button"
+                    size="sm"
+                    disabled={isCancelling}
+                    onClick={() => void cancel()}
+                    variant="destructive"
+                  >
+                    {isCancelling ? 'Annulation en cours…' : 'Annuler'}
+                  </Button>
+                </div>
+              )}
               <div className="absolute inset-0 flex flex-col">
-                {lastImageUrl ? (
-                  <img alt={`Photo ${progress?.step ?? 0}`} className="size-full object-contain" src={lastImageUrl} />
+                {displayImageUrl ? (
+                  <img
+                    alt={`Photo ${progress?.step ?? 0}`}
+                    className="size-full object-contain"
+                    src={displayImageUrl}
+                  />
                 ) : (
                   <div className="flex flex-1 flex-col items-center justify-center gap-4 text-gray-500">
                     <Loader2 className="size-10 animate-spin" />
                     <p>Préparation de la prochaine photo…</p>
                   </div>
                 )}
-                <div className="absolute inset-x-0 bottom-0 bg-linear-to-t from-black/70 to-transparent p-6 text-white">
-                  <p className="font-medium">
-                    Photo {progress?.step ?? 0} / {progress?.total ?? 0}
-                  </p>
-                  <div className="mt-2 h-2 overflow-hidden rounded-full bg-white/30">
-                    <div
-                      className="bg-brand-400 h-full rounded-full transition-all duration-500"
-                      style={{ width: `${progressPercent}%` }}
-                    />
+                {progress && (
+                  <div className="absolute inset-x-0 bottom-0 bg-linear-to-t from-black/70 to-transparent p-6 text-white">
+                    <p className="font-medium">
+                      Photo {progress.step} / {progress.total}
+                    </p>
+                    <div className="mt-2 h-2 overflow-hidden rounded-full bg-white/30">
+                      <div
+                        className="bg-brand-400 h-full rounded-full transition-all duration-500"
+                        style={{ width: `${progressPercent}%` }}
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+              {acquisition.status === 'PAUSED' && (
+                <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/50 p-8">
+                  <div className="flex w-full max-w-md flex-col gap-5 rounded-xl border border-gray-200 bg-white p-6 shadow-2xl">
+                    <div className="flex flex-col gap-2 text-center">
+                      <h2 className="text-lg font-semibold text-gray-950">L&apos;acquisition est en pause</h2>
+                      <p className="text-sm leading-relaxed text-gray-600">
+                        Effectuez une rotation manuelle de l'objet, puis reprenez l&apos;acquisition lorsque vous êtes
+                        prêt.
+                      </p>
+                    </div>
+                    <Button onClick={() => void startOrResume()} size="lg">
+                      Reprendre
+                    </Button>
                   </div>
                 </div>
-              </div>
+              )}
             </>
           )}
         </div>
@@ -115,7 +149,7 @@ function RouteComponent() {
       {acquisition.status === 'FAILED' && (
         <div className="flex flex-col items-center gap-4 rounded-xl border border-gray-200 bg-white p-8 text-center">
           <p className="text-error-700">{runError ?? "L'acquisition a échoué."}</p>
-          <Button onClick={() => void start()} variant="outline">
+          <Button onClick={() => void startOrResume()} variant="outline">
             Réessayer
           </Button>
         </div>
@@ -127,9 +161,20 @@ function RouteComponent() {
         <div className="flex w-full flex-col gap-4">
           <h2 className="font-medium text-gray-900">Galerie ({acquisition.photos.length} photos)</h2>
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
-            {acquisition.photos.map((photo) => (
-              <AcquisitionPhotoCard key={photo.id} photo={photo} />
-            ))}
+            {acquisition.photos.map((photo) => {
+              const rotationIndex =
+                photo.rotationRadians !== null ? rotationRadiansList.indexOf(photo.rotationRadians) + 1 : undefined;
+
+              return (
+                <AcquisitionPhotoCard
+                  key={photo.id}
+                  manualRotations={acquisition.withManualRotations}
+                  photo={photo}
+                  rotationIndex={rotationIndex}
+                  rotationTotal={rotationRadiansList.length || undefined}
+                />
+              );
+            })}
           </div>
         </div>
       )}

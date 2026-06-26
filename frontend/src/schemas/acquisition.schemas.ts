@@ -11,6 +11,7 @@ export const createAcquisitionSchema = vine.create(
     artifactId: vine.number().withoutDecimals().positive(),
     scenarioId: vine.number().withoutDecimals().positive().nullable(),
     calibrationId: vine.number().withoutDecimals().positive().nullable(),
+    withManualRotations: vine.boolean(),
     withRotationAutofocus: vine.boolean(),
   })
 );
@@ -30,6 +31,7 @@ export const createCalibrationSchema = vine.create(
       .regex(/^[a-zA-ZÀ-ÿ0-9\s\-_()]+$/)
       .trim(),
     scenarioId: vine.number().withoutDecimals().positive().nullable(),
+    withManualRotations: vine.boolean(),
     withRotationAutofocus: vine.boolean(),
   })
 );

@@ -3,7 +3,7 @@ import type { UseQueryResult } from '@tanstack/react-query';
 import type {
   Acquisition,
   AcquisitionDetail,
-  AcquisitionRunStartResponse,
+  AcquisitionRunStartOrResumeResponse,
   AcquisitionStatus,
 } from '@/types/acquisition.types';
 import { client } from '@/lib/client';
@@ -70,8 +70,12 @@ export const useGetAcquisitionById = (acquisitionId: number): UseQueryResult<Acq
   });
 };
 
-export const startAcquisitionRun = async (acquisitionId: number): Promise<AcquisitionRunStartResponse> => {
-  const { data } = await client.post<AcquisitionRunStartResponse>(`/acquisition/${acquisitionId}/run/start`);
+export const startOrResumeAcquisitionRun = async (
+  acquisitionId: number
+): Promise<AcquisitionRunStartOrResumeResponse> => {
+  const { data } = await client.post<AcquisitionRunStartOrResumeResponse>(
+    `/acquisition/${acquisitionId}/run/start-or-resume`
+  );
   return data;
 };
 

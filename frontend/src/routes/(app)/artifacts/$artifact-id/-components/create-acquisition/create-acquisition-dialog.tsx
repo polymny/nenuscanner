@@ -38,6 +38,7 @@ const CreateAcquisitionDialog = ({ open, setOpen, artifactId }: CreateAcquisitio
       artifactId,
       scenarioId: null,
       calibrationId: null,
+      withManualRotations: false,
       withRotationAutofocus: false,
     },
   });

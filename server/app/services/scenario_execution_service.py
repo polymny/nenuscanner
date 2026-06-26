@@ -11,7 +11,7 @@ from .exiftool_service import write_jpeg_preview_from_raw
 from .gphoto2_service import capture_raw_to_file
 from .sse_job_runner import JobCancelled, SseJobContext
 from ..constants.leds import LEDS_COUNT
-from ..models.acquisition import Acquisition
+from ..models.acquisition import Acquisition, AcquisitionStatus
 from ..models.acquisition_photo import AcquisitionPhoto
 from ..models.scenario import Scenario, ScenarioLED, ScenarioRotation, ScenarioShutterSpeed
 from ..paths import SERVER_ROOT
@@ -19,6 +19,10 @@ from ... import config, leds
 
 STEP_DELAY_SECONDS = 1
 POC_IMAGE_SIZE = '800/600'
+
+
+class AcquisitionPaused(Exception):
+    """Levée lorsqu'une acquisition avec rotations manuelles est mise en pause."""
 
 
 @dataclass
@@ -152,6 +156,22 @@ def _scenario_progress_payload(step: ScenarioCaptureStep) -> dict:
     }
 
 
+def _should_pause_for_manual_rotation(step: ScenarioCaptureStep, acquisition: Acquisition) -> bool:
+    if not acquisition.with_manual_rotations or not step.has_rotations:
+        return False
+    if step.rotation_index >= step.rotation_total:
+        return False
+    return step.led_index == step.led_total and step.shutter_speed_index == step.shutter_speed_total
+
+
+def _steps_from_current(acquisition: Acquisition, steps: list[ScenarioCaptureStep]) -> list[ScenarioCaptureStep]:
+    if acquisition.current_step is None:
+        return steps
+    if acquisition.current_step < 1 or acquisition.current_step > len(steps):
+        raise ValueError('invalid-current-step')
+    return [step for step in steps if step.step_index >= acquisition.current_step]
+
+
 def execute_scenario(
     context: SseJobContext,
     session: Session,
@@ -177,6 +197,7 @@ def execute_scenario(
 
     steps = build_scenario_capture_steps(scenario)
     total = len(steps)
+    steps_to_run = _steps_from_current(acquisition, steps)
     acquisition_id = acquisition.id
 
     output_dir = SERVER_ROOT / 'data' / 'acquisitions' / str(acquisition_id)
@@ -186,7 +207,7 @@ def execute_scenario(
         'started',
         {
             'total': total,
-            **(_scenario_progress_payload(steps[0]) if steps else {}),
+            **(_scenario_progress_payload(steps_to_run[0]) if steps_to_run else {}),
         },
     )
 
@@ -199,7 +220,7 @@ def execute_scenario(
     # trigger_autofocus()
     # gpio_leds.off()
 
-    for step in steps:
+    for step in steps_to_run:
         if context.is_cancelled():
             raise JobCancelled()
 
@@ -259,6 +280,15 @@ def execute_scenario(
             },
         )
         session.commit()
+
+        if _should_pause_for_manual_rotation(step, acquisition):
+            gpio_leds.off()
+            acquisition.status = AcquisitionStatus.PAUSED
+            acquisition.current_step = step.step_index + 1
+            session.commit()
+            time.sleep(0.7)
+            context.emit('paused', {'acquisitionId': acquisition.id})
+            raise AcquisitionPaused()
 
         if step.step_index < total and config.CAMERA != 'real':
             time.sleep(STEP_DELAY_SECONDS)

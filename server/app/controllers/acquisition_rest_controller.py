@@ -76,6 +76,7 @@ def _acquisition_to_dto(
         },
         'profileId': acquisition.profile_id,
         'withRotationAutofocus': acquisition.with_rotation_autofocus,
+        'withManualRotations': acquisition.with_manual_rotations,
         'status': acquisition.status,
         'isoValue': camera_settings.iso_value,
         'absoluteShutterSpeedValue': camera_settings.absolute_shutter_speed_value,
@@ -132,6 +133,9 @@ class AcquisitionController(MethodView):
         if scenario is None:
             abort(404, message='scenario-not-found')
 
+        if payload['withManualRotations'] and len(scenario.rotations) == 0:
+            abort(400, message='manual-rotations-require-scenario-rotations')
+
         arms_position = get_last_arms_position(db_session)
 
         calibration_id = payload['calibrationId']
@@ -175,6 +179,7 @@ class AcquisitionController(MethodView):
             profile_id=active_profile.id if active_profile is not None else None,
             camera_settings_id=camera_settings_snapshot.id,
             with_rotation_autofocus=payload['withRotationAutofocus'],
+            with_manual_rotations=payload['withManualRotations'],
             status=AcquisitionStatus.PENDING,
             is_calibration=False,
         )
@@ -233,6 +238,9 @@ class CalibrationController(MethodView):
         if scenario is None:
             abort(404, message='scenario-not-found')
 
+        if payload['withManualRotations'] and len(scenario.rotations) == 0:
+            abort(400, message='manual-rotations-require-scenario-rotations')
+
         arms_position = get_last_arms_position(db_session)
         active_profile = get_first_active_profile(db_session)
 
@@ -255,6 +263,7 @@ class CalibrationController(MethodView):
             profile_id=active_profile.id if active_profile is not None else None,
             camera_settings_id=camera_settings_snapshot.id,
             with_rotation_autofocus=payload['withRotationAutofocus'],
+            with_manual_rotations=payload['withManualRotations'],
             status=AcquisitionStatus.PENDING,
             is_calibration=True,
         )
@@ -316,16 +325,26 @@ class AcquisitionByIdController(MethodView):
         db_session.commit()
 
 
-@blp.route('/<int:acquisition_id>/run/start')
-class AcquisitionRunStartController(MethodView):
+@blp.route('/<int:acquisition_id>/run/start-or-resume')
+class AcquisitionRunStartOrResumeController(MethodView):
     @blp.response(202, AcquisitionRunStartSchema)
     def post(self, acquisition_id):
-        """Démarre l'exécution d'une acquisition."""
+        """Démarre ou reprend l'exécution d'une acquisition."""
         acquisition = db_session.get(Acquisition, acquisition_id)
         if acquisition is None:
             abort(404, message='acquisition-not-found')
-        if acquisition.status not in (AcquisitionStatus.PENDING, AcquisitionStatus.FAILED):
+        if acquisition.status not in (
+            AcquisitionStatus.PENDING,
+            AcquisitionStatus.FAILED,
+            AcquisitionStatus.PAUSED,
+        ):
             abort(409, message='acquisition-not-startable')
+
+        if acquisition.status == AcquisitionStatus.PAUSED:
+            if acquisition.current_step is None:
+                abort(409, message='acquisition-not-resumable')
+        else:
+            acquisition.current_step = None
 
         acquisition.status = AcquisitionStatus.RUNNING
         db_session.commit()
