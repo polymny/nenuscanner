@@ -12,14 +12,14 @@ from .acquisition_service import acquisition_photos_load_options
 from ..models.acquisition import Acquisition
 from ..models.acquisition_photo import AcquisitionPhoto
 from ..paths import SERVER_ROOT
-from ...archive import ZipSender
+from ...archive import TarSender
 
 # TODO(temp): disque externe Samsung T9 (label T9_B), monté dans le home de pi
 EXTERNAL_DISK_PATH = Path('/home/pi/mnt/T9_B')
 
 
-class _AcquisitionDownloadZipSender(ZipSender):
-    """Envoi zip qui supprime les fichiers de métadonnées temporaires après écriture de l'archive."""
+class _AcquisitionDownloadTarSender(TarSender):
+    """Envoi tar qui supprime les fichiers de métadonnées temporaires après écriture de l'archive."""
 
     def __init__(self, temp_dir: Path):
         super().__init__()
@@ -33,7 +33,9 @@ class _AcquisitionDownloadZipSender(ZipSender):
 
     def write_to_path(self, path: Path | str) -> None:
         try:
-            super().write_to_path(path)
+            with open(path, 'wb') as archive_file:
+                for chunk in super().generator():
+                    archive_file.write(chunk)
         finally:
             shutil.rmtree(self._temp_dir, ignore_errors=True)
 
@@ -53,8 +55,8 @@ def _photo_leaf_path(photo: AcquisitionPhoto) -> str:
     return f'{rotation_name}/{led_name}/{shutter_name}'
 
 
-def _add_photos_to_zip(
-    zip_sender: ZipSender,
+def _add_photos_to_archive(
+    archive_sender: TarSender,
     *,
     section: str,
     folder_name: str,
@@ -67,19 +69,19 @@ def _add_photos_to_zip(
             if not disk_path.is_file():
                 continue
             archive_path = f'{folder_path}/{disk_path.name}'
-            if archive_path in zip_sender.files:
+            if archive_path in archive_sender.files:
                 continue
-            zip_sender.add_file(archive_path, str(disk_path))
+            archive_sender.add_file(archive_path, str(disk_path))
 
 
-def _build_acquisitions_zip(acquisitions: list[Acquisition], calibrations: list[Acquisition]) -> ZipSender:
+def _build_acquisitions_archive(acquisitions: list[Acquisition], calibrations: list[Acquisition]) -> TarSender:
     temp_path = Path(tempfile.mkdtemp())
-    zip_sender = _AcquisitionDownloadZipSender(temp_path)
+    tar_sender = _AcquisitionDownloadTarSender(temp_path)
     calibration_by_id = {calibration.id: calibration for calibration in calibrations}
 
     for calibration in calibrations:
-        _add_photos_to_zip(
-            zip_sender,
+        _add_photos_to_archive(
+            tar_sender,
             section='calibrations',
             folder_name=_folder_name(calibration),
             photos=list(calibration.photos),
@@ -96,15 +98,15 @@ def _build_acquisitions_zip(acquisitions: list[Acquisition], calibrations: list[
             metadata_content = 'calibration: ""\n'
         metadata_file = temp_path / f'metadata_{acquisition.id}.yaml'
         metadata_file.write_text(metadata_content, encoding='utf-8')
-        zip_sender.add_file(f'data/acquisitions/{folder_name}/metadata.yaml', str(metadata_file))
-        _add_photos_to_zip(
-            zip_sender,
+        tar_sender.add_file(f'data/acquisitions/{folder_name}/metadata.yaml', str(metadata_file))
+        _add_photos_to_archive(
+            tar_sender,
             section='acquisitions',
             folder_name=folder_name,
             photos=list(acquisition.photos),
         )
 
-    return zip_sender
+    return tar_sender
 
 
 def _load_acquisitions_for_download(
@@ -132,18 +134,18 @@ def _load_acquisitions_for_download(
 
 
 def download_acquisitions_data(session: Session, acquisitions: list[Acquisition]) -> Response:
-    """Construit une archive zip avec les données d'acquisition et d'étalonnage associées."""
+    """Construit une archive tar avec les données d'acquisition et d'étalonnage associées."""
     acquisitions_with_photos, calibrations = _load_acquisitions_for_download(session, acquisitions)
-    zip_sender = _build_acquisitions_zip(acquisitions_with_photos, calibrations)
-    return zip_sender.response()
+    tar_sender = _build_acquisitions_archive(acquisitions_with_photos, calibrations)
+    return tar_sender.response()
 
 
 def copy_acquisitions_data_to_disk(session: Session, acquisitions: list[Acquisition]) -> Path:
-    """Construit une archive zip et la copie sur le disque externe au lieu de la streamer."""
+    """Construit une archive tar et la copie sur le disque externe au lieu de la streamer."""
     acquisitions_with_photos, calibrations = _load_acquisitions_for_download(session, acquisitions)
-    zip_sender = _build_acquisitions_zip(acquisitions_with_photos, calibrations)
+    tar_sender = _build_acquisitions_archive(acquisitions_with_photos, calibrations)
 
     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-    dest_path = EXTERNAL_DISK_PATH / f'acquisitions_{timestamp}.zip'
-    zip_sender.write_to_path(dest_path)
+    dest_path = EXTERNAL_DISK_PATH / f'acquisitions_{timestamp}.tar'
+    tar_sender.write_to_path(dest_path)
     return dest_path
