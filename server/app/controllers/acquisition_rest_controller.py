@@ -16,6 +16,7 @@ from ..dtos.acquisition_dto import (
     CalibrationListQuerySchema,
 )
 from ..models.acquisition import Acquisition, AcquisitionStatus
+from ..models.arms_position import ArmsPosition
 from ..models.artifact import Artifact
 from ..models.scenario import Scenario
 from ..services.acquisition_download_service import (
@@ -108,11 +109,12 @@ class AcquisitionController(MethodView):
                 *acquisition_scenario_load_options(),
                 joinedload(Acquisition.arms_position),
             )
+            .join(Acquisition.arms_position)
             .filter(
                 Acquisition.artifact_id == artifact_id,
                 Acquisition.is_calibration.is_(False),
             )
-            .order_by(Acquisition.id.asc())
+            .order_by(ArmsPosition.index.desc())
             .all()
         )
         return [_acquisition_to_dto(acquisition) for acquisition in acquisitions]
@@ -214,7 +216,7 @@ class CalibrationController(MethodView):
         if status is not None:
             query = query.filter(Acquisition.status == status)
 
-        calibrations = query.order_by(Acquisition.id.asc()).all()
+        calibrations = query.join(Acquisition.arms_position).order_by(ArmsPosition.index.desc()).all()
         return [_acquisition_to_dto(calibration) for calibration in calibrations]
 
     @blp.arguments(CalibrationCreateSchema)

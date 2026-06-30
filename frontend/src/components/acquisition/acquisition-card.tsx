@@ -18,6 +18,7 @@ interface AcquisitionCardProps {
   onDownload?: () => void;
   onSelect?: (selected: boolean) => void;
   selected?: boolean;
+  dimmed?: boolean;
 }
 
 export default function AcquisitionCard({
@@ -27,6 +28,7 @@ export default function AcquisitionCard({
   onDownload,
   onSelect,
   selected = false,
+  dimmed = false,
 }: AcquisitionCardProps) {
   const [showCompatibleScenarios, setShowCompatibleScenarios] = useState(false);
   const { data: compatibleScenarios = [] } = useGetCompatibleScenarios(
@@ -43,8 +45,9 @@ export default function AcquisitionCard({
   return (
     <div
       className={cn(
-        'flex cursor-pointer flex-col gap-4 rounded-lg border border-gray-300 bg-white p-3',
-        selected && 'border-brand-600 bg-brand-50'
+        'flex cursor-pointer flex-col gap-4 rounded-lg border border-gray-300 p-3 transition-colors',
+        dimmed ? 'bg-gray-100 opacity-75 saturate-[0.9]' : 'bg-white shadow-sm',
+        selected && !dimmed && 'border-brand-600 bg-brand-50 shadow-md'
       )}
       onClick={onClick}
     >
@@ -57,7 +60,9 @@ export default function AcquisitionCard({
               onClick={(event) => event.stopPropagation()}
             />
           )}
-          <div className="text-lg font-semibold text-gray-950">{acquisition.name}</div>
+          <div className={cn('text-lg font-semibold', dimmed ? 'text-gray-500' : 'text-gray-950')}>
+            {acquisition.name}
+          </div>
           <span className="flex items-center gap-1 text-lg" title="Position des bras">
             <span>{acquisition.armsPosition.emojiLeft}</span>
             <span>{acquisition.armsPosition.emojiRight}</span>
@@ -112,8 +117,9 @@ export default function AcquisitionCard({
       </div>
       <div
         className={cn(
-          'bg-brand-100 relative flex h-[200px] w-full items-center justify-center rounded-md',
-          acquisition.thumbnail ? 'bg-cover bg-center bg-no-repeat' : 'bg-gray-200'
+          'relative flex h-[200px] w-full items-center justify-center rounded-md',
+          dimmed ? 'bg-gray-200' : 'bg-brand-100',
+          acquisition.thumbnail ? 'bg-cover bg-center bg-no-repeat' : !dimmed && 'bg-gray-200'
         )}
         style={{
           backgroundImage: acquisition.thumbnail ? `url(${toAbsoluteImageUrl(acquisition.thumbnail)})` : undefined,
@@ -121,10 +127,15 @@ export default function AcquisitionCard({
       >
         {!acquisition.thumbnail && (
           <div className="rounded-full border border-gray-200 bg-white p-4">
-            <Camera className="text-brand-600 size-10" />
+            <Camera className={cn('size-10', dimmed ? 'text-gray-400' : 'text-brand-600')} />
           </div>
         )}
-        <div className="text-brand-950 absolute bottom-3 left-3 rounded-3xl bg-white p-2 text-sm font-medium">
+        <div
+          className={cn(
+            'absolute bottom-3 left-3 rounded-3xl bg-white p-2 text-sm font-medium',
+            dimmed ? 'text-gray-500' : 'text-brand-950'
+          )}
+        >
           {formatDateFr(acquisition.createdAt)}
         </div>
       </div>
@@ -155,13 +166,7 @@ export default function AcquisitionCard({
                 const compatibility = compatibilityById.get(scenario.id);
                 if (!compatibility) return null;
 
-                return (
-                  <ScenarioSummaryRow
-                    compatibility={compatibility}
-                    key={scenario.id}
-                    scenario={scenario}
-                  />
-                );
+                return <ScenarioSummaryRow compatibility={compatibility} key={scenario.id} scenario={scenario} />;
               })}
             </div>
           </div>

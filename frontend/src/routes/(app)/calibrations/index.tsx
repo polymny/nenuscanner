@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { ComponentCardSkeleton } from '@/components/component-card';
 import { useDeleteAcquisition } from '@/api/mutations/acquisition.mutations';
 import { useGetCalibrations } from '@/api/queries/acquisition.queries';
+import { useGetLastArmsPosition } from '@/api/queries/arms-position.queries';
 import { useMinimumLoadingDuration } from '@/hooks/use-minimum-loading-duration';
 
 export const Route = createFileRoute('/(app)/calibrations/')({
@@ -18,6 +19,7 @@ export const Route = createFileRoute('/(app)/calibrations/')({
 function RouteComponent() {
   const navigate = useNavigate();
   const { data: calibrations, isPending: isLoadingCalibrations } = useGetCalibrations();
+  const { data: lastArmsPosition } = useGetLastArmsPosition();
   const showSkeleton = useMinimumLoadingDuration(isLoadingCalibrations);
 
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
@@ -63,6 +65,7 @@ function RouteComponent() {
             {calibrations.map((calibration) => (
               <AcquisitionCard
                 acquisition={calibration}
+                dimmed={lastArmsPosition !== undefined && calibration.armsPositionId !== lastArmsPosition.id}
                 key={calibration.id}
                 onClick={() => navigate({ to: `/acquisitions/${calibration.id}` })}
                 onDelete={() => {
