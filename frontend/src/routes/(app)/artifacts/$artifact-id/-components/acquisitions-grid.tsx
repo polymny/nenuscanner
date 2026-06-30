@@ -20,7 +20,7 @@ const AcquisitionsGrid = memo(function AcquisitionsGrid({
   multiSelectedAcquisitionIds = [],
 }: AcquisitionsGridProps) {
   return (
-    <div className="grid grid-cols-4 gap-5">
+    <div className="grid grid-cols-4 items-start gap-5">
       {acquisitions.map((acquisition) => (
         <AcquisitionCard
           acquisition={acquisition}

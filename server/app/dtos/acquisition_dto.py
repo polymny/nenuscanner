@@ -95,7 +95,6 @@ class CalibrationListQuerySchema(Schema):
         ordered = True
 
     onlyCurrentArmsPosition = fields.Boolean(load_default=False)
-    scenarioId = fields.Integer(load_default=None, allow_none=True, validate=validate.Range(min=1))
     status = fields.String(load_default=None, allow_none=True, validate=validate.OneOf(ACQUISITION_STATUSES))
 
 

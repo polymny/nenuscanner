@@ -34,7 +34,7 @@ from ..services.acquisition_service import (
 from ..services.arms_position_service import get_last_arms_position
 from ..services.camera_settings_service import snapshot_current_camera_settings
 from ..services.profile_service import get_first_active_profile
-from ..services.scenario_service import compatible_scenario_ids, scenario_summary_dto
+from ..services.scenario_service import scenario_summary_dto
 from ..services.sse_job_runner import sse_job_registry
 from ...sa_db import db_session
 
@@ -153,10 +153,11 @@ class AcquisitionController(MethodView):
             if calibration is None:
                 abort(404, message='calibration-not-found')
 
-            all_scenarios = db_session.query(Scenario).all()
-            matching_scenario_ids = {scenario_id} | compatible_scenario_ids(scenario, all_scenarios)
-            if calibration.scenario_id not in matching_scenario_ids:
-                abort(404, message='calibration-not-found')
+            # TODO : voir ce qu'on fait de ce check là
+            # all_scenarios = db_session.query(Scenario).all()
+            # matching_scenario_ids = {scenario_id} | compatible_scenario_ids(scenario, all_scenarios)
+            # if calibration.scenario_id not in matching_scenario_ids:
+            #     abort(404, message='calibration-not-found')
 
         active_profile = get_first_active_profile(db_session)
 
@@ -195,11 +196,6 @@ class CalibrationController(MethodView):
     @blp.response(200, AcquisitionReadSchema(many=True))
     def get(self, query_args):
         """Liste tous les étalonnages."""
-        scenario_id = query_args['scenarioId']
-        scenario = db_session.get(Scenario, scenario_id) if scenario_id is not None else None
-        if scenario_id is not None and scenario is None:
-            abort(404, message='scenario-not-found')
-
         query = (
             db_session.query(Acquisition)
             .options(
@@ -213,11 +209,6 @@ class CalibrationController(MethodView):
         if query_args['onlyCurrentArmsPosition']:
             arms_position = get_last_arms_position(db_session)
             query = query.filter(Acquisition.arms_position_id == arms_position.id)
-
-        if scenario is not None:
-            all_scenarios = db_session.query(Scenario).all()
-            matching_scenario_ids = {scenario_id} | compatible_scenario_ids(scenario, all_scenarios)
-            query = query.filter(Acquisition.scenario_id.in_(matching_scenario_ids))
 
         status = query_args['status']
         if status is not None:

@@ -36,9 +36,6 @@ export function ScenarioCard({ scenario, onDelete, onDuplicate }: ScenarioCardPr
                   {formatDateFr(scenario.updatedAt)}
                 </div>
               </div>
-              <Badge className="self-start" variant={scenario.isCalibrated ? 'success' : 'error'}>
-                {scenario.isCalibrated ? 'Étalonné' : 'Non étalonné'}
-              </Badge>
               <Badge className="self-start" variant="light-gray">
                 {scenario.acquisitions.length} {pluralize(scenario.acquisitions.length, 'acquisition')}
               </Badge>

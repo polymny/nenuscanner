@@ -54,7 +54,6 @@ class ScenarioReadSchema(Schema):
     shutterSpeedIds = fields.List(fields.Integer(), required=True)
     acquisitions = fields.List(fields.Nested(ScenarioLinkedAcquisitionSchema), required=True)
     calibrations = fields.List(fields.Nested(ScenarioLinkedCalibrationSchema), required=True)
-    isCalibrated = fields.Boolean(required=True)
 
 
 class ScenarioCreateSchema(Schema):
@@ -87,11 +86,21 @@ class ScenarioIdSchema(Schema):
     id = fields.Integer(required=True)
 
 
-class CompatibleScenarioIdsSchema(Schema):
+class ScenarioCompatibilitySchema(Schema):
     class Meta:
         ordered = True
 
-    ids = fields.List(fields.Integer(), required=True)
+    id = fields.Integer(required=True)
+    sameLeds = fields.Boolean(required=True)
+    sameShutterSpeeds = fields.Boolean(required=True)
+    sameRotationsCount = fields.Boolean(required=True)
+
+
+class CompatibleScenariosSchema(Schema):
+    class Meta:
+        ordered = True
+
+    scenarios = fields.List(fields.Nested(ScenarioCompatibilitySchema), required=True)
 
 
 class ScenarioDuplicateSchema(Schema):

@@ -1,36 +1,54 @@
 import { Clapperboard } from 'lucide-react';
 import { useNavigate } from '@tanstack/react-router';
-import type { ScenarioSummary } from '@/types/scenario.types';
+import type { ScenarioCompatibility, ScenarioSummary } from '@/types/scenario.types';
 import ScenarioSummaryStats from '@/components/scenario/scenario-summary-stats';
+import ScenarioCompatibilityIndicators from '@/components/scenario/scenario-compatibility-indicators';
 import { cn } from '@/lib/utils';
 
 interface ScenarioSummaryRowProps {
   scenario: ScenarioSummary;
+  compatibility?: Omit<ScenarioCompatibility, 'id'>;
   className?: string;
+  interactive?: boolean;
 }
 
-export default function ScenarioSummaryRow({ scenario, className }: ScenarioSummaryRowProps) {
+export default function ScenarioSummaryRow({
+  scenario,
+  compatibility,
+  className,
+  interactive = true,
+}: ScenarioSummaryRowProps) {
   const navigate = useNavigate();
 
   return (
     <div
       className={cn(
-        'flex items-center gap-3 divide-x divide-gray-200 rounded-md bg-transparent py-1 hover:bg-gray-100',
+        'flex items-center gap-3 divide-x divide-gray-200',
+        interactive && 'rounded-md bg-transparent py-1 hover:bg-gray-100',
         className
       )}
-      onClick={(event) => {
-        event.stopPropagation();
-        navigate({ to: `/scenarios/${scenario.id}` });
-        return false;
-      }}
+      onClick={
+        interactive
+          ? (event) => {
+              event.stopPropagation();
+              navigate({ to: `/scenarios/${scenario.id}` });
+              return false;
+            }
+          : undefined
+      }
     >
-      <div className="inline-flex items-center gap-1 px-2">
-        <div className="bg-brand-600 flex items-center justify-center rounded-full p-2">
-          <Clapperboard className="size-3 text-white" />
+      <div className="flex flex-1 items-center gap-2 overflow-hidden px-2">
+        <div className="bg-brand-600 flex rounded-full p-2">
+          <Clapperboard className="size-4 text-white" />
         </div>
-        <div className="wrap-break-words max-w-[300px] text-sm font-medium text-gray-700">{scenario.name}</div>
+        <div className="flex min-w-0 flex-1 flex-col justify-center gap-1">
+          {compatibility && <ScenarioCompatibilityIndicators compatibility={compatibility} />}
+          <div className="truncate text-sm font-medium text-gray-700" title={scenario.name}>
+            {scenario.name}
+          </div>
+        </div>
       </div>
-      <ScenarioSummaryStats scenario={scenario} />
+      <ScenarioSummaryStats className="flex-1" scenario={scenario} />
     </div>
   );
 }

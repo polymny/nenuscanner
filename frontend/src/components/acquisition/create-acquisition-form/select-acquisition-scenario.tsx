@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { AlertOctagon, CircleCheck, Clapperboard } from 'lucide-react';
+import { AlertOctagon } from 'lucide-react';
 import { useFormContext } from 'react-hook-form';
 import type { Dispatch } from 'react';
 
@@ -8,15 +8,14 @@ import { ComponentCardSkeleton } from '@/components/component-card';
 import { Button } from '@/components/ui/button';
 import { DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { FlatRadioGroupItem, RadioGroup } from '@/components/ui/radio-group';
-import { useGetCompatibleScenarioIds, useGetScenarios } from '@/api/queries/scenario.queries';
+import { useGetCompatibleScenarios, useGetScenarios } from '@/api/queries/scenario.queries';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
 import { FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
 import DialogBackButton from '@/components/ui/dialog-back-button';
+import ScenarioSummaryRow from '@/components/scenario/scenario-summary-row';
 import { useMinimumLoadingDuration } from '@/hooks/use-minimum-loading-duration';
-import ScenarioSummaryStats from '@/components/scenario/scenario-summary-stats';
-import { cn } from '@/lib/utils';
 
 interface SelectAcquisitionScenarioProps {
   setOpen: Dispatch<boolean>;
@@ -32,16 +31,13 @@ const SelectAcquisitionScenario = ({
   const form = useFormContext<CreateAcquisitionPayload | CreateCalibrationPayload>();
   const selectedScenarioId = form.watch('scenarioId');
   const { data: scenarios, isPending: isLoadingScenarios } = useGetScenarios();
-  const { data: compatibleScenarioIds = [] } = useGetCompatibleScenarioIds(
+  const { data: compatibleScenarios = [] } = useGetCompatibleScenarios(
     selectedScenarioId ?? 0,
     isCalibration && !!selectedScenarioId
   );
-  const compatibleScenarios = useMemo(
-    () =>
-      (scenarios ?? [])
-        .filter((scenario) => compatibleScenarioIds.includes(scenario.id))
-        .sort((a, b) => a.name.localeCompare(b.name)),
-    [compatibleScenarioIds, scenarios]
+  const compatibilityByScenarioId = useMemo(
+    () => new Map(compatibleScenarios.map((compatibility) => [compatibility.id, compatibility])),
+    [compatibleScenarios]
   );
   const showSkeleton = useMinimumLoadingDuration(isLoadingScenarios);
   const selectedScenario = scenarios?.find((scenario) => scenario.id === selectedScenarioId);
@@ -100,29 +96,24 @@ const SelectAcquisitionScenario = ({
                       value={field.value?.toString() ?? ''}
                     >
                       {scenarios.map((scenario) => {
-                        const isCompatible =
-                          isCalibration && !!selectedScenarioId && compatibleScenarioIds.includes(scenario.id);
+                        const compatibility = compatibilityByScenarioId.get(scenario.id);
+                        const isSelected = scenario.id === selectedScenarioId;
 
                         return (
-                          <FlatRadioGroupItem
-                            className={cn('h-max', isCompatible && 'border-success-300 bg-success-50')}
-                            key={scenario.id}
-                            value={scenario.id.toString()}
-                          >
-                            <div className="flex items-center gap-3 divide-x divide-gray-200">
-                              <div className="inline-flex items-center gap-2 px-2">
-                                <div className="bg-brand-600 flex rounded-full p-2">
-                                  <Clapperboard className="size-4 text-white" />
-                                </div>
-                                <div
-                                  title={scenario.name}
-                                  className="wrap-break-words max-w-[100px] overflow-hidden text-sm font-medium text-ellipsis text-gray-700"
-                                >
-                                  {scenario.name}
-                                </div>
-                              </div>
-                              <ScenarioSummaryStats scenario={scenario} />
-                            </div>
+                          <FlatRadioGroupItem className="h-max" key={scenario.id} value={scenario.id.toString()}>
+                            <ScenarioSummaryRow
+                              className="min-w-0 flex-1"
+                              compatibility={
+                                isCalibration
+                                  ? (compatibility ??
+                                    (isSelected
+                                      ? { sameLeds: true, sameShutterSpeeds: true, sameRotationsCount: true }
+                                      : { sameLeds: false, sameShutterSpeeds: false, sameRotationsCount: false }))
+                                  : undefined
+                              }
+                              interactive={false}
+                              scenario={scenario}
+                            />
                           </FlatRadioGroupItem>
                         );
                       })}
@@ -131,22 +122,6 @@ const SelectAcquisitionScenario = ({
                 </FormItem>
               )}
             />
-
-            {isCalibration && compatibleScenarios.length > 0 && (
-              <Alert className="border-success-200 bg-success-50 text-success-800">
-                <CircleCheck className="text-success-800! size-5" />
-                <AlertTitle>Étalonnage étendu</AlertTitle>
-                <AlertDescription>
-                  {compatibleScenarios.length === 1
-                    ? 'Le scénario suivant sera également étalonné automatiquement : '
-                    : 'Les scénarios suivants seront également étalonnés automatiquement : '}
-                  <span className="font-semibold">
-                    {compatibleScenarios.map((scenario) => scenario.name).join(', ')}
-                  </span>
-                  .
-                </AlertDescription>
-              </Alert>
-            )}
 
             <Separator />
             <FormField

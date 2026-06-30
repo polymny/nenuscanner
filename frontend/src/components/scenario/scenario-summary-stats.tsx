@@ -35,10 +35,7 @@ export default function ScenarioSummaryStats({ scenario, className }: ScenarioSu
         <span className="text-xs font-semibold text-sky-700 tabular-nums">{ledsCount}</span>
         <ScenarioLedIcon ledValue="1" />
       </span>
-      <span
-        className="inline-flex items-center gap-1 px-2"
-        title={`${shutterSpeedsCount} ${pluralize(shutterSpeedsCount, 'vitesse')} d'obturation`}
-      >
+      <span className="inline-flex items-center gap-1 px-2" title={`${shutterSpeedsCount} temps de pose`}>
         <span className="text-xs font-semibold text-cyan-700 tabular-nums">{shutterSpeedsCount}</span>
         <Hourglass className="size-4 text-cyan-600" />
       </span>

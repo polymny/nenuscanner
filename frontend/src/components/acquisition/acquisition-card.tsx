@@ -1,9 +1,9 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { Camera, ChevronDown, ChevronRight, Download, EllipsisVertical, Trash } from 'lucide-react';
 import type { Acquisition } from '@/types/acquisition.types';
 import { acquisitionStatusBadges } from '@/types/acquisition.types';
 import { toAbsoluteImageUrl } from '@/api/queries/acquisition.queries';
-import { useGetCompatibleScenarioIds, useGetScenarios } from '@/api/queries/scenario.queries';
+import { useGetCompatibleScenarios, useGetScenarios } from '@/api/queries/scenario.queries';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 import { cn, formatDateFr } from '@/lib/utils';
@@ -29,19 +29,16 @@ export default function AcquisitionCard({
   selected = false,
 }: AcquisitionCardProps) {
   const [showCompatibleScenarios, setShowCompatibleScenarios] = useState(false);
-  const { data: compatibleScenarioIds = [] } = useGetCompatibleScenarioIds(
+  const { data: compatibleScenarios = [] } = useGetCompatibleScenarios(
     acquisition.scenario.id,
     acquisition.isCalibration
   );
   const { data: scenarios = [] } = useGetScenarios({ enabled: acquisition.isCalibration });
-  const compatibleScenarios = useMemo(
-    () =>
-      scenarios
-        .filter((scenario) => compatibleScenarioIds.includes(scenario.id))
-        .sort((a, b) => a.name.localeCompare(b.name)),
-    [compatibleScenarioIds, scenarios]
-  );
-  const hasCompatibleScenarios = acquisition.isCalibration && compatibleScenarios.length > 0;
+  const compatibilityById = new Map(compatibleScenarios.map((item) => [item.id, item]));
+  const otherScenarios = scenarios
+    .filter((scenario) => scenario.id !== acquisition.scenario.id)
+    .sort((a, b) => a.name.localeCompare(b.name));
+  const hasCompatibleScenarios = acquisition.isCalibration && otherScenarios.length > 0;
 
   return (
     <div
@@ -153,10 +150,19 @@ export default function AcquisitionCard({
             <div className="text-xs font-semibold tracking-wide text-gray-500 uppercase">
               Autres scénarios étalonnés
             </div>
-            <div className="flex flex-col gap-1">
-              {compatibleScenarios.map((scenario) => (
-                <ScenarioSummaryRow key={scenario.id} scenario={scenario} />
-              ))}
+            <div className="flex flex-col gap-2">
+              {otherScenarios.map((scenario) => {
+                const compatibility = compatibilityById.get(scenario.id);
+                if (!compatibility) return null;
+
+                return (
+                  <ScenarioSummaryRow
+                    compatibility={compatibility}
+                    key={scenario.id}
+                    scenario={scenario}
+                  />
+                );
+              })}
             </div>
           </div>
         )}
