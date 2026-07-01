@@ -16,6 +16,7 @@ from ..dtos.acquisition_dto import (
     CalibrationListQuerySchema,
 )
 from ..models.acquisition import Acquisition, AcquisitionStatus
+from ..models.arms_position import ArmsPosition
 from ..models.artifact import Artifact
 from ..models.scenario import Scenario
 from ..services.acquisition_download_service import (
@@ -34,7 +35,7 @@ from ..services.acquisition_service import (
 from ..services.arms_position_service import get_last_arms_position
 from ..services.camera_settings_service import snapshot_current_camera_settings
 from ..services.profile_service import get_first_active_profile
-from ..services.scenario_service import compatible_scenario_ids, scenario_summary_dto
+from ..services.scenario_service import scenario_summary_dto
 from ..services.sse_job_runner import sse_job_registry
 from ...sa_db import db_session
 
@@ -61,6 +62,7 @@ def _acquisition_to_dto(
     *,
     scenario: Scenario | None = None,
     include_photos: bool = False,
+    acquisitions: list[dict] | None = None,
 ) -> dict:
     camera_settings = acquisition.camera_settings
     payload = {
@@ -86,6 +88,8 @@ def _acquisition_to_dto(
         'updatedAt': acquisition.updated_at,
         'scenario': scenario_summary_dto(scenario if scenario is not None else acquisition.scenario),
     }
+    if acquisitions is not None:
+        payload['acquisitions'] = acquisitions
     if include_photos:
         payload['photos'] = [_photo_to_dto(photo) for photo in acquisition.photos]
     return payload
@@ -108,11 +112,12 @@ class AcquisitionController(MethodView):
                 *acquisition_scenario_load_options(),
                 joinedload(Acquisition.arms_position),
             )
+            .join(Acquisition.arms_position)
             .filter(
                 Acquisition.artifact_id == artifact_id,
                 Acquisition.is_calibration.is_(False),
             )
-            .order_by(Acquisition.id.asc())
+            .order_by(ArmsPosition.index.desc())
             .all()
         )
         return [_acquisition_to_dto(acquisition) for acquisition in acquisitions]
@@ -153,10 +158,11 @@ class AcquisitionController(MethodView):
             if calibration is None:
                 abort(404, message='calibration-not-found')
 
-            all_scenarios = db_session.query(Scenario).all()
-            matching_scenario_ids = {scenario_id} | compatible_scenario_ids(scenario, all_scenarios)
-            if calibration.scenario_id not in matching_scenario_ids:
-                abort(404, message='calibration-not-found')
+            # TODO : voir ce qu'on fait de ce check là
+            # all_scenarios = db_session.query(Scenario).all()
+            # matching_scenario_ids = {scenario_id} | compatible_scenario_ids(scenario, all_scenarios)
+            # if calibration.scenario_id not in matching_scenario_ids:
+            #     abort(404, message='calibration-not-found')
 
         active_profile = get_first_active_profile(db_session)
 
@@ -195,11 +201,6 @@ class CalibrationController(MethodView):
     @blp.response(200, AcquisitionReadSchema(many=True))
     def get(self, query_args):
         """Liste tous les étalonnages."""
-        scenario_id = query_args['scenarioId']
-        scenario = db_session.get(Scenario, scenario_id) if scenario_id is not None else None
-        if scenario_id is not None and scenario is None:
-            abort(404, message='scenario-not-found')
-
         query = (
             db_session.query(Acquisition)
             .options(
@@ -214,17 +215,36 @@ class CalibrationController(MethodView):
             arms_position = get_last_arms_position(db_session)
             query = query.filter(Acquisition.arms_position_id == arms_position.id)
 
-        if scenario is not None:
-            all_scenarios = db_session.query(Scenario).all()
-            matching_scenario_ids = {scenario_id} | compatible_scenario_ids(scenario, all_scenarios)
-            query = query.filter(Acquisition.scenario_id.in_(matching_scenario_ids))
-
         status = query_args['status']
         if status is not None:
             query = query.filter(Acquisition.status == status)
 
-        calibrations = query.order_by(Acquisition.id.asc()).all()
-        return [_acquisition_to_dto(calibration) for calibration in calibrations]
+        calibrations = query.join(Acquisition.arms_position).order_by(ArmsPosition.index.desc()).all()
+
+        calibration_ids = [calibration.id for calibration in calibrations]
+        acquisitions_by_calibration_id: dict[int, list[dict]] = {
+            calibration_id: [] for calibration_id in calibration_ids
+        }
+        if calibration_ids:
+            rows = (
+                db_session.query(Acquisition.id, Acquisition.name, Acquisition.calibration_id)
+                .filter(
+                    Acquisition.calibration_id.in_(calibration_ids),
+                    Acquisition.is_calibration.is_(False),
+                )
+                .order_by(Acquisition.id.asc())
+                .all()
+            )
+            for acquisition_id, acquisition_name, calibration_id in rows:
+                acquisitions_by_calibration_id[calibration_id].append({'id': acquisition_id, 'name': acquisition_name})
+
+        return [
+            _acquisition_to_dto(
+                calibration,
+                acquisitions=acquisitions_by_calibration_id.get(calibration.id, []),
+            )
+            for calibration in calibrations
+        ]
 
     @blp.arguments(CalibrationCreateSchema)
     @blp.response(201, AcquisitionCreateReturnSchema)

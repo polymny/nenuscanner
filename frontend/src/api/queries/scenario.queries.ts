@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import type { UseQueryResult } from '@tanstack/react-query';
-import type { Scenario } from '@/types/scenario.types';
+import type { Scenario, ScenarioCompatibility } from '@/types/scenario.types';
 import { client } from '@/lib/client';
 import { QUERY_STALE_TIME } from '@/lib/constants';
 
@@ -23,17 +23,16 @@ export const useGetScenarios = (options?: { enabled?: boolean }): UseQueryResult
   });
 };
 
-const getCompatibleScenarioIds = async (scenarioId: number) => {
-  const response = await client.get<{ ids: Array<number> }>(`/scenario/${scenarioId}/compatible`);
-  return response.data.ids;
+const getCompatibleScenarios = async (scenarioId: number) => {
+  const response = await client.get<{ scenarios: Array<ScenarioCompatibility> }>(`/scenario/${scenarioId}/compatible`);
+  return response.data.scenarios;
 };
 
-export const useGetCompatibleScenarioIds = (scenarioId: number, enabled = true) => {
+export const useGetCompatibleScenarios = (scenarioId: number, enabled = true) => {
   return useQuery({
     queryKey: scenariosKeyFactory.compatible(scenarioId),
-    queryFn: () => getCompatibleScenarioIds(scenarioId),
+    queryFn: () => getCompatibleScenarios(scenarioId),
     staleTime: QUERY_STALE_TIME,
     enabled,
   });
 };
-

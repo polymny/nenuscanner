@@ -1,6 +1,5 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useCallback, useMemo, useState } from 'react';
-import { Camera } from 'lucide-react';
 import { toast } from 'sonner';
 import AcquisitionsGrid from './-components/acquisitions-grid';
 import CreateAcquisitionDialog from './-components/create-acquisition/create-acquisition-dialog';
@@ -94,37 +93,29 @@ function RouteComponent() {
       <div className="flex w-full flex-col gap-4">
         <div className="flex items-start justify-between">
           <h2 className="font-semibold text-gray-950">{`Acquisitions de ${existingArtifact.name}`}</h2>
-          {!showSkeleton && !!acquisitions?.length && (
-            <div className="flex items-center gap-3">
-              <Button
-                disabled={multiSelectedAcquisitionIds.length === 0 || isDownloadingAcquisitions}
-                onClick={() => downloadAcquisitions({ acquisitionIds: multiSelectedAcquisitionIds })}
-                variant="outline"
-              >
-                Télécharger les acquisitions
-              </Button>
-              <Button onClick={() => setOpenCreateAcquisitionDialog(true)}>Créer une acquisition</Button>
-            </div>
+          {!showSkeleton && (
+            <Button
+              disabled={multiSelectedAcquisitionIds.length === 0 || isDownloadingAcquisitions}
+              onClick={() => downloadAcquisitions({ acquisitionIds: multiSelectedAcquisitionIds })}
+              variant="outline"
+            >
+              Télécharger les acquisitions
+            </Button>
           )}
         </div>
         {showSkeleton ? (
-          <div className="grid grid-cols-3 gap-5">
+          <div className="grid grid-cols-4 items-start gap-x-6 gap-y-8">
             <ComponentCardSkeleton />
             <ComponentCardSkeleton />
             <ComponentCardSkeleton />
             <ComponentCardSkeleton />
           </div>
-        ) : isLoadingAcquisitions ? null : !acquisitions?.length ? (
-          <div className="mt-8 flex flex-col items-center gap-4">
-            <div className="size-max rounded-full border border-gray-200 bg-white p-3">
-              <Camera className="text-brand-600 size-6" />
-            </div>
-            <h4 className="font-semibold">Aucune acquisition trouvée</h4>
-            <Button onClick={() => setOpenCreateAcquisitionDialog(true)}>Créer une acquisition</Button>
-          </div>
-        ) : (
+        ) : isLoadingAcquisitions ? null : (
           <AcquisitionsGrid
-            acquisitions={acquisitions}
+            acquisitions={acquisitions ?? []}
+            createDescription="Créer une acquisition pour cet objet"
+            createLabel="Nouvelle acquisition"
+            onCreate={() => setOpenCreateAcquisitionDialog(true)}
             onDelete={handleAcquisitionDelete}
             onDownloadAcquisition={handleAcquisitionDownload}
             onNavigate={handleAcquisitionNavigate}

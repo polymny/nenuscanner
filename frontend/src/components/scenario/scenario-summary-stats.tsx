@@ -18,36 +18,29 @@ export default function ScenarioSummaryStats({ scenario, className }: ScenarioSu
 
   return (
     <div className={cn('flex flex-wrap items-center gap-y-2 divide-x divide-gray-200 text-gray-600', className)}>
-      {hasNoLed && (
-        <span className="inline-flex items-center px-2" title="Aucune LED">
-          <ScenarioLedIcon ledValue="NO_LED" />
-        </span>
-      )}
-      {hasAllLeds && (
-        <span className="inline-flex items-center px-2" title="Toutes les LEDs">
-          <ScenarioLedIcon ledValue="ALL_LEDS" />
-        </span>
-      )}
+      <span className="inline-flex items-center px-1" title="Aucune LED">
+        <ScenarioLedIcon ledValue="NO_LED" className={hasNoLed ? '' : 'text-gray-400'} />
+      </span>
+      <span className="inline-flex items-center px-1" title="Toutes les LEDs">
+        <ScenarioLedIcon ledValue="ALL_LEDS" className={hasAllLeds ? '' : 'text-gray-400'} />
+      </span>
       <span
-        className="inline-flex items-center gap-1 px-2"
+        className="inline-flex items-center gap-1 px-1"
         title={`${ledsCount} ${pluralize(ledsCount, 'valeur')} de LED`}
       >
         <span className="text-xs font-semibold text-sky-700 tabular-nums">{ledsCount}</span>
         <ScenarioLedIcon ledValue="1" />
       </span>
-      <span
-        className="inline-flex items-center gap-1 px-2"
-        title={`${shutterSpeedsCount} ${pluralize(shutterSpeedsCount, 'vitesse')} d'obturation`}
-      >
+      <span className="inline-flex items-center gap-1 px-1" title={`${shutterSpeedsCount} temps de pose`}>
         <span className="text-xs font-semibold text-cyan-700 tabular-nums">{shutterSpeedsCount}</span>
-        <Hourglass className="size-4 text-cyan-600" />
+        <Hourglass className="size-3 text-cyan-600" />
       </span>
       <span
-        className="inline-flex items-center gap-1 px-2"
+        className="inline-flex items-center gap-1 px-1"
         title={`${rotationsCount} ${pluralize(rotationsCount, 'rotation')}`}
       >
         <span className="text-xs font-semibold text-violet-700 tabular-nums">{rotationsCount}</span>
-        <RotateCw className="size-4 text-violet-600" />
+        <RotateCw className="size-3 text-violet-600" />
       </span>
     </div>
   );

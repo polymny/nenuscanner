@@ -21,7 +21,6 @@ export const acquisitionsKeyFactory = {
 
 export interface GetCalibrationsParams {
   onlyCurrentArmsPosition?: boolean;
-  scenarioId?: number;
   status?: AcquisitionStatus;
 }
 

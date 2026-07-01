@@ -17,6 +17,12 @@ export interface ScenarioSummary {
 export interface Scenario extends ScenarioSummary {
   acquisitions: Array<{ id: number; name: string }>;
   calibrations: Array<{ id: number; name: string; armsPositionId: number; status: AcquisitionStatus }>;
-  isCalibrated: boolean;
   updatedAt: string;
+}
+
+export interface ScenarioCompatibility {
+  id: number;
+  sameLedPowerValues: boolean;
+  sameShutterSpeeds: boolean;
+  sameRotationsCount: boolean;
 }

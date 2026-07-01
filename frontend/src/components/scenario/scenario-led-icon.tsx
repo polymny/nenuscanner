@@ -11,11 +11,11 @@ export const getLedIconConfig = (
   return { Icon: Lightbulb, className: 'text-sky-600' };
 };
 
-interface ScenarioLedIconProps {
+type ScenarioLedIconProps = {
   ledValue: LedValue | null;
-}
+} & React.SVGProps<SVGSVGElement>;
 
-export function ScenarioLedIcon({ ledValue }: ScenarioLedIconProps) {
+export function ScenarioLedIcon({ ledValue, className, ...props }: ScenarioLedIconProps) {
   const { Icon, className: colorClass } = getLedIconConfig(ledValue);
-  return <Icon className={cn('size-4 shrink-0', colorClass)} />;
+  return <Icon className={cn('size-3 shrink-0', colorClass, className)} {...props} />;
 }
