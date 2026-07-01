@@ -107,8 +107,12 @@ const SelectAcquisitionScenario = ({
                                 isCalibration
                                   ? (compatibility ??
                                     (isSelected
-                                      ? { sameLeds: true, sameShutterSpeeds: true, sameRotationsCount: true }
-                                      : { sameLeds: false, sameShutterSpeeds: false, sameRotationsCount: false }))
+                                      ? { sameLedPowerValues: true, sameShutterSpeeds: true, sameRotationsCount: true }
+                                      : {
+                                          sameLedPowerValues: false,
+                                          sameShutterSpeeds: false,
+                                          sameRotationsCount: false,
+                                        }))
                                   : undefined
                               }
                               interactive={false}

@@ -22,7 +22,7 @@ export interface Scenario extends ScenarioSummary {
 
 export interface ScenarioCompatibility {
   id: number;
-  sameLeds: boolean;
+  sameLedPowerValues: boolean;
   sameShutterSpeeds: boolean;
   sameRotationsCount: boolean;
 }

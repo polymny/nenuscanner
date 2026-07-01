@@ -39,10 +39,16 @@ def apply_scenario_payload(scenario: Scenario, payload: dict) -> None:
     scenario.updated_at = func.now()
 
 
-def scenarios_have_same_leds(a: Scenario, b: Scenario) -> bool:
-    leds_a = sorted((led.led_value, led.led_power_value_id) for led in a.leds)
-    leds_b = sorted((led.led_value, led.led_power_value_id) for led in b.leds)
-    return leds_a == leds_b
+def scenarios_have_same_led_values(a: Scenario, b: Scenario) -> bool:
+    values_a = sorted(led.led_value for led in a.leds)
+    values_b = sorted(led.led_value for led in b.leds)
+    return values_a == values_b
+
+
+def scenarios_have_same_led_power_values(a: Scenario, b: Scenario) -> bool:
+    powers_by_led_value_a = {led.led_value: led.led_power_value_id for led in a.leds}
+    powers_by_led_value_b = {led.led_value: led.led_power_value_id for led in b.leds}
+    return powers_by_led_value_a == powers_by_led_value_b
 
 
 def scenarios_have_same_shutter_speeds(a: Scenario, b: Scenario) -> bool:
@@ -58,14 +64,18 @@ def scenarios_have_same_rotations_count(a: Scenario, b: Scenario) -> bool:
 def scenario_compatibility(reference: Scenario, other: Scenario) -> dict:
     return {
         'id': other.id,
-        'sameLeds': scenarios_have_same_leds(reference, other),
+        'sameLedPowerValues': scenarios_have_same_led_power_values(reference, other),
         'sameShutterSpeeds': scenarios_have_same_shutter_speeds(reference, other),
         'sameRotationsCount': scenarios_have_same_rotations_count(reference, other),
     }
 
 
 def compatible_scenarios_details(reference: Scenario, all_scenarios: list[Scenario]) -> list[dict]:
-    return [scenario_compatibility(reference, other) for other in all_scenarios if other.id != reference.id]
+    return [
+        scenario_compatibility(reference, other)
+        for other in all_scenarios
+        if other.id != reference.id and scenarios_have_same_led_values(reference, other)
+    ]
 
 
 # def compatible_scenario_ids(scenario: Scenario, all_scenarios: list[Scenario]) -> set[int]:

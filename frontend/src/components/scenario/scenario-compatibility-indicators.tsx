@@ -34,7 +34,7 @@ export default function ScenarioCompatibilityIndicators({
 }: ScenarioCompatibilityIndicatorsProps) {
   return (
     <div className={cn('flex items-center gap-0.5', className)}>
-      <CompatibilityIndicator matches={compatibility.sameLeds} title="Mêmes LEDs (puissance + valeur)">
+      <CompatibilityIndicator matches={compatibility.sameLedPowerValues} title="Mêmes puissances de LED">
         <ScenarioLedIcon ledValue="1" />
       </CompatibilityIndicator>
       <CompatibilityIndicator matches={compatibility.sameShutterSpeeds} title="Mêmes temps de pose">

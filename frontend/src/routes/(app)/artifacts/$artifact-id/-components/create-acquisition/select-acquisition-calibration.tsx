@@ -20,7 +20,7 @@ import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
 
 export interface CompatibilityCriteria {
-  sameLeds: boolean;
+  sameLedPowerValues: boolean;
   sameShutterSpeeds: boolean;
   sameRotationsCount: boolean;
 }
@@ -30,7 +30,7 @@ export function matchesCompatibilityCriteria(
   criteria: CompatibilityCriteria
 ): boolean {
   return (
-    (!criteria.sameLeds || compatibility.sameLeds) &&
+    (!criteria.sameLedPowerValues || compatibility.sameLedPowerValues) &&
     (!criteria.sameShutterSpeeds || compatibility.sameShutterSpeeds) &&
     (!criteria.sameRotationsCount || compatibility.sameRotationsCount)
   );
@@ -46,7 +46,7 @@ const SelectAcquisitionCalibration = ({ setOpen, setCurrentStep }: SelectAcquisi
   const selectedScenarioId = form.watch('scenarioId');
 
   const [compatibilityCriteria, setCompatibilityCriteria] = useState<CompatibilityCriteria>({
-    sameLeds: true,
+    sameLedPowerValues: true,
     sameShutterSpeeds: true,
     sameRotationsCount: true,
   });
@@ -91,15 +91,22 @@ const SelectAcquisitionCalibration = ({ setOpen, setCurrentStep }: SelectAcquisi
           <div className="text-sm font-bold text-gray-500">Critères de compatibilité</div>
           <div className="flex flex-col gap-2">
             <div className="flex w-full flex-row items-center gap-2">
+              <Switch checked disabled className="data-[state=checked]:bg-success-500" />
+              <span className="inline-flex items-center gap-1 text-sm font-medium text-gray-700">
+                Mêmes LEDs
+                <ScenarioLedIcon ledValue="1" />
+              </span>
+            </div>
+            <div className="flex w-full flex-row items-center gap-2">
               <Switch
-                checked={compatibilityCriteria.sameLeds}
+                checked={compatibilityCriteria.sameLedPowerValues}
                 className="data-[state=checked]:bg-success-500"
                 onCheckedChange={(checked) => {
-                  setCompatibilityCriteria((current) => ({ ...current, sameLeds: checked }));
+                  setCompatibilityCriteria((current) => ({ ...current, sameLedPowerValues: checked }));
                 }}
               />
               <span className="inline-flex items-center gap-1 text-sm font-medium text-gray-700">
-                Mêmes LEDs (puissance + valeur)
+                Mêmes puissances de LED
                 <ScenarioLedIcon ledValue="1" />
               </span>
             </div>

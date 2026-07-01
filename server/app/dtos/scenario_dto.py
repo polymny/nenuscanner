@@ -91,7 +91,7 @@ class ScenarioCompatibilitySchema(Schema):
         ordered = True
 
     id = fields.Integer(required=True)
-    sameLeds = fields.Boolean(required=True)
+    sameLedPowerValues = fields.Boolean(required=True)
     sameShutterSpeeds = fields.Boolean(required=True)
     sameRotationsCount = fields.Boolean(required=True)
 
