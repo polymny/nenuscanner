@@ -5,6 +5,14 @@ from .base import ACQUISITION_STATUSES, NAME_VALIDATE
 from .scenario_dto import ScenarioSummarySchema
 
 
+class CalibrationLinkedAcquisitionSchema(Schema):
+    class Meta:
+        ordered = True
+
+    id = fields.Integer(required=True)
+    name = fields.String(required=True)
+
+
 class AcquisitionListQuerySchema(Schema):
     class Meta:
         unknown = EXCLUDE
@@ -35,6 +43,7 @@ class AcquisitionReadSchema(Schema):
     updatedAt = fields.DateTime(required=True)
     thumbnail = fields.String(required=True, allow_none=True)
     scenario = fields.Nested(ScenarioSummarySchema, required=True)
+    acquisitions = fields.List(fields.Nested(CalibrationLinkedAcquisitionSchema), required=False)
 
 
 class AcquisitionPhotoReadSchema(Schema):

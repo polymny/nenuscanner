@@ -38,8 +38,8 @@ export default function ScenarioSummaryRow({
       }
     >
       <div className="flex flex-1 items-center gap-2 overflow-hidden px-2">
-        <div className="bg-brand-600 flex rounded-full p-2">
-          <Clapperboard className="size-4 text-white" />
+        <div className="bg-brand-600 flex rounded-full p-1.5">
+          <Clapperboard className="size-3 text-white" />
         </div>
         <div className="flex min-w-0 flex-1 flex-col justify-center gap-1">
           {compatibility && <ScenarioCompatibilityIndicators compatibility={compatibility} />}

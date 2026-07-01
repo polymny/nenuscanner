@@ -1,12 +1,13 @@
 import { useState } from 'react';
-import { Camera, ChevronDown, ChevronRight, Download, EllipsisVertical, Trash } from 'lucide-react';
+import { useNavigate } from '@tanstack/react-router';
+import { Camera, ChevronDown, ChevronRight, Download, Ellipsis, Trash } from 'lucide-react';
 import type { Acquisition } from '@/types/acquisition.types';
 import { acquisitionStatusBadges } from '@/types/acquisition.types';
 import { toAbsoluteImageUrl } from '@/api/queries/acquisition.queries';
 import { useGetCompatibleScenarios, useGetScenarios } from '@/api/queries/scenario.queries';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
-import { cn, formatDateFr } from '@/lib/utils';
+import { cn, formatDateFr, pluralize } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import ScenarioSummaryRow from '@/components/scenario/scenario-summary-row';
@@ -30,6 +31,7 @@ export default function AcquisitionCard({
   selected = false,
   dimmed = false,
 }: AcquisitionCardProps) {
+  const navigate = useNavigate();
   const [showCompatibleScenarios, setShowCompatibleScenarios] = useState(false);
   const { data: compatibleScenarios = [] } = useGetCompatibleScenarios(
     acquisition.scenario.id,
@@ -45,14 +47,14 @@ export default function AcquisitionCard({
   return (
     <div
       className={cn(
-        'flex cursor-pointer flex-col gap-4 rounded-lg border border-gray-300 p-3 transition-colors',
-        dimmed ? 'bg-gray-100 opacity-75 saturate-[0.9]' : 'bg-white shadow-sm',
-        selected && !dimmed && 'border-brand-600 bg-brand-50 shadow-md'
+        'flex cursor-pointer flex-col gap-1 rounded-lg border border-transparent p-1 transition-colors',
+        dimmed && 'opacity-75 saturate-[0.9]',
+        selected && 'border-brand-600 bg-brand-50'
       )}
       onClick={onClick}
     >
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
+      <div className="flex items-center justify-between gap-8 px-2">
+        <div className="flex items-center gap-2 overflow-hidden">
           {onSelect && (
             <Checkbox
               checked={selected}
@@ -60,16 +62,12 @@ export default function AcquisitionCard({
               onClick={(event) => event.stopPropagation()}
             />
           )}
-          <div className={cn('text-lg font-semibold', dimmed ? 'text-gray-500' : 'text-gray-950')}>
+          <div
+            title={acquisition.name}
+            className={cn('flex-1 truncate text-lg font-semibold', dimmed ? 'text-gray-500' : 'text-gray-950')}
+          >
             {acquisition.name}
           </div>
-          <span className="flex items-center gap-1 text-lg" title="Position des bras">
-            <span>{acquisition.armsPosition.emojiLeft}</span>
-            <span>{acquisition.armsPosition.emojiRight}</span>
-          </span>
-          <Badge variant={acquisitionStatusBadges[acquisition.status].badgeVariant.variant}>
-            {acquisitionStatusBadges[acquisition.status].label}
-          </Badge>
         </div>
         <Popover>
           <PopoverTrigger asChild>
@@ -80,7 +78,7 @@ export default function AcquisitionCard({
               }}
               variant="link"
             >
-              <EllipsisVertical color="#64748B" size={20} />
+              <Ellipsis className="size-6" color="#64748B" />
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-[180px]">
@@ -130,21 +128,48 @@ export default function AcquisitionCard({
             <Camera className={cn('size-10', dimmed ? 'text-gray-400' : 'text-brand-600')} />
           </div>
         )}
+        <div className="absolute top-3 right-3 flex items-center gap-1">
+          <Badge variant={acquisitionStatusBadges[acquisition.status].badgeVariant.variant}>
+            {acquisitionStatusBadges[acquisition.status].label}
+          </Badge>
+          {acquisition.isCalibration ? (
+            <Badge variant="light-gray">
+              {acquisition.acquisitions?.length ?? 0} {pluralize(acquisition.acquisitions?.length ?? 0, 'acquisition')}
+            </Badge>
+          ) : (
+            acquisition.calibrationId !== null && (
+              <Badge
+                className="cursor-pointer"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  void navigate({ to: `/acquisitions/${acquisition.calibrationId}` });
+                }}
+                variant="warning"
+              >
+                Étalonnée
+              </Badge>
+            )
+          )}
+          <span className="flex items-center gap-1 rounded-lg bg-white p-1 text-xs" title="Position des bras">
+            <span>{acquisition.armsPosition.emojiLeft}</span>
+            <span>{acquisition.armsPosition.emojiRight}</span>
+          </span>
+        </div>
         <div
           className={cn(
-            'absolute bottom-3 left-3 rounded-3xl bg-white p-2 text-sm font-medium',
-            dimmed ? 'text-gray-500' : 'text-brand-950'
+            'absolute right-3 bottom-3 rounded-md bg-white p-2 text-xs font-medium',
+            dimmed ? 'text-gray-500' : 'text-gray-600'
           )}
         >
           {formatDateFr(acquisition.createdAt)}
         </div>
       </div>
       <div className="flex flex-col gap-2">
-        <div className="flex items-center gap-1">
+        <div className="flex items-center">
           <ScenarioSummaryRow className="flex-1" scenario={acquisition.scenario} />
           {hasCompatibleScenarios && (
             <Button
-              className="shrink-0 px-2 text-gray-600"
+              className="h-[40px] shrink-0 text-gray-600"
               onClick={(event) => {
                 event.stopPropagation();
                 setShowCompatibleScenarios((current) => !current);

@@ -61,7 +61,7 @@ function RouteComponent() {
             <Button onClick={() => setOpenCreateCalibrationDialog(true)}>Créer un étalonnage</Button>
           </div>
         ) : (
-          <div className="grid grid-cols-4 items-start gap-5">
+          <div className="grid grid-cols-4 items-start gap-x-6 gap-y-8">
             {calibrations.map((calibration) => (
               <AcquisitionCard
                 acquisition={calibration}

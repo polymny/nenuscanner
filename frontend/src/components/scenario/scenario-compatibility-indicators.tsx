@@ -19,7 +19,7 @@ function CompatibilityIndicator({ matches, title, children }: CompatibilityIndic
     <span
       className={cn(
         'flex size-4.5 items-center justify-center rounded-full',
-        matches ? 'bg-success-100 [&_svg]:text-success-600!' : 'bg-gray-100 [&_svg]:text-gray-400!'
+        matches ? 'bg-success-300 [&_svg]:text-success-700!' : 'bg-gray-100 [&_svg]:text-gray-400!'
       )}
       title={title}
     >

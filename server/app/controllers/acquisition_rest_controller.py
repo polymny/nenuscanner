@@ -62,6 +62,7 @@ def _acquisition_to_dto(
     *,
     scenario: Scenario | None = None,
     include_photos: bool = False,
+    acquisitions: list[dict] | None = None,
 ) -> dict:
     camera_settings = acquisition.camera_settings
     payload = {
@@ -87,6 +88,8 @@ def _acquisition_to_dto(
         'updatedAt': acquisition.updated_at,
         'scenario': scenario_summary_dto(scenario if scenario is not None else acquisition.scenario),
     }
+    if acquisitions is not None:
+        payload['acquisitions'] = acquisitions
     if include_photos:
         payload['photos'] = [_photo_to_dto(photo) for photo in acquisition.photos]
     return payload
@@ -217,7 +220,31 @@ class CalibrationController(MethodView):
             query = query.filter(Acquisition.status == status)
 
         calibrations = query.join(Acquisition.arms_position).order_by(ArmsPosition.index.desc()).all()
-        return [_acquisition_to_dto(calibration) for calibration in calibrations]
+
+        calibration_ids = [calibration.id for calibration in calibrations]
+        acquisitions_by_calibration_id: dict[int, list[dict]] = {
+            calibration_id: [] for calibration_id in calibration_ids
+        }
+        if calibration_ids:
+            rows = (
+                db_session.query(Acquisition.id, Acquisition.name, Acquisition.calibration_id)
+                .filter(
+                    Acquisition.calibration_id.in_(calibration_ids),
+                    Acquisition.is_calibration.is_(False),
+                )
+                .order_by(Acquisition.id.asc())
+                .all()
+            )
+            for acquisition_id, acquisition_name, calibration_id in rows:
+                acquisitions_by_calibration_id[calibration_id].append({'id': acquisition_id, 'name': acquisition_name})
+
+        return [
+            _acquisition_to_dto(
+                calibration,
+                acquisitions=acquisitions_by_calibration_id.get(calibration.id, []),
+            )
+            for calibration in calibrations
+        ]
 
     @blp.arguments(CalibrationCreateSchema)
     @blp.response(201, AcquisitionCreateReturnSchema)
