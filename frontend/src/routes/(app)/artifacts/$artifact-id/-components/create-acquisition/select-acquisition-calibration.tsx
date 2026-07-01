@@ -6,16 +6,18 @@ import type { Dispatch } from 'react';
 import type { CreateAcquisitionStep } from './create-acquisition-dialog';
 import type { CreateAcquisitionPayload } from '@/schemas/acquisition.schemas';
 import type { ScenarioCompatibility } from '@/types/scenario.types';
+import { toAbsoluteImageUrl, useGetCalibrations } from '@/api/queries/acquisition.queries';
+import { useGetCompatibleScenarios } from '@/api/queries/scenario.queries';
+import { ComponentCardSkeleton } from '@/components/component-card';
+import { FlatRadioGroupItem, RadioGroup } from '@/components/ui/radio-group';
 import { Button } from '@/components/ui/button';
 import { DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import DialogBackButton from '@/components/ui/dialog-back-button';
 import { FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
-import { useGetCalibrations } from '@/api/queries/acquisition.queries';
-import { useGetCompatibleScenarios } from '@/api/queries/scenario.queries';
-import { ComponentCardSkeleton } from '@/components/component-card';
-import { FlatRadioGroupItem, RadioGroup } from '@/components/ui/radio-group';
 import { useMinimumLoadingDuration } from '@/hooks/use-minimum-loading-duration';
+import ScenarioCompatibilityIndicators from '@/components/scenario/scenario-compatibility-indicators';
 import { ScenarioLedIcon } from '@/components/scenario/scenario-led-icon';
+import { cn, formatDateFr } from '@/lib/utils';
 import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
 
@@ -162,6 +164,15 @@ const SelectAcquisitionCalibration = ({ setOpen, setCurrentStep }: SelectAcquisi
                   <FormControl>
                     <RadioGroup className="h-max grid-cols-2 gap-5" value={field.value?.toString() ?? ''}>
                       {filteredCalibrations.map((calibration) => {
+                        const isExactMatch = calibration.scenario.id === selectedScenarioId;
+                        const compatibility = isExactMatch
+                          ? { sameLedPowerValues: true, sameShutterSpeeds: true, sameRotationsCount: true }
+                          : (compatibilityByScenarioId.get(calibration.scenario.id) ?? {
+                              sameLedPowerValues: false,
+                              sameShutterSpeeds: false,
+                              sameRotationsCount: false,
+                            });
+
                         return (
                           <FlatRadioGroupItem
                             onClick={() => {
@@ -175,12 +186,26 @@ const SelectAcquisitionCalibration = ({ setOpen, setCurrentStep }: SelectAcquisi
                             key={calibration.id}
                             value={calibration.id.toString()}
                           >
-                            <div className="flex items-center gap-2">
-                              <div className="bg-brand-600 rounded-full p-2">
-                                <Camera className="size-4 text-white" />
+                            <div className="flex w-full items-center gap-3">
+                              <div className="flex w-full flex-col gap-1">
+                                <ScenarioCompatibilityIndicators compatibility={compatibility} />
+                                <span className="truncate text-sm font-semibold text-gray-900" title={calibration.name}>
+                                  {calibration.name}
+                                </span>
+                                <span className="text-xs text-gray-500">{formatDateFr(calibration.createdAt)}</span>
                               </div>
-                              <div className="max-w-[300px] overflow-hidden text-sm font-semibold text-ellipsis text-gray-700">
-                                {calibration.name}
+                              <div
+                                className={cn(
+                                  'flex h-14 w-20 shrink-0 items-center justify-center overflow-hidden rounded-md border border-gray-200 bg-gray-100',
+                                  calibration.thumbnail && 'bg-cover bg-center bg-no-repeat'
+                                )}
+                                style={{
+                                  backgroundImage: calibration.thumbnail
+                                    ? `url(${toAbsoluteImageUrl(calibration.thumbnail)})`
+                                    : undefined,
+                                }}
+                              >
+                                {!calibration.thumbnail && <Camera className="size-5 text-gray-400" />}
                               </div>
                             </div>
                           </FlatRadioGroupItem>
