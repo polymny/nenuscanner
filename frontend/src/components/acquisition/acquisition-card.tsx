@@ -1,11 +1,10 @@
-import { useState } from 'react';
 import { useNavigate } from '@tanstack/react-router';
-import { Camera, ChevronDown, ChevronRight, Download, Ellipsis, Trash } from 'lucide-react';
+import { Camera, ChevronDown, Download, Ellipsis, Trash } from 'lucide-react';
 import type { Acquisition } from '@/types/acquisition.types';
 import { acquisitionStatusBadges } from '@/types/acquisition.types';
 import { toAbsoluteImageUrl } from '@/api/queries/acquisition.queries';
 import { useGetCompatibleScenarios, useGetScenarios } from '@/api/queries/scenario.queries';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Popover, PopoverAnchor, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 import { cn, formatDateFr, pluralize } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
@@ -32,7 +31,6 @@ export default function AcquisitionCard({
   dimmed = false,
 }: AcquisitionCardProps) {
   const navigate = useNavigate();
-  const [showCompatibleScenarios, setShowCompatibleScenarios] = useState(false);
   const { data: compatibleScenarios = [] } = useGetCompatibleScenarios(
     acquisition.scenario.id,
     acquisition.isCalibration
@@ -171,40 +169,50 @@ export default function AcquisitionCard({
           {formatDateFr(acquisition.createdAt)}
         </div>
       </div>
-      <div className="flex flex-col gap-2">
-        <div className="flex items-center">
-          <ScenarioSummaryRow className="flex-1" scenario={acquisition.scenario} />
-          {hasCompatibleScenarios && (
-            <Button
-              className="h-[40px] shrink-0 text-gray-600"
-              onClick={(event) => {
-                event.stopPropagation();
-                setShowCompatibleScenarios((current) => !current);
-                return false;
-              }}
-              variant="link"
-            >
-              {showCompatibleScenarios ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
-            </Button>
-          )}
-        </div>
-        {hasCompatibleScenarios && showCompatibleScenarios && (
-          <div className="flex flex-col gap-2 rounded-md border border-gray-200 bg-gray-50 p-2">
+      {hasCompatibleScenarios ? (
+        <Popover>
+          <PopoverAnchor asChild>
+            <div className="flex items-center">
+              <ScenarioSummaryRow className="flex-1" scenario={acquisition.scenario} />
+              <PopoverTrigger asChild>
+                <Button
+                  className="h-[24px] shrink-0 cursor-pointer rounded-md text-gray-600 hover:bg-gray-200 data-[state=open]:bg-gray-200 data-[state=open]:text-gray-950 [&_svg]:transition-transform data-[state=open]:[&_svg]:rotate-180"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    return false;
+                  }}
+                  variant="link"
+                >
+                  <ChevronDown className="size-[18px]" />
+                </Button>
+              </PopoverTrigger>
+            </div>
+          </PopoverAnchor>
+          <PopoverContent
+            align="end"
+            className="flex w-(--radix-popper-anchor-width) flex-col gap-2 border-gray-200 bg-gray-50 p-2"
+            onClick={(event) => event.stopPropagation()}
+            side="bottom"
+            sideOffset={4}
+          >
             <div className="text-xs font-semibold tracking-wide text-gray-500 uppercase">
               Autres scénarios étalonnés
             </div>
             <div className="flex flex-col gap-2">
               {otherScenarios.map((scenario) => (
                 <ScenarioSummaryRow
+                  className="cursor-pointer"
                   compatibility={compatibilityById.get(scenario.id)}
                   key={scenario.id}
                   scenario={scenario}
                 />
               ))}
             </div>
-          </div>
-        )}
-      </div>
+          </PopoverContent>
+        </Popover>
+      ) : (
+        <ScenarioSummaryRow scenario={acquisition.scenario} />
+      )}
     </div>
   );
 }
