@@ -1,6 +1,7 @@
 import { memo } from 'react';
 import type { Acquisition } from '@/types/acquisition.types';
 import AcquisitionCard from '@/components/acquisition/acquisition-card';
+import CreateAcquisitionCard from '@/components/acquisition/create-acquisition-card';
 
 interface AcquisitionsGridProps {
   acquisitions: Array<Acquisition>;
@@ -9,6 +10,9 @@ interface AcquisitionsGridProps {
   onDownloadAcquisition?: (acquisitionId: number) => void;
   onSelectAcquisition?: (acquisitionId: number, selected: boolean) => void;
   multiSelectedAcquisitionIds?: Array<number>;
+  onCreate?: () => void;
+  createLabel?: string;
+  createDescription?: string;
 }
 
 const AcquisitionsGrid = memo(function AcquisitionsGrid({
@@ -18,9 +22,13 @@ const AcquisitionsGrid = memo(function AcquisitionsGrid({
   onDownloadAcquisition,
   onSelectAcquisition,
   multiSelectedAcquisitionIds = [],
+  onCreate,
+  createLabel = 'Nouvelle acquisition',
+  createDescription,
 }: AcquisitionsGridProps) {
   return (
     <div className="grid grid-cols-4 items-start gap-x-6 gap-y-8">
+      {onCreate && <CreateAcquisitionCard description={createDescription} label={createLabel} onClick={onCreate} />}
       {acquisitions.map((acquisition) => (
         <AcquisitionCard
           acquisition={acquisition}

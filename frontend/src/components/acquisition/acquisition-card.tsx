@@ -54,7 +54,7 @@ export default function AcquisitionCard({
   return (
     <div
       className={cn(
-        'flex cursor-pointer flex-col gap-1 rounded-lg border border-transparent p-1 transition-colors',
+        'hover:bg-brand-50 flex cursor-pointer flex-col gap-1 rounded-lg border border-transparent p-3 transition-colors',
         dimmed && 'opacity-75 saturate-[0.9]',
         selected && 'border-brand-600 bg-brand-50'
       )}

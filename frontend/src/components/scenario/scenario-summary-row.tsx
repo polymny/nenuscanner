@@ -24,7 +24,7 @@ export default function ScenarioSummaryRow({
     <div
       className={cn(
         'flex items-center gap-3 divide-x divide-gray-200',
-        interactive && 'rounded-md bg-transparent py-1 hover:bg-gray-100',
+        interactive && 'rounded-md bg-transparent py-1 hover:bg-gray-200',
         className
       )}
       onClick={
