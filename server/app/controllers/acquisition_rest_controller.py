@@ -26,6 +26,7 @@ from ..services.acquisition_download_service import (
 from ..services.acquisition_service import (
     acquisition_photos_load_options,
     acquisition_scenario_load_options,
+    acquisition_size_bytes,
     acquisition_thumbnail_url,
     delete_acquisition,
     delete_pending_acquisitions,
@@ -86,6 +87,8 @@ def _acquisition_to_dto(
         'isCalibration': acquisition.is_calibration,
         'createdAt': acquisition.created_at,
         'updatedAt': acquisition.updated_at,
+        'photosCount': len(acquisition.photos),
+        'sizeBytes': acquisition_size_bytes(acquisition.photos),
         'scenario': scenario_summary_dto(scenario if scenario is not None else acquisition.scenario),
     }
     if acquisitions is not None:

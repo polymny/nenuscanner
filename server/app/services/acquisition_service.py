@@ -48,6 +48,20 @@ def acquisition_scenario_load_options():
     )
 
 
+def acquisition_size_bytes(photos: list[AcquisitionPhoto]) -> int:
+    total = 0
+    seen_paths: set[str] = set()
+    for photo in photos:
+        for relative_path in (photo.raw_path, photo.preview_path):
+            if relative_path in seen_paths:
+                continue
+            seen_paths.add(relative_path)
+            disk_path = SERVER_ROOT / relative_path
+            if disk_path.is_file():
+                total += disk_path.stat().st_size
+    return total
+
+
 def acquisition_thumbnail_url(photos: list[AcquisitionPhoto]) -> str | None:
     """
     Choisit une URL de photo représentative :

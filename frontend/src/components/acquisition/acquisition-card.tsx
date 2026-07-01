@@ -6,7 +6,7 @@ import { toAbsoluteImageUrl } from '@/api/queries/acquisition.queries';
 import { useGetCompatibleScenarios, useGetScenarios } from '@/api/queries/scenario.queries';
 import { Popover, PopoverAnchor, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
-import { cn, formatDateFr, pluralize } from '@/lib/utils';
+import { cn, formatDateFr, formatSizeGb, pluralize } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import ScenarioSummaryRow from '@/components/scenario/scenario-summary-row';
@@ -162,11 +162,26 @@ export default function AcquisitionCard({
         </div>
         <div
           className={cn(
-            'absolute right-3 bottom-3 rounded-md bg-white p-2 text-xs font-medium',
-            dimmed ? 'text-gray-500' : 'text-gray-600'
+            'absolute right-3 bottom-3 flex items-center gap-1.5 rounded-md bg-white px-2 py-1 text-xs',
+            dimmed ? 'text-gray-400' : 'text-gray-500'
           )}
         >
-          {formatDateFr(acquisition.createdAt)}
+          <span>{formatDateFr(acquisition.createdAt)}</span>
+          {acquisition.status !== 'PENDING' && (
+            <>
+              <span aria-hidden className="font-bold">
+                ·
+              </span>
+              <span>{formatSizeGb(acquisition.sizeBytes)}</span>
+              <span aria-hidden className="font-bold">
+                ·
+              </span>
+              <span className="flex items-center gap-0.5">
+                {acquisition.photosCount}
+                <Camera className="size-3" />
+              </span>
+            </>
+          )}
         </div>
       </div>
       {hasCompatibleScenarios ? (
