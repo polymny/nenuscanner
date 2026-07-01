@@ -16,6 +16,8 @@ export interface ScenarioCardProps extends React.HTMLAttributes<HTMLDivElement> 
 export function ScenarioCard({ scenario, onDelete, onDuplicate }: ScenarioCardProps) {
   const navigate = useNavigate();
 
+  const acquisitionsCount = scenario.acquisitions.length + scenario.calibrations.length;
+
   return (
     <div
       className="flex min-h-[90px] flex-1 cursor-pointer flex-col items-start gap-3 rounded-lg border border-gray-200 bg-white p-6 shadow-sm"
@@ -37,7 +39,7 @@ export function ScenarioCard({ scenario, onDelete, onDuplicate }: ScenarioCardPr
                 </div>
               </div>
               <Badge className="self-start" variant="light-gray">
-                {scenario.acquisitions.length} {pluralize(scenario.acquisitions.length, 'acquisition')}
+                {acquisitionsCount} {pluralize(acquisitionsCount, 'acquisition')}
               </Badge>
             </div>
           </div>

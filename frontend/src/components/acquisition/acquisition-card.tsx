@@ -40,7 +40,14 @@ export default function AcquisitionCard({
   const { data: scenarios = [] } = useGetScenarios({ enabled: acquisition.isCalibration });
   const compatibilityById = new Map(compatibleScenarios.map((item) => [item.id, item]));
   const otherScenarios = scenarios
-    .filter((scenario) => scenario.id !== acquisition.scenario.id)
+    .filter((scenario) => {
+      if (scenario.id === acquisition.scenario.id) return false;
+
+      const compatibility = compatibilityById.get(scenario.id);
+      if (!compatibility) return false;
+
+      return compatibility.sameLeds || compatibility.sameShutterSpeeds || compatibility.sameRotationsCount;
+    })
     .sort((a, b) => a.name.localeCompare(b.name));
   const hasCompatibleScenarios = acquisition.isCalibration && otherScenarios.length > 0;
 
@@ -187,12 +194,13 @@ export default function AcquisitionCard({
               Autres scénarios étalonnés
             </div>
             <div className="flex flex-col gap-2">
-              {otherScenarios.map((scenario) => {
-                const compatibility = compatibilityById.get(scenario.id);
-                if (!compatibility) return null;
-
-                return <ScenarioSummaryRow compatibility={compatibility} key={scenario.id} scenario={scenario} />;
-              })}
+              {otherScenarios.map((scenario) => (
+                <ScenarioSummaryRow
+                  compatibility={compatibilityById.get(scenario.id)}
+                  key={scenario.id}
+                  scenario={scenario}
+                />
+              ))}
             </div>
           </div>
         )}
