@@ -3,7 +3,7 @@ import { useFormContext } from 'react-hook-form';
 import { Camera, Hourglass, RotateCw } from 'lucide-react';
 import type { Dispatch } from 'react';
 
-import type { CreateAcquisitionStep } from './create-acquisition-dialog';
+import type { CreateAcquisitionStep } from '@/components/acquisition/create-acquisition-form/create-acquisition.types';
 import type { CreateAcquisitionPayload } from '@/schemas/acquisition.schemas';
 import type { ScenarioCompatibility } from '@/types/scenario.types';
 import { toAbsoluteImageUrl, useGetCalibrations } from '@/api/queries/acquisition.queries';

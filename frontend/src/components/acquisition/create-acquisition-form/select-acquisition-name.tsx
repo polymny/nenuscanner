@@ -3,16 +3,23 @@ import type { Dispatch } from 'react';
 import type { CreateAcquisitionPayload, CreateCalibrationPayload } from '@/schemas/acquisition.schemas';
 import { Button } from '@/components/ui/button';
 import { DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import DialogBackButton from '@/components/ui/dialog-back-button';
 import { FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 
 interface SelectAcquisitionNameProps {
   setOpen: Dispatch<boolean>;
-  setCurrentStep: Dispatch<'name' | 'scenario' | 'calibration'>;
+  setCurrentStep: Dispatch<'name' | 'scenario'>;
   isCalibration?: boolean;
+  onBack?: () => void;
 }
 
-const SelectAcquisitionName = ({ setOpen, setCurrentStep, isCalibration = false }: SelectAcquisitionNameProps) => {
+const SelectAcquisitionName = ({
+  setOpen,
+  setCurrentStep,
+  isCalibration = false,
+  onBack,
+}: SelectAcquisitionNameProps) => {
   const form = useFormContext<CreateAcquisitionPayload | CreateCalibrationPayload>();
 
   const handleContinue = async () => {
@@ -23,6 +30,7 @@ const SelectAcquisitionName = ({ setOpen, setCurrentStep, isCalibration = false 
   return (
     <>
       <DialogHeader>
+        {onBack && <DialogBackButton onClick={onBack} />}
         <DialogTitle>{isCalibration ? 'Créer un étalonnage' : 'Créer une acquisition'}</DialogTitle>
         <DialogDescription>
           Veuillez entrer un nom pour {isCalibration ? 'ce nouvel étalonnage' : 'cette nouvelle acquisition'}.

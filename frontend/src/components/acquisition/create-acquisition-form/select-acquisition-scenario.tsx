@@ -19,7 +19,7 @@ import { useMinimumLoadingDuration } from '@/hooks/use-minimum-loading-duration'
 
 interface SelectAcquisitionScenarioProps {
   setOpen: Dispatch<boolean>;
-  setCurrentStep: Dispatch<'name' | 'scenario' | 'calibration'>;
+  setCurrentStep: Dispatch<'name' | 'calibration'>;
   isCalibration?: boolean;
 }
 
