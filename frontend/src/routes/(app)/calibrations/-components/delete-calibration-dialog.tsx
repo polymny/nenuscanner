@@ -2,32 +2,27 @@ import { AlertTriangle, Loader2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import type { Dispatch } from 'react';
-import type { Scenario } from '@/types/scenario.types';
-import { useDeleteScenario } from '@/api/mutations/scenario.mutations';
+import type { Acquisition } from '@/types/acquisition.types';
+import { useDeleteAcquisition } from '@/api/mutations/acquisition.mutations';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 
-interface DeleteScenarioDialogProps {
+interface DeleteCalibrationDialogProps {
+  calibration: Acquisition | null;
   open: boolean;
   setOpen: Dispatch<boolean>;
-  scenario: Scenario | null;
 }
 
-interface RelatedItemsSectionProps {
-  items: Array<{ id: number; name: string }>;
-  title: string;
-}
-
-function RelatedItemsSection({ items, title }: RelatedItemsSectionProps) {
+function RelatedAcquisitionsSection({ items }: { items: Array<{ id: number; name: string }> }) {
   if (items.length === 0) return null;
 
   return (
     <div>
       <div className="flex items-center gap-2">
-        <h4 className="text-sm font-semibold text-gray-900">{title}</h4>
+        <h4 className="text-sm font-semibold text-gray-900">Acquisitions concernées</h4>
         <Badge variant="light-gray">{items.length}</Badge>
       </div>
       <ul className="mt-2 max-h-40 space-y-1.5 overflow-y-auto pl-1 text-sm text-gray-700">
@@ -42,12 +37,12 @@ function RelatedItemsSection({ items, title }: RelatedItemsSectionProps) {
   );
 }
 
-export default function DeleteScenarioDialog({ open, setOpen, scenario }: DeleteScenarioDialogProps) {
+export default function DeleteCalibrationDialog({ calibration, open, setOpen }: DeleteCalibrationDialogProps) {
   const [confirmed, setConfirmed] = useState(false);
 
-  const { mutate: deleteScenario, isPending: isDeletingScenario } = useDeleteScenario({
+  const { mutate: deleteCalibration, isPending: isDeletingCalibration } = useDeleteAcquisition({
     onSuccess: () => {
-      toast.success('Scénario supprimé.');
+      toast.success('Étalonnage supprimé.');
       setOpen(false);
     },
     onError: () => {
@@ -61,52 +56,49 @@ export default function DeleteScenarioDialog({ open, setOpen, scenario }: Delete
     }
   }, [open]);
 
-  const acquisitions = scenario?.acquisitions ?? [];
-  const calibrations = scenario?.calibrations ?? [];
-  const hasRelatedItems = acquisitions.length > 0 || calibrations.length > 0;
-  const canDelete = !!scenario && (confirmed || !hasRelatedItems) && !isDeletingScenario;
+  const relatedAcquisitions = calibration?.acquisitions ?? [];
+  const hasRelatedAcquisitions = relatedAcquisitions.length > 0;
+  const canDelete = !!calibration && (confirmed || !hasRelatedAcquisitions) && !isDeletingCalibration;
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Supprimer le scénario</DialogTitle>
+          <DialogTitle>Supprimer l'étalonnage</DialogTitle>
         </DialogHeader>
         <div className="bg-gray-25 flex max-h-[50vh] flex-col gap-5 overflow-y-auto p-8">
-          {scenario ? (
+          {calibration ? (
             <>
               <div className="bg-error-50 text-error-900 flex items-start gap-3 rounded-lg px-4 py-3 text-sm">
                 <AlertTriangle className="text-error-600 mt-0.5 size-5 shrink-0" />
                 <p className="leading-relaxed">
-                  Cette action est irréversible. Le scénario{' '}
-                  <span className="text-error-950 font-semibold">« {scenario.name} »</span> sera définitivement supprimé
-                  {hasRelatedItems ? ', ainsi que les éléments associés listés ci-dessous.' : '.'}
+                  Cette action est irréversible. L'étalonnage{' '}
+                  <span className="text-error-950 font-semibold">« {calibration.name} »</span> sera définitivement
+                  supprimé
+                  {hasRelatedAcquisitions
+                    ? ', et les acquisitions listées ci-dessous n’auront plus d’étalonnage associé.'
+                    : '.'}
                 </p>
               </div>
 
-              {hasRelatedItems && (
-                <div className="flex flex-col gap-4">
-                  <RelatedItemsSection items={acquisitions} title="Acquisitions" />
-                  <RelatedItemsSection items={calibrations} title="Étalonages" />
-                </div>
-              )}
+              {hasRelatedAcquisitions && <RelatedAcquisitionsSection items={relatedAcquisitions} />}
             </>
           ) : (
-            <p className="text-sm text-gray-600">Aucun scénario sélectionné.</p>
+            <p className="text-sm text-gray-600">Aucun étalonnage sélectionné.</p>
           )}
 
-          {hasRelatedItems && (
+          {hasRelatedAcquisitions && (
             <div className="flex items-start gap-3 border-t border-gray-200 pt-4">
               <Checkbox
                 checked={confirmed}
-                disabled={!scenario}
-                id="confirm-delete-scenario"
+                disabled={!calibration}
+                id="confirm-delete-calibration"
                 onCheckedChange={(checked) => {
                   setConfirmed(checked === true);
                 }}
               />
-              <Label className="leading-snug font-normal text-gray-600" htmlFor="confirm-delete-scenario">
-                Je confirme vouloir supprimer ce scénario et les éléments listés ci-dessus
+              <Label className="leading-snug font-normal text-gray-600" htmlFor="confirm-delete-calibration">
+                Je confirme vouloir supprimer cet étalonnage et retirer son association aux acquisitions listées ci-dessus
               </Label>
             </div>
           )}
@@ -125,15 +117,15 @@ export default function DeleteScenarioDialog({ open, setOpen, scenario }: Delete
           <Button
             disabled={!canDelete}
             onClick={() => {
-              if (!scenario) return;
-              deleteScenario(scenario.id);
+              if (!calibration) return;
+              deleteCalibration(calibration.id);
             }}
             size="lg"
             type="button"
             variant="destructive"
           >
             Supprimer
-            {isDeletingScenario && <Loader2 className="ml-2 h-4 w-4 animate-spin" />}
+            {isDeletingCalibration && <Loader2 className="ml-2 h-4 w-4 animate-spin" />}
           </Button>
         </DialogFooter>
       </DialogContent>

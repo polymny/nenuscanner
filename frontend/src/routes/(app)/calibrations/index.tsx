@@ -1,12 +1,10 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
-import { toast } from 'sonner';
 import { useState } from 'react';
 import CreateCalibrationDialog from './-components/create-calibration-dialog';
-import ConfirmActionDialog from '@/components/confirm-action-dialog';
+import DeleteCalibrationDialog from './-components/delete-calibration-dialog';
 import AcquisitionCard from '@/components/acquisition/acquisition-card';
 import CreateAcquisitionCard from '@/components/acquisition/create-acquisition-card';
 import { ComponentCardSkeleton } from '@/components/component-card';
-import { useDeleteAcquisition } from '@/api/mutations/acquisition.mutations';
 import { useGetCalibrations } from '@/api/queries/acquisition.queries';
 import { useGetLastArmsPosition } from '@/api/queries/arms-position.queries';
 import { useMinimumLoadingDuration } from '@/hooks/use-minimum-loading-duration';
@@ -24,16 +22,8 @@ function RouteComponent() {
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [selectedCalibrationId, setSelectedCalibrationId] = useState<null | number>(null);
 
-  const { mutate: deleteCalibration } = useDeleteAcquisition({
-    onSuccess: () => {
-      toast.success('Étalonnage supprimé.');
-    },
-    onError: () => {
-      toast.error('La suppression a échoué.');
-    },
-  });
-
   const [openCreateCalibrationDialog, setOpenCreateCalibrationDialog] = useState(false);
+  const selectedCalibration = calibrations?.find((calibration) => calibration.id === selectedCalibrationId) ?? null;
 
   return (
     <div className="bg-gray-25 flex h-full flex-col items-start gap-6 px-20 py-8">
@@ -69,16 +59,10 @@ function RouteComponent() {
         )}
       </div>
       <CreateCalibrationDialog open={openCreateCalibrationDialog} setOpen={setOpenCreateCalibrationDialog} />
-      <ConfirmActionDialog
-        confirmButtonContent="Supprimer"
-        confirmButtonVariant={{ variant: 'destructive' }}
-        description="Voulez-vous vraiment supprimer cet étalonnage ? Cette action ne peut pas être annulée."
-        handleConfirmAction={() => {
-          if (selectedCalibrationId) deleteCalibration(selectedCalibrationId);
-        }}
+      <DeleteCalibrationDialog
+        calibration={selectedCalibration}
         open={openDeleteDialog}
         setOpen={setOpenDeleteDialog}
-        title="Supprimer l'étalonnage"
       />
     </div>
   );
