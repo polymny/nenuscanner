@@ -1,6 +1,7 @@
 [Unit]
 Description=NenuScanner
-After=network.target
+Wants=mediamtx.service
+After=network.target mediamtx.service
 
 [Service]
 RestartSec=2s

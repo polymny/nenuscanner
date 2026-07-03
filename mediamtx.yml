@@ -803,15 +803,17 @@ paths:
   # HDMI capture card (V4L2) -> RTSP publisher for browser/WebRTC/HLS
   cam:
     runOnInit: >
-      ffmpeg -hide_banner -loglevel warning
-      -f v4l2 -input_format mjpeg -video_size 1280x720 -framerate 30
-      -use_wallclock_as_timestamps 1
-      -i /dev/v4l/by-id/usb-MACROSILICON_USB3.0_Capture_20210621-video-index0
-      -vf fps=30,setpts=N/FRAME_RATE/TB
-      -c:v libx264 -preset ultrafast -tune zerolatency -pix_fmt yuv420p
-      -b:v 2M -maxrate 2M -bufsize 4M -g 30 -keyint_min 30
-      -fps_mode cfr
-      -f rtsp -rtsp_transport tcp rtsp://127.0.0.1:$RTSP_PORT/$MTX_PATH
+      sh -c '
+        ffmpeg -hide_banner -loglevel warning
+        -f v4l2 -input_format mjpeg -video_size 1280x720 -framerate 30
+        -use_wallclock_as_timestamps 1
+        -i /dev/v4l/by-id/usb-MACROSILICON_USB3.0_Capture_[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]-video-index0
+        -vf fps=30,setpts=N/FRAME_RATE/TB
+        -c:v libx264 -preset ultrafast -tune zerolatency -pix_fmt yuv420p
+        -b:v 2M -maxrate 2M -bufsize 4M -g 30 -keyint_min 30
+        -fps_mode cfr
+        -f rtsp -rtsp_transport tcp rtsp://127.0.0.1:$RTSP_PORT/$MTX_PATH
+      '
     runOnInitRestart: true
   # Settings under path "all_others" are applied to all paths that
   # do not match another entry.
