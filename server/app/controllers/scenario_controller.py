@@ -2,21 +2,19 @@ from flask.views import MethodView
 from flask_smorest import Blueprint, abort
 
 from ..dtos.scenario_dto import (
-    CompatibleScenarioIdsSchema,
+    CompatibleScenariosSchema,
     ScenarioCreateSchema,
     ScenarioDuplicateSchema,
     ScenarioIdSchema,
     ScenarioReadSchema,
     ScenarioUpdateSchema,
 )
-from ..models.acquisition import Acquisition, AcquisitionStatus
+from ..models.acquisition import Acquisition
 from ..models.scenario import Scenario
-from ..services.arms_position_service import get_last_arms_position
 from ..services.scenario_service import (
     apply_scenario_payload,
-    compatible_scenario_ids,
+    compatible_scenarios_details,
     duplicate_scenario,
-    is_scenario_calibrated,
     scenario_summary_dto,
 )
 from ...sa_db import db_session
@@ -29,14 +27,12 @@ def _scenario_to_dto(
     *,
     acquisitions_by_scenario_id: dict[int, list[dict]] | None = None,
     calibrations_by_scenario_id: dict[int, list[dict]] | None = None,
-    is_calibrated: bool = False,
 ) -> dict:
     return {
         **scenario_summary_dto(scenario),
         'acquisitions': (acquisitions_by_scenario_id or {}).get(scenario.id, []),
         'calibrations': (calibrations_by_scenario_id or {}).get(scenario.id, []),
         'updatedAt': scenario.updated_at,
-        'isCalibrated': is_calibrated,
     }
 
 
@@ -64,8 +60,7 @@ class ScenarioController(MethodView):
             acquisitions_by_scenario_id[scenario_id].append({'id': acq_id, 'name': acq_name})
 
         calibrations_by_scenario_id: dict[int, list[dict]] = {sid: [] for sid in scenario_ids}
-        arms_position = get_last_arms_position(db_session)
-        scenario_ids_with_completed_calibration: set[int] = set()
+
         cal_rows = (
             db_session.query(
                 Acquisition.id,
@@ -85,17 +80,12 @@ class ScenarioController(MethodView):
             calibrations_by_scenario_id[scenario_id].append(
                 {'id': cal_id, 'name': cal_name, 'armsPositionId': arms_position_id, 'status': status}
             )
-            if arms_position_id == arms_position.id and status == AcquisitionStatus.COMPLETED:
-                scenario_ids_with_completed_calibration.add(scenario_id)
 
         return [
             _scenario_to_dto(
                 scenario,
                 acquisitions_by_scenario_id=acquisitions_by_scenario_id,
                 calibrations_by_scenario_id=calibrations_by_scenario_id,
-                is_calibrated=is_scenario_calibrated(
-                    scenario, scenarios, scenario_ids_with_completed_calibration
-                ),
             )
             for scenario in scenarios
         ]
@@ -134,15 +124,15 @@ class ScenarioController(MethodView):
 
 @blp.route('/<int:scenario_id>/compatible')
 class ScenarioCompatibleController(MethodView):
-    @blp.response(200, CompatibleScenarioIdsSchema)
+    @blp.response(200, CompatibleScenariosSchema)
     def get(self, scenario_id):
-        """Liste les identifiants des scénarios compatibles avec un scénario donné."""
+        """Liste la compatibilité détaillée des scénarios avec un scénario donné."""
         scenario = db_session.get(Scenario, scenario_id)
         if scenario is None:
             abort(404, message='scenario-not-found')
 
         all_scenarios = db_session.query(Scenario).all()
-        return {'ids': list(compatible_scenario_ids(scenario, all_scenarios))}
+        return {'scenarios': compatible_scenarios_details(scenario, all_scenarios)}
 
 
 @blp.route('/<int:scenario_id>')

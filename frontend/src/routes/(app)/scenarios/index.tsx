@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Clapperboard } from 'lucide-react';
 import DeleteScenarioDialog from './-components/delete-scenario-dialog';
 import DuplicateScenarioDialog from './-components/duplicate-scenario-dialog';
+import CreateScenarioCalibrationDialog from './-components/create-scenario-calibration-dialog';
 import { ScenarioCard } from './-components/scenario-card';
 import { ComponentCardSkeleton } from '@/components/component-card';
 import { Button } from '@/components/ui/button';
@@ -20,6 +21,7 @@ function RouteComponent() {
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [selectedScenarioId, setSelectedScenarioId] = useState<null | number>(null);
   const [openDuplicateDialog, setOpenDuplicateDialog] = useState(false);
+  const [openCalibrateDialog, setOpenCalibrateDialog] = useState(false);
 
   const selectedScenario = scenarios?.find((scenario) => scenario.id === selectedScenarioId) ?? null;
 
@@ -75,6 +77,10 @@ function RouteComponent() {
                   setSelectedScenarioId(scenario.id);
                   setOpenDuplicateDialog(true);
                 }}
+                onCalibrate={() => {
+                  setSelectedScenarioId(scenario.id);
+                  setOpenCalibrateDialog(true);
+                }}
                 onDelete={() => {
                   setSelectedScenarioId(scenario.id);
                   setOpenDeleteDialog(true);
@@ -89,6 +95,11 @@ function RouteComponent() {
         open={openDuplicateDialog}
         setOpen={setOpenDuplicateDialog}
         sourceScenarioId={selectedScenarioId}
+      />
+      <CreateScenarioCalibrationDialog
+        open={openCalibrateDialog}
+        scenario={selectedScenario}
+        setOpen={setOpenCalibrateDialog}
       />
     </div>
   );

@@ -8,6 +8,13 @@ export function cn(...inputs: Array<ClassValue>) {
 
 export const pluralize = (count: number, word: string) => (count <= 1 ? word : `${word}s`);
 
+export const formatSizeGb = (bytes: number | undefined) => {
+  if (!Number.isFinite(bytes) || bytes === undefined || bytes <= 0) return '0 Go';
+  const gb = bytes / 1024 ** 3;
+  if (gb < 0.1) return '<0,1 Go';
+  return `${gb.toLocaleString('fr-FR', { maximumFractionDigits: 1 })} Go`;
+};
+
 export const formatDateFr = (date: Date | string | number) => {
   const parsed = date instanceof Date ? date : new Date(date);
   if (Number.isNaN(parsed.getTime())) return '';

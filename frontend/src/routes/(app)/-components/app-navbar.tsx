@@ -2,6 +2,7 @@ import { Link } from '@tanstack/react-router';
 import { memo } from 'react';
 import ArmsPositionWidget from './arms-position-widget';
 import ProfileMenuWidget from './profile-menu-widget';
+import CreateGlobalAcquisitionDialog from './create-global-acquisition-dialog';
 import { cn } from '@/lib/utils';
 
 interface AppNavbarProps {
@@ -64,6 +65,7 @@ const AppNavbar = memo(function AppNavbar({ pathname }: AppNavbarProps) {
       <div className="flex w-full max-w-7xl justify-between">
         <AppNavLinks pathname={pathname} />
         <div className="flex items-center gap-2">
+          <CreateGlobalAcquisitionDialog />
           <ArmsPositionWidget />
           <ProfileMenuWidget />
         </div>

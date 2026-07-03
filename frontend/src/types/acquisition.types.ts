@@ -34,6 +34,9 @@ export interface Acquisition {
   absoluteShutterSpeedValue: number;
   apertureValue: number;
   isCalibration: boolean;
+  acquisitions?: Array<{ id: number; name: string }>;
+  photosCount: number;
+  sizeBytes: number;
   createdAt: string;
   updatedAt: string;
 }

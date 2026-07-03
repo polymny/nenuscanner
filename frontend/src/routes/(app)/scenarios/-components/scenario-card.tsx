@@ -1,5 +1,5 @@
 import { useNavigate } from '@tanstack/react-router';
-import { Clapperboard, Copy, EllipsisVertical, Trash } from 'lucide-react';
+import { Clapperboard, Copy, EllipsisVertical, RulerDimensionLine, Trash } from 'lucide-react';
 import type { Scenario } from '@/types/scenario.types';
 import { Badge } from '@/components/ui/badge';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -12,9 +12,12 @@ export interface ScenarioCardProps extends React.HTMLAttributes<HTMLDivElement> 
   scenario: Scenario;
   onDelete: () => void;
   onDuplicate: () => void;
+  onCalibrate: () => void;
 }
-export function ScenarioCard({ scenario, onDelete, onDuplicate }: ScenarioCardProps) {
+export function ScenarioCard({ scenario, onDelete, onDuplicate, onCalibrate }: ScenarioCardProps) {
   const navigate = useNavigate();
+
+  const acquisitionsCount = scenario.acquisitions.length + scenario.calibrations.length;
 
   return (
     <div
@@ -36,11 +39,8 @@ export function ScenarioCard({ scenario, onDelete, onDuplicate }: ScenarioCardPr
                   {formatDateFr(scenario.updatedAt)}
                 </div>
               </div>
-              <Badge className="self-start" variant={scenario.isCalibrated ? 'success' : 'error'}>
-                {scenario.isCalibrated ? 'Étalonné' : 'Non étalonné'}
-              </Badge>
               <Badge className="self-start" variant="light-gray">
-                {scenario.acquisitions.length} {pluralize(scenario.acquisitions.length, 'acquisition')}
+                {acquisitionsCount} {pluralize(acquisitionsCount, 'acquisition')}
               </Badge>
             </div>
           </div>
@@ -60,6 +60,18 @@ export function ScenarioCard({ scenario, onDelete, onDuplicate }: ScenarioCardPr
             </PopoverTrigger>
             <PopoverContent className="w-[150px]">
               <div className="flex flex-col gap-3">
+                <Button
+                  className="w-full justify-start text-sm text-gray-700"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    onCalibrate();
+                    return false;
+                  }}
+                  variant="link"
+                >
+                  <RulerDimensionLine className="text-gray-700" size={20} />
+                  Étalonner
+                </Button>
                 <Button
                   className={`w-full justify-start text-sm text-gray-700`}
                   onClick={(event) => {
