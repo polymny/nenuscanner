@@ -110,15 +110,21 @@ def _build_acquisitions_zip(acquisitions: list[Acquisition], calibrations: list[
 def _load_acquisitions_for_download(
     session: Session, acquisitions: list[Acquisition]
 ) -> tuple[list[Acquisition], list[Acquisition]]:
-    acquisition_ids = [acquisition.id for acquisition in acquisitions]
-    acquisitions_with_photos = (
-        session.query(Acquisition)
-        .options(*acquisition_photos_load_options(), joinedload(Acquisition.calibration))
-        .filter(Acquisition.id.in_(acquisition_ids))
-        .all()
-    )
+    acquisition_ids = [acquisition.id for acquisition in acquisitions if not acquisition.is_calibration]
+    calibration_ids_direct = {acquisition.id for acquisition in acquisitions if acquisition.is_calibration}
 
-    calibration_ids = list({row.calibration_id for row in acquisitions_with_photos if row.calibration_id is not None})
+    acquisitions: list[Acquisition] = []
+    if acquisition_ids:
+        acquisitions = (
+            session.query(Acquisition)
+            .options(*acquisition_photos_load_options(), joinedload(Acquisition.calibration))
+            .filter(Acquisition.id.in_(acquisition_ids))
+            .all()
+        )
+
+    calibration_ids = list(
+        {row.calibration_id for row in acquisitions if row.calibration_id is not None} | calibration_ids_direct
+    )
     calibrations: list[Acquisition] = []
     if calibration_ids:
         calibrations = (
@@ -128,7 +134,7 @@ def _load_acquisitions_for_download(
             .all()
         )
 
-    return acquisitions_with_photos, calibrations
+    return acquisitions, calibrations
 
 
 def download_acquisitions_data(session: Session, acquisitions: list[Acquisition]) -> Response:
@@ -140,8 +146,8 @@ def download_acquisitions_data(session: Session, acquisitions: list[Acquisition]
 
 def copy_acquisitions_data_to_disk(session: Session, acquisitions: list[Acquisition]) -> Path:
     """Construit une archive zip et la copie sur le disque externe au lieu de la streamer."""
-    acquisitions_with_photos, calibrations = _load_acquisitions_for_download(session, acquisitions)
-    zip_sender = _build_acquisitions_zip(acquisitions_with_photos, calibrations)
+    acquisitions, calibrations = _load_acquisitions_for_download(session, acquisitions)
+    zip_sender = _build_acquisitions_zip(acquisitions, calibrations)
 
     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
     dest_path = EXTERNAL_DISK_PATH / f'acquisitions_{timestamp}.zip'

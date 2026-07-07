@@ -307,8 +307,6 @@ class AcquisitionDownloadController(MethodView):
             abort(404, message='acquisition-not-found')
 
         for acquisition in acquisitions:
-            if acquisition.is_calibration:
-                abort(400, message='acquisition-is-calibration')
             if acquisition.status != AcquisitionStatus.COMPLETED:
                 abort(400, message='acquisition-not-completed')
 
