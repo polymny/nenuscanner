@@ -1,0 +1,2075 @@
+{
+  "main": {
+    "actions": {
+      "movie": {
+        "Label": "Movie Capture",
+        "Readonly": "0",
+        "Type": "TOGGLE",
+        "Current": "2"
+      },
+      "opcode": {
+        "Label": "PTP Opcode",
+        "Readonly": "0",
+        "Type": "TEXT",
+        "Current": "0x1001,0xparam1,0xparam2"
+      }
+    },
+    "settings": {
+      "capturetarget": {
+        "Label": "Capture Target",
+        "Readonly": "0",
+        "Type": "RADIO",
+        "Current": "sdram",
+        "Choices": [
+          {
+            "id": 0,
+            "label": "sdram"
+          },
+          {
+            "id": 1,
+            "label": "card+sdram"
+          },
+          {
+            "id": 2,
+            "label": "card"
+          }
+        ]
+      }
+    },
+    "status": {
+      "serialnumber": {
+        "Label": "Serial Number",
+        "Readonly": "1",
+        "Type": "TEXT",
+        "Current": "00000000000000003287414002005470"
+      },
+      "manufacturer": {
+        "Label": "Camera Manufacturer",
+        "Readonly": "1",
+        "Type": "TEXT",
+        "Current": "Sony Corporation"
+      },
+      "cameramodel": {
+        "Label": "Camera Model",
+        "Readonly": "1",
+        "Type": "TEXT",
+        "Current": "ILME-FX3A"
+      },
+      "deviceversion": {
+        "Label": "Device Version",
+        "Readonly": "1",
+        "Type": "TEXT",
+        "Current": "2.01"
+      },
+      "vendorextension": {
+        "Label": "Vendor Extension",
+        "Readonly": "1",
+        "Type": "TEXT",
+        "Current": "Sony PTP Extensions"
+      },
+      "batterylevel": {
+        "Label": "Battery Level",
+        "Readonly": "0",
+        "Type": "TEXT",
+        "Current": "48%"
+      }
+    },
+    "imgsettings": {
+      "imagesize": {
+        "Label": "Image Size",
+        "Readonly": "0",
+        "Type": "RADIO",
+        "Current": "Large",
+        "Choices": [
+          {
+            "id": 0,
+            "label": "Large"
+          },
+          {
+            "id": 1,
+            "label": "Medium"
+          },
+          {
+            "id": 2,
+            "label": "Small"
+          }
+        ]
+      },
+      "iso": {
+        "Label": "ISO Speed",
+        "Readonly": "0",
+        "Type": "RADIO",
+        "Current": "5000"
+      },
+      "colortemperature": {
+        "Label": "Color Temperature",
+        "Readonly": "1",
+        "Type": "RANGE",
+        "Current": "0",
+        "Bottom": "2500",
+        "Top": "9900",
+        "Step": "100"
+      },
+      "whitebalance": {
+        "Label": "WhiteBalance",
+        "Readonly": "0",
+        "Type": "RADIO",
+        "Current": "Automatic",
+        "Choices": [
+          {
+            "id": 0,
+            "label": "Automatic"
+          },
+          {
+            "id": 1,
+            "label": "Daylight"
+          },
+          {
+            "id": 2,
+            "label": "Shade"
+          },
+          {
+            "id": 3,
+            "label": "Cloudy"
+          },
+          {
+            "id": 4,
+            "label": "Tungsten"
+          },
+          {
+            "id": 5,
+            "label": "Fluorescent: Warm White"
+          },
+          {
+            "id": 6,
+            "label": "Fluorescent: Cold White"
+          },
+          {
+            "id": 7,
+            "label": "Fluorescent: Day White"
+          },
+          {
+            "id": 8,
+            "label": "Fluorescent: Daylight"
+          },
+          {
+            "id": 9,
+            "label": "Flash"
+          },
+          {
+            "id": 10,
+            "label": "Underwater: Auto"
+          },
+          {
+            "id": 11,
+            "label": "Choose Color Temperature"
+          },
+          {
+            "id": 12,
+            "label": "Preset 1"
+          },
+          {
+            "id": 13,
+            "label": "Preset 2"
+          },
+          {
+            "id": 14,
+            "label": "Preset 3"
+          }
+        ]
+      }
+    },
+    "capturesettings": {
+      "zoom": {
+        "Label": "Zoom",
+        "Readonly": "0",
+        "Type": "RANGE",
+        "Current": "31,332",
+        "Bottom": "0",
+        "Top": "4294,97",
+        "Step": "1"
+      },
+      "exposurecompensation": {
+        "Label": "Exposure Compensation",
+        "Readonly": "1",
+        "Type": "RADIO",
+        "Current": "0"
+      },
+      "flashmode": {
+        "Label": "Flash Mode",
+        "Readonly": "0",
+        "Type": "RADIO",
+        "Current": "Rear Curtain Sync",
+        "Choices": [
+          {
+            "id": 0,
+            "label": "Automatic Flash"
+          },
+          {
+            "id": 1,
+            "label": "Flash off"
+          },
+          {
+            "id": 2,
+            "label": "Fill flash"
+          },
+          {
+            "id": 3,
+            "label": "Red-eye automatic"
+          },
+          {
+            "id": 4,
+            "label": "Red-eye fill"
+          },
+          {
+            "id": 5,
+            "label": "External sync"
+          },
+          {
+            "id": 6,
+            "label": "Slow Sync"
+          },
+          {
+            "id": 7,
+            "label": "Rear Curtain Sync"
+          },
+          {
+            "id": 8,
+            "label": "Wireless Sync"
+          },
+          {
+            "id": 9,
+            "label": "HSS auto"
+          },
+          {
+            "id": 10,
+            "label": "HSS fill"
+          },
+          {
+            "id": 11,
+            "label": "HSS WL"
+          },
+          {
+            "id": 12,
+            "label": "Slow Slow Sync Red Eye On"
+          },
+          {
+            "id": 13,
+            "label": "Slow Sync Red Eye Off"
+          },
+          {
+            "id": 14,
+            "label": "Slow Sync Wireless"
+          },
+          {
+            "id": 15,
+            "label": "Rear Sync Wireless"
+          }
+        ]
+      },
+      "f-number": {
+        "Label": "F-Number",
+        "Readonly": "0",
+        "Type": "RADIO",
+        "Current": "f/13",
+        "Choices": [
+          {
+            "id": 0,
+            "label": "f/1"
+          },
+          {
+            "id": 1,
+            "label": "f/1,1"
+          },
+          {
+            "id": 2,
+            "label": "f/1,2"
+          },
+          {
+            "id": 3,
+            "label": "f/1,4"
+          },
+          {
+            "id": 4,
+            "label": "f/1,6"
+          },
+          {
+            "id": 5,
+            "label": "f/1,8"
+          },
+          {
+            "id": 6,
+            "label": "f/2"
+          },
+          {
+            "id": 7,
+            "label": "f/2,2"
+          },
+          {
+            "id": 8,
+            "label": "f/2,5"
+          },
+          {
+            "id": 9,
+            "label": "f/2,8"
+          },
+          {
+            "id": 10,
+            "label": "f/3,2"
+          },
+          {
+            "id": 11,
+            "label": "f/3,5"
+          },
+          {
+            "id": 12,
+            "label": "f/4"
+          },
+          {
+            "id": 13,
+            "label": "f/4,5"
+          },
+          {
+            "id": 14,
+            "label": "f/5"
+          },
+          {
+            "id": 15,
+            "label": "f/5,6"
+          },
+          {
+            "id": 16,
+            "label": "f/6,3"
+          },
+          {
+            "id": 17,
+            "label": "f/7,1"
+          },
+          {
+            "id": 18,
+            "label": "f/8"
+          },
+          {
+            "id": 19,
+            "label": "f/9"
+          },
+          {
+            "id": 20,
+            "label": "f/10"
+          },
+          {
+            "id": 21,
+            "label": "f/11"
+          },
+          {
+            "id": 22,
+            "label": "f/13"
+          },
+          {
+            "id": 23,
+            "label": "f/14"
+          },
+          {
+            "id": 24,
+            "label": "f/16"
+          },
+          {
+            "id": 25,
+            "label": "f/18"
+          },
+          {
+            "id": 26,
+            "label": "f/20"
+          },
+          {
+            "id": 27,
+            "label": "f/22"
+          },
+          {
+            "id": 28,
+            "label": "f/25"
+          },
+          {
+            "id": 29,
+            "label": "f/29"
+          },
+          {
+            "id": 30,
+            "label": "f/32"
+          },
+          {
+            "id": 31,
+            "label": "f/36"
+          },
+          {
+            "id": 32,
+            "label": "f/42"
+          },
+          {
+            "id": 33,
+            "label": "f/45"
+          },
+          {
+            "id": 34,
+            "label": "f/50"
+          },
+          {
+            "id": 35,
+            "label": "f/57"
+          },
+          {
+            "id": 36,
+            "label": "f/64"
+          }
+        ]
+      },
+      "imagequality": {
+        "Label": "Image Quality",
+        "Readonly": "0",
+        "Type": "RADIO",
+        "Current": "RAW",
+        "Choices": [
+          {
+            "id": 0,
+            "label": "RAW"
+          },
+          {
+            "id": 1,
+            "label": "RAW+JPEG (X.Fine)"
+          },
+          {
+            "id": 2,
+            "label": "RAW+JPEG (Fine)"
+          },
+          {
+            "id": 3,
+            "label": "RAW+JPEG (Std)"
+          },
+          {
+            "id": 4,
+            "label": "RAW+JPEG (Light)"
+          },
+          {
+            "id": 5,
+            "label": "Extra Fine"
+          },
+          {
+            "id": 6,
+            "label": "Fine"
+          },
+          {
+            "id": 7,
+            "label": "Standard"
+          },
+          {
+            "id": 8,
+            "label": "Light"
+          }
+        ]
+      },
+      "focusmode": {
+        "Label": "Focus Mode",
+        "Readonly": "0",
+        "Type": "RADIO",
+        "Current": "Manual",
+        "Choices": [
+          {
+            "id": 0,
+            "label": "Automatic"
+          },
+          {
+            "id": 1,
+            "label": "AF-A"
+          },
+          {
+            "id": 2,
+            "label": "AF-C"
+          },
+          {
+            "id": 3,
+            "label": "DMF"
+          },
+          {
+            "id": 4,
+            "label": "Manual"
+          }
+        ]
+      },
+      "expprogram": {
+        "Label": "Exposure Program",
+        "Readonly": "0",
+        "Type": "RADIO",
+        "Current": "M",
+        "Choices": [
+          {
+            "id": 0,
+            "label": "Intelligent Auto"
+          },
+          {
+            "id": 1,
+            "label": "P"
+          },
+          {
+            "id": 2,
+            "label": "A"
+          },
+          {
+            "id": 3,
+            "label": "S"
+          },
+          {
+            "id": 4,
+            "label": "M"
+          },
+          {
+            "id": 5,
+            "label": "Unknown value 8090"
+          },
+          {
+            "id": 6,
+            "label": "Unknown value 8091"
+          }
+        ]
+      },
+      "aspectratio": {
+        "Label": "Aspect Ratio",
+        "Readonly": "0",
+        "Type": "RADIO",
+        "Current": "3:2",
+        "Choices": [
+          {
+            "id": 0,
+            "label": "3:2"
+          },
+          {
+            "id": 1,
+            "label": "4:3"
+          },
+          {
+            "id": 2,
+            "label": "16:9"
+          },
+          {
+            "id": 3,
+            "label": "1:1"
+          }
+        ]
+      },
+      "capturemode": {
+        "Label": "Still Capture Mode",
+        "Readonly": "0",
+        "Type": "RADIO",
+        "Current": "Single Shot",
+        "Choices": [
+          {
+            "id": 0,
+            "label": "Single Shot"
+          },
+          {
+            "id": 1,
+            "label": "Continuous Hi+ Speed"
+          },
+          {
+            "id": 2,
+            "label": "Burst"
+          },
+          {
+            "id": 3,
+            "label": "Continuous Med Speed"
+          },
+          {
+            "id": 4,
+            "label": "Continuous Low Speed"
+          },
+          {
+            "id": 5,
+            "label": "Selftimer 10s"
+          },
+          {
+            "id": 6,
+            "label": "Selftimer 5s"
+          },
+          {
+            "id": 7,
+            "label": "Selftimer 2s"
+          },
+          {
+            "id": 8,
+            "label": "Selftimer 10s 3 Pictures"
+          },
+          {
+            "id": 9,
+            "label": "Selftimer 10s 5 Pictures"
+          },
+          {
+            "id": 10,
+            "label": "Selftimer 5s 3 Pictures"
+          },
+          {
+            "id": 11,
+            "label": "Selftimer 5s 5 Pictures"
+          },
+          {
+            "id": 12,
+            "label": "Selftimer 2s 3 Pictures"
+          },
+          {
+            "id": 13,
+            "label": "Selftimer 2s 5 Pictures"
+          },
+          {
+            "id": 14,
+            "label": "Bracketing C 0.3 Steps 3 Pictures"
+          },
+          {
+            "id": 15,
+            "label": "Bracketing C 0.3 Steps 5 Pictures"
+          },
+          {
+            "id": 16,
+            "label": "Bracketing C 0.3 Steps 9 Pictures"
+          },
+          {
+            "id": 17,
+            "label": "Bracketing C 0.5 Steps 3 Pictures"
+          },
+          {
+            "id": 18,
+            "label": "Bracketing C 0.5 Steps 5 Pictures"
+          },
+          {
+            "id": 19,
+            "label": "Bracketing C 0.5 Steps 9 Pictures"
+          },
+          {
+            "id": 20,
+            "label": "Bracketing C 0.7 Steps 3 Pictures"
+          },
+          {
+            "id": 21,
+            "label": "Bracketing C 0.7 Steps 5 Pictures"
+          },
+          {
+            "id": 22,
+            "label": "Bracketing C 0.7 Steps 9 Pictures"
+          },
+          {
+            "id": 23,
+            "label": "Bracketing C 1.0 Steps 3 Pictures"
+          },
+          {
+            "id": 24,
+            "label": "Bracketing C 1.0 Steps 5 Pictures"
+          },
+          {
+            "id": 25,
+            "label": "Bracketing C 1.0 Steps 9 Pictures"
+          },
+          {
+            "id": 26,
+            "label": "Bracketing C 2.0 Steps 3 Pictures"
+          },
+          {
+            "id": 27,
+            "label": "Bracketing C 2.0 Steps 5 Pictures"
+          },
+          {
+            "id": 28,
+            "label": "Bracketing C 3.0 Steps 3 Pictures"
+          },
+          {
+            "id": 29,
+            "label": "Bracketing C 3.0 Steps 5 Pictures"
+          },
+          {
+            "id": 30,
+            "label": "Bracketing S 0.3 Steps 3 Pictures"
+          },
+          {
+            "id": 31,
+            "label": "Bracketing S 0.3 Steps 5 Pictures"
+          },
+          {
+            "id": 32,
+            "label": "Bracketing S 0.3 Steps 9 Pictures"
+          },
+          {
+            "id": 33,
+            "label": "Bracketing S 0.5 Steps 3 Pictures"
+          },
+          {
+            "id": 34,
+            "label": "Bracketing S 0.5 Steps 5 Pictures"
+          },
+          {
+            "id": 35,
+            "label": "Bracketing S 0.5 Steps 9 Pictures"
+          },
+          {
+            "id": 36,
+            "label": "Bracketing S 0.7 Steps 3 Pictures"
+          },
+          {
+            "id": 37,
+            "label": "Bracketing S 0.7 Steps 5 Pictures"
+          },
+          {
+            "id": 38,
+            "label": "Bracketing S 0.7 Steps 9 Pictures"
+          },
+          {
+            "id": 39,
+            "label": "Bracketing S 1.0 Steps 3 Pictures"
+          },
+          {
+            "id": 40,
+            "label": "Bracketing S 1.0 Steps 5 Pictures"
+          },
+          {
+            "id": 41,
+            "label": "Bracketing S 1.0 Steps 9 Pictures"
+          },
+          {
+            "id": 42,
+            "label": "Bracketing S 2.0 Steps 3 Pictures"
+          },
+          {
+            "id": 43,
+            "label": "Bracketing S 2.0 Steps 5 Pictures"
+          },
+          {
+            "id": 44,
+            "label": "Bracketing S 3.0 Steps 3 Pictures"
+          },
+          {
+            "id": 45,
+            "label": "Bracketing S 3.0 Steps 5 Pictures"
+          },
+          {
+            "id": 46,
+            "label": "Bracketing WB Hi"
+          },
+          {
+            "id": 47,
+            "label": "Bracketing WB Lo"
+          },
+          {
+            "id": 48,
+            "label": "Bracketing DRO Hi"
+          },
+          {
+            "id": 49,
+            "label": "Bracketing DRO Lo"
+          }
+        ]
+      },
+      "exposuremetermode": {
+        "Label": "Exposure Metering Mode",
+        "Readonly": "0",
+        "Type": "RADIO",
+        "Current": "Multi",
+        "Choices": [
+          {
+            "id": 0,
+            "label": "Multi"
+          },
+          {
+            "id": 1,
+            "label": "Center"
+          },
+          {
+            "id": 2,
+            "label": "Spot Standard"
+          },
+          {
+            "id": 3,
+            "label": "Spot Large"
+          },
+          {
+            "id": 4,
+            "label": "Entire Screen Avg."
+          },
+          {
+            "id": 5,
+            "label": "Highlight"
+          }
+        ]
+      },
+      "shutterspeed": {
+        "Label": "Shutter Speed",
+        "Readonly": "0",
+        "Type": "RADIO",
+        "Current": "1/25",
+        "Choices": [
+          {
+            "id": 0,
+            "label": "30"
+          },
+          {
+            "id": 1,
+            "label": "25"
+          },
+          {
+            "id": 2,
+            "label": "20"
+          },
+          {
+            "id": 3,
+            "label": "15"
+          },
+          {
+            "id": 4,
+            "label": "13"
+          },
+          {
+            "id": 5,
+            "label": "10"
+          },
+          {
+            "id": 6,
+            "label": "8"
+          },
+          {
+            "id": 7,
+            "label": "6"
+          },
+          {
+            "id": 8,
+            "label": "5"
+          },
+          {
+            "id": 9,
+            "label": "4"
+          },
+          {
+            "id": 10,
+            "label": "32/10"
+          },
+          {
+            "id": 11,
+            "label": "25/10"
+          },
+          {
+            "id": 12,
+            "label": "2"
+          },
+          {
+            "id": 13,
+            "label": "16/10"
+          },
+          {
+            "id": 14,
+            "label": "13/10"
+          },
+          {
+            "id": 15,
+            "label": "1"
+          },
+          {
+            "id": 16,
+            "label": "8/10"
+          },
+          {
+            "id": 17,
+            "label": "6/10"
+          },
+          {
+            "id": 18,
+            "label": "5/10"
+          },
+          {
+            "id": 19,
+            "label": "4/10"
+          },
+          {
+            "id": 20,
+            "label": "1/3"
+          },
+          {
+            "id": 21,
+            "label": "1/4"
+          },
+          {
+            "id": 22,
+            "label": "1/5"
+          },
+          {
+            "id": 23,
+            "label": "1/6"
+          },
+          {
+            "id": 24,
+            "label": "1/8"
+          },
+          {
+            "id": 25,
+            "label": "1/10"
+          },
+          {
+            "id": 26,
+            "label": "1/13"
+          },
+          {
+            "id": 27,
+            "label": "1/15"
+          },
+          {
+            "id": 28,
+            "label": "1/20"
+          },
+          {
+            "id": 29,
+            "label": "1/25"
+          },
+          {
+            "id": 30,
+            "label": "1/30"
+          },
+          {
+            "id": 31,
+            "label": "1/40"
+          },
+          {
+            "id": 32,
+            "label": "1/50"
+          },
+          {
+            "id": 33,
+            "label": "1/60"
+          },
+          {
+            "id": 34,
+            "label": "1/80"
+          },
+          {
+            "id": 35,
+            "label": "1/100"
+          },
+          {
+            "id": 36,
+            "label": "1/125"
+          },
+          {
+            "id": 37,
+            "label": "1/160"
+          },
+          {
+            "id": 38,
+            "label": "1/200"
+          },
+          {
+            "id": 39,
+            "label": "1/250"
+          },
+          {
+            "id": 40,
+            "label": "1/320"
+          },
+          {
+            "id": 41,
+            "label": "1/400"
+          },
+          {
+            "id": 42,
+            "label": "1/500"
+          },
+          {
+            "id": 43,
+            "label": "1/640"
+          },
+          {
+            "id": 44,
+            "label": "1/800"
+          },
+          {
+            "id": 45,
+            "label": "1/1000"
+          },
+          {
+            "id": 46,
+            "label": "1/1250"
+          },
+          {
+            "id": 47,
+            "label": "1/1600"
+          },
+          {
+            "id": 48,
+            "label": "1/2000"
+          },
+          {
+            "id": 49,
+            "label": "1/2500"
+          },
+          {
+            "id": 50,
+            "label": "1/3200"
+          },
+          {
+            "id": 51,
+            "label": "1/4000"
+          },
+          {
+            "id": 52,
+            "label": "1/5000"
+          },
+          {
+            "id": 53,
+            "label": "1/6400"
+          },
+          {
+            "id": 54,
+            "label": "1/8000"
+          },
+          {
+            "id": 55,
+            "label": "1/10000"
+          },
+          {
+            "id": 56,
+            "label": "1/12500"
+          },
+          {
+            "id": 57,
+            "label": "1/16000"
+          },
+          {
+            "id": 58,
+            "label": "1/20000"
+          },
+          {
+            "id": 59,
+            "label": "1/25000"
+          },
+          {
+            "id": 60,
+            "label": "1/32000"
+          },
+          {
+            "id": 61,
+            "label": "Bulb"
+          }
+        ]
+      }
+    },
+    "other": {
+      "5005": {
+        "Label": "White Balance",
+        "Readonly": "0",
+        "Type": "MENU",
+        "Current": "2",
+        "Choices": [
+          {
+            "id": 0,
+            "label": "2"
+          },
+          {
+            "id": 1,
+            "label": "4"
+          },
+          {
+            "id": 2,
+            "label": "32785"
+          },
+          {
+            "id": 3,
+            "label": "32784"
+          },
+          {
+            "id": 4,
+            "label": "6"
+          },
+          {
+            "id": 5,
+            "label": "32769"
+          },
+          {
+            "id": 6,
+            "label": "32770"
+          },
+          {
+            "id": 7,
+            "label": "32771"
+          },
+          {
+            "id": 8,
+            "label": "32772"
+          },
+          {
+            "id": 9,
+            "label": "7"
+          },
+          {
+            "id": 10,
+            "label": "32816"
+          },
+          {
+            "id": 11,
+            "label": "32786"
+          },
+          {
+            "id": 12,
+            "label": "32800"
+          },
+          {
+            "id": 13,
+            "label": "32801"
+          },
+          {
+            "id": 14,
+            "label": "32802"
+          }
+        ]
+      },
+      "500a": {
+        "Label": "Focus Mode",
+        "Readonly": "0",
+        "Type": "MENU",
+        "Current": "1",
+        "Choices": [
+          {
+            "id": 0,
+            "label": "2"
+          },
+          {
+            "id": 1,
+            "label": "32773"
+          },
+          {
+            "id": 2,
+            "label": "32772"
+          },
+          {
+            "id": 3,
+            "label": "32774"
+          },
+          {
+            "id": 4,
+            "label": "1"
+          }
+        ]
+      },
+      "500b": {
+        "Label": "Exposure Metering Mode",
+        "Readonly": "0",
+        "Type": "MENU",
+        "Current": "32769",
+        "Choices": [
+          {
+            "id": 0,
+            "label": "32769"
+          },
+          {
+            "id": 1,
+            "label": "32770"
+          },
+          {
+            "id": 2,
+            "label": "32772"
+          },
+          {
+            "id": 3,
+            "label": "32773"
+          },
+          {
+            "id": 4,
+            "label": "32771"
+          },
+          {
+            "id": 5,
+            "label": "32774"
+          }
+        ]
+      },
+      "500c": {
+        "Label": "Flash Mode",
+        "Readonly": "0",
+        "Type": "MENU",
+        "Current": "32771"
+      },
+      "5010": {
+        "Label": "Exposure Bias Compensation",
+        "Readonly": "1",
+        "Type": "MENU",
+        "Current": "0"
+      },
+      "d200": {
+        "Label": "DOC Compensation",
+        "Readonly": "0",
+        "Type": "MENU",
+        "Current": "0"
+      },
+      "d201": {
+        "Label": "DRangeOptimize",
+        "Readonly": "0",
+        "Type": "MENU",
+        "Current": "31",
+        "Choices": [
+          {
+            "id": 0,
+            "label": "1"
+          },
+          {
+            "id": 1,
+            "label": "31"
+          },
+          {
+            "id": 2,
+            "label": "17"
+          },
+          {
+            "id": 3,
+            "label": "18"
+          },
+          {
+            "id": 4,
+            "label": "19"
+          },
+          {
+            "id": 5,
+            "label": "20"
+          },
+          {
+            "id": 6,
+            "label": "21"
+          }
+        ]
+      },
+      "d20d": {
+        "Label": "Shutter speed",
+        "Readonly": "0",
+        "Type": "RANGE",
+        "Current": "65561",
+        "Bottom": "73536",
+        "Top": "1,96608e+06",
+        "Step": "1"
+      },
+      "d20f": {
+        "Label": "Color temperature",
+        "Readonly": "1",
+        "Type": "RANGE",
+        "Current": "0",
+        "Bottom": "2500",
+        "Top": "9900",
+        "Step": "100"
+      },
+      "d211": {
+        "Label": "Aspect Ratio",
+        "Readonly": "0",
+        "Type": "MENU",
+        "Current": "1",
+        "Choices": [
+          {
+            "id": 0,
+            "label": "1"
+          },
+          {
+            "id": 1,
+            "label": "3"
+          },
+          {
+            "id": 2,
+            "label": "2"
+          },
+          {
+            "id": 3,
+            "label": "4"
+          }
+        ]
+      },
+      "d213": {
+        "Label": "Focus Indication",
+        "Readonly": "0",
+        "Type": "MENU",
+        "Current": "1"
+      },
+      "d217": {
+        "Label": "AELock Indication",
+        "Readonly": "0",
+        "Type": "MENU",
+        "Current": "1"
+      },
+      "d221": {
+        "Label": "Live View Status",
+        "Readonly": "0",
+        "Type": "MENU",
+        "Current": "1"
+      },
+      "d21e": {
+        "Label": "ISO",
+        "Readonly": "0",
+        "Type": "MENU",
+        "Current": "5000"
+      },
+      "d222": {
+        "Label": "Capture Target",
+        "Readonly": "0",
+        "Type": "MENU",
+        "Current": "1",
+        "Choices": [
+          {
+            "id": 0,
+            "label": "1"
+          },
+          {
+            "id": 1,
+            "label": "17"
+          },
+          {
+            "id": 2,
+            "label": "16"
+          }
+        ]
+      },
+      "d20e": {
+        "Label": "Battery Level Indicator",
+        "Readonly": "0",
+        "Type": "MENU",
+        "Current": "13"
+      },
+      "d218": {
+        "Label": "Battery Level",
+        "Readonly": "0",
+        "Type": "MENU",
+        "Current": "48",
+        "Choices": [
+          {
+            "id": 0,
+            "label": "-1"
+          },
+          {
+            "id": 1,
+            "label": "0"
+          },
+          {
+            "id": 2,
+            "label": "1"
+          },
+          {
+            "id": 3,
+            "label": "2"
+          },
+          {
+            "id": 4,
+            "label": "3"
+          },
+          {
+            "id": 5,
+            "label": "4"
+          },
+          {
+            "id": 6,
+            "label": "5"
+          },
+          {
+            "id": 7,
+            "label": "6"
+          },
+          {
+            "id": 8,
+            "label": "7"
+          },
+          {
+            "id": 9,
+            "label": "8"
+          },
+          {
+            "id": 10,
+            "label": "9"
+          },
+          {
+            "id": 11,
+            "label": "10"
+          },
+          {
+            "id": 12,
+            "label": "11"
+          },
+          {
+            "id": 13,
+            "label": "12"
+          },
+          {
+            "id": 14,
+            "label": "13"
+          },
+          {
+            "id": 15,
+            "label": "14"
+          },
+          {
+            "id": 16,
+            "label": "15"
+          },
+          {
+            "id": 17,
+            "label": "16"
+          },
+          {
+            "id": 18,
+            "label": "17"
+          },
+          {
+            "id": 19,
+            "label": "18"
+          },
+          {
+            "id": 20,
+            "label": "19"
+          },
+          {
+            "id": 21,
+            "label": "20"
+          },
+          {
+            "id": 22,
+            "label": "21"
+          },
+          {
+            "id": 23,
+            "label": "22"
+          },
+          {
+            "id": 24,
+            "label": "23"
+          },
+          {
+            "id": 25,
+            "label": "24"
+          },
+          {
+            "id": 26,
+            "label": "25"
+          },
+          {
+            "id": 27,
+            "label": "26"
+          },
+          {
+            "id": 28,
+            "label": "27"
+          },
+          {
+            "id": 29,
+            "label": "28"
+          },
+          {
+            "id": 30,
+            "label": "29"
+          },
+          {
+            "id": 31,
+            "label": "30"
+          },
+          {
+            "id": 32,
+            "label": "31"
+          },
+          {
+            "id": 33,
+            "label": "32"
+          },
+          {
+            "id": 34,
+            "label": "33"
+          },
+          {
+            "id": 35,
+            "label": "34"
+          },
+          {
+            "id": 36,
+            "label": "35"
+          },
+          {
+            "id": 37,
+            "label": "36"
+          },
+          {
+            "id": 38,
+            "label": "37"
+          },
+          {
+            "id": 39,
+            "label": "38"
+          },
+          {
+            "id": 40,
+            "label": "39"
+          },
+          {
+            "id": 41,
+            "label": "40"
+          },
+          {
+            "id": 42,
+            "label": "41"
+          },
+          {
+            "id": 43,
+            "label": "42"
+          },
+          {
+            "id": 44,
+            "label": "43"
+          },
+          {
+            "id": 45,
+            "label": "44"
+          },
+          {
+            "id": 46,
+            "label": "45"
+          },
+          {
+            "id": 47,
+            "label": "46"
+          },
+          {
+            "id": 48,
+            "label": "47"
+          },
+          {
+            "id": 49,
+            "label": "48"
+          },
+          {
+            "id": 50,
+            "label": "49"
+          },
+          {
+            "id": 51,
+            "label": "50"
+          },
+          {
+            "id": 52,
+            "label": "51"
+          },
+          {
+            "id": 53,
+            "label": "52"
+          },
+          {
+            "id": 54,
+            "label": "53"
+          },
+          {
+            "id": 55,
+            "label": "54"
+          },
+          {
+            "id": 56,
+            "label": "55"
+          },
+          {
+            "id": 57,
+            "label": "56"
+          },
+          {
+            "id": 58,
+            "label": "57"
+          },
+          {
+            "id": 59,
+            "label": "58"
+          },
+          {
+            "id": 60,
+            "label": "59"
+          },
+          {
+            "id": 61,
+            "label": "60"
+          },
+          {
+            "id": 62,
+            "label": "61"
+          },
+          {
+            "id": 63,
+            "label": "62"
+          },
+          {
+            "id": 64,
+            "label": "63"
+          },
+          {
+            "id": 65,
+            "label": "64"
+          },
+          {
+            "id": 66,
+            "label": "65"
+          },
+          {
+            "id": 67,
+            "label": "66"
+          },
+          {
+            "id": 68,
+            "label": "67"
+          },
+          {
+            "id": 69,
+            "label": "68"
+          },
+          {
+            "id": 70,
+            "label": "69"
+          },
+          {
+            "id": 71,
+            "label": "70"
+          },
+          {
+            "id": 72,
+            "label": "71"
+          },
+          {
+            "id": 73,
+            "label": "72"
+          },
+          {
+            "id": 74,
+            "label": "73"
+          },
+          {
+            "id": 75,
+            "label": "74"
+          },
+          {
+            "id": 76,
+            "label": "75"
+          },
+          {
+            "id": 77,
+            "label": "76"
+          },
+          {
+            "id": 78,
+            "label": "77"
+          },
+          {
+            "id": 79,
+            "label": "78"
+          },
+          {
+            "id": 80,
+            "label": "79"
+          },
+          {
+            "id": 81,
+            "label": "80"
+          },
+          {
+            "id": 82,
+            "label": "81"
+          },
+          {
+            "id": 83,
+            "label": "82"
+          },
+          {
+            "id": 84,
+            "label": "83"
+          },
+          {
+            "id": 85,
+            "label": "84"
+          },
+          {
+            "id": 86,
+            "label": "85"
+          },
+          {
+            "id": 87,
+            "label": "86"
+          },
+          {
+            "id": 88,
+            "label": "87"
+          },
+          {
+            "id": 89,
+            "label": "88"
+          },
+          {
+            "id": 90,
+            "label": "89"
+          },
+          {
+            "id": 91,
+            "label": "90"
+          },
+          {
+            "id": 92,
+            "label": "91"
+          },
+          {
+            "id": 93,
+            "label": "92"
+          },
+          {
+            "id": 94,
+            "label": "93"
+          },
+          {
+            "id": 95,
+            "label": "94"
+          },
+          {
+            "id": 96,
+            "label": "95"
+          },
+          {
+            "id": 97,
+            "label": "96"
+          },
+          {
+            "id": 98,
+            "label": "97"
+          },
+          {
+            "id": 99,
+            "label": "98"
+          },
+          {
+            "id": 100,
+            "label": "99"
+          },
+          {
+            "id": 101,
+            "label": "100"
+          }
+        ]
+      },
+      "5013": {
+        "Label": "Still Capture Mode",
+        "Readonly": "0",
+        "Type": "MENU",
+        "Current": "1",
+        "Choices": [
+          {
+            "id": 0,
+            "label": "1"
+          },
+          {
+            "id": 1,
+            "label": "32784"
+          },
+          {
+            "id": 2,
+            "label": "2"
+          },
+          {
+            "id": 3,
+            "label": "32789"
+          },
+          {
+            "id": 4,
+            "label": "32786"
+          },
+          {
+            "id": 5,
+            "label": "32772"
+          },
+          {
+            "id": 6,
+            "label": "32771"
+          },
+          {
+            "id": 7,
+            "label": "32773"
+          },
+          {
+            "id": 8,
+            "label": "32776"
+          },
+          {
+            "id": 9,
+            "label": "32777"
+          },
+          {
+            "id": 10,
+            "label": "32780"
+          },
+          {
+            "id": 11,
+            "label": "32781"
+          },
+          {
+            "id": 12,
+            "label": "32782"
+          },
+          {
+            "id": 13,
+            "label": "32783"
+          },
+          {
+            "id": 14,
+            "label": "33591"
+          },
+          {
+            "id": 15,
+            "label": "34103"
+          },
+          {
+            "id": 16,
+            "label": "35127"
+          },
+          {
+            "id": 17,
+            "label": "33623"
+          },
+          {
+            "id": 18,
+            "label": "34135"
+          },
+          {
+            "id": 19,
+            "label": "35159"
+          },
+          {
+            "id": 20,
+            "label": "33655"
+          },
+          {
+            "id": 21,
+            "label": "34167"
+          },
+          {
+            "id": 22,
+            "label": "35191"
+          },
+          {
+            "id": 23,
+            "label": "33553"
+          },
+          {
+            "id": 24,
+            "label": "34065"
+          },
+          {
+            "id": 25,
+            "label": "35089"
+          },
+          {
+            "id": 26,
+            "label": "33569"
+          },
+          {
+            "id": 27,
+            "label": "34081"
+          },
+          {
+            "id": 28,
+            "label": "33585"
+          },
+          {
+            "id": 29,
+            "label": "34097"
+          },
+          {
+            "id": 30,
+            "label": "33590"
+          },
+          {
+            "id": 31,
+            "label": "34102"
+          },
+          {
+            "id": 32,
+            "label": "35126"
+          },
+          {
+            "id": 33,
+            "label": "33622"
+          },
+          {
+            "id": 34,
+            "label": "34134"
+          },
+          {
+            "id": 35,
+            "label": "35158"
+          },
+          {
+            "id": 36,
+            "label": "33654"
+          },
+          {
+            "id": 37,
+            "label": "34166"
+          },
+          {
+            "id": 38,
+            "label": "35190"
+          },
+          {
+            "id": 39,
+            "label": "33552"
+          },
+          {
+            "id": 40,
+            "label": "34064"
+          },
+          {
+            "id": 41,
+            "label": "35088"
+          },
+          {
+            "id": 42,
+            "label": "33568"
+          },
+          {
+            "id": 43,
+            "label": "34080"
+          },
+          {
+            "id": 44,
+            "label": "33584"
+          },
+          {
+            "id": 45,
+            "label": "34096"
+          },
+          {
+            "id": 46,
+            "label": "32808"
+          },
+          {
+            "id": 47,
+            "label": "32792"
+          },
+          {
+            "id": 48,
+            "label": "32809"
+          },
+          {
+            "id": 49,
+            "label": "32793"
+          }
+        ]
+      },
+      "d203": {
+        "Label": "Image size",
+        "Readonly": "0",
+        "Type": "MENU",
+        "Current": "1"
+      },
+      "d21f": {
+        "Label": "FELock Indication",
+        "Readonly": "0",
+        "Type": "MENU",
+        "Current": "1"
+      },
+      "5004": {
+        "Label": "Compression Setting",
+        "Readonly": "0",
+        "Type": "MENU",
+        "Current": "16",
+        "Choices": [
+          {
+            "id": 0,
+            "label": "16"
+          },
+          {
+            "id": 1,
+            "label": "20"
+          },
+          {
+            "id": 2,
+            "label": "19"
+          },
+          {
+            "id": 3,
+            "label": "18"
+          },
+          {
+            "id": 4,
+            "label": "17"
+          },
+          {
+            "id": 5,
+            "label": "4"
+          },
+          {
+            "id": 6,
+            "label": "3"
+          },
+          {
+            "id": 7,
+            "label": "2"
+          },
+          {
+            "id": 8,
+            "label": "1"
+          }
+        ]
+      },
+      "5007": {
+        "Label": "F-Number",
+        "Readonly": "0",
+        "Type": "RANGE",
+        "Current": "1300",
+        "Bottom": "180",
+        "Top": "2200",
+        "Step": "1"
+      },
+      "500e": {
+        "Label": "Exposure Program Mode",
+        "Readonly": "0",
+        "Type": "MENU",
+        "Current": "1",
+        "Choices": [
+          {
+            "id": 0,
+            "label": "32768"
+          },
+          {
+            "id": 1,
+            "label": "2"
+          },
+          {
+            "id": 2,
+            "label": "3"
+          },
+          {
+            "id": 3,
+            "label": "4"
+          },
+          {
+            "id": 4,
+            "label": "1"
+          },
+          {
+            "id": 5,
+            "label": "32912"
+          },
+          {
+            "id": 6,
+            "label": "32913"
+          }
+        ]
+      },
+      "d214": {
+        "Label": "Zoom",
+        "Readonly": "0",
+        "Type": "RANGE",
+        "Current": "3,1332e+07",
+        "Bottom": "0",
+        "Top": "4,29497e+09",
+        "Step": "1"
+      },
+      "d215": {
+        "Label": "Objects in memory",
+        "Readonly": "0",
+        "Type": "RANGE",
+        "Current": "0",
+        "Bottom": "0",
+        "Top": "65535",
+        "Step": "1"
+      }
+    }
+  }
+}

@@ -4,11 +4,7 @@ import { toast } from 'sonner';
 import CameraSettingSlider from './camera-setting-slider';
 import type { CameraSettings } from '@/types/camera.types';
 import { useTriggerCameraAutofocus, useUpdateCameraSetting } from '@/api/mutations/camera.mutations';
-import {
-  leaveInspectMode,
-  sendLeaveInspectModeOnPageExit,
-  useSetInspectModeLed,
-} from '@/api/mutations/inspect-mode.mutations';
+import { useSetInspectModeLed } from '@/api/mutations/inspect-mode.mutations';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 
@@ -22,13 +18,13 @@ const CameraSettingsForm = memo(function CameraSettingsForm({ isPending, isError
   const { mutate: setLedMutation } = useSetInspectModeLed();
 
   const { mutate: updateSetting, isPending: isUpdatingSetting } = useUpdateCameraSetting({
-    onSuccess: (_data, variables) => {
+    onSuccess: (_data, _variables) => {
       toast.success('Réglage appliqué.');
 
       // TODO : comportement temporaire de patch pour réappliquer le temps de pose à 1/12 après chaque changement
-      if (variables.setting === 'shutterspeed') {
-        setLedMutation({ value: 'ALL_LEDS', powerId: 1 });
-      }
+      // if (variables.setting === 'shutterspeed') {
+      //   setLedMutation({ value: 'ALL_LEDS', powerId: 1 });
+      // }
     },
     onError: () => {
       toast.error('Impossible de modifier ce réglage.');
@@ -45,18 +41,18 @@ const CameraSettingsForm = memo(function CameraSettingsForm({ isPending, isError
   });
 
   useEffect(() => {
-    setLedMutation({ value: 'ALL_LEDS', powerId: 1 });
+    // setLedMutation({ value: 'ALL_LEDS', powerId: 1 });
 
     const handlePageHide = (event: PageTransitionEvent) => {
       if (event.persisted) return;
-      sendLeaveInspectModeOnPageExit();
+      // sendLeaveInspectModeOnPageExit();
     };
 
     window.addEventListener('pagehide', handlePageHide);
 
     return () => {
       window.removeEventListener('pagehide', handlePageHide);
-      void leaveInspectMode();
+      // void leaveInspectMode();
     };
   }, [setLedMutation]);
 
