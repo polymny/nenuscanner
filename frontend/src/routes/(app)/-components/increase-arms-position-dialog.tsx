@@ -1,7 +1,8 @@
 import { toast } from 'sonner';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import type { Dispatch } from 'react';
+import { DialogTrigger } from '@radix-ui/react-dialog';
 
+import { DraftingCompass } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -15,12 +16,8 @@ import { useGetLastArmsPosition } from '@/api/queries/arms-position.queries';
 import { useIncreaseArmsPosition } from '@/api/mutations/arms-position.mutations';
 import { cn } from '@/lib/utils';
 
-interface IncreaseArmsPositionDialogProps {
-  open: boolean;
-  setOpen: Dispatch<boolean>;
-}
-
-export default function IncreaseArmsPositionDialog({ open, setOpen }: IncreaseArmsPositionDialogProps) {
+export default function IncreaseArmsPositionDialog() {
+  const [open, setOpen] = useState(false);
   const { data: lastArmsPosition } = useGetLastArmsPosition();
 
   const {
@@ -68,6 +65,20 @@ export default function IncreaseArmsPositionDialog({ open, setOpen }: IncreaseAr
       }}
       open={open}
     >
+      <DialogTrigger asChild>
+        <Button
+          size="sm"
+          className="text-brand-600 h-[42px] overflow-hidden border-none bg-orange-300 p-0 hover:bg-orange-400"
+        >
+          <div className="flex items-center gap-2 px-3">
+            <DraftingCompass className="size-4" /> J'ai bougé les bras
+          </div>
+          <div className="flex h-full min-w-[70px] items-center justify-center gap-1 bg-orange-100 px-3 text-lg text-gray-900">
+            <span>{lastArmsPosition?.emojiLeft}</span>
+            <span>{lastArmsPosition?.emojiRight}</span>
+          </div>
+        </Button>
+      </DialogTrigger>
       <DialogContent className="w-max">
         <DialogHeader>
           <DialogTitle className="text-center text-2xl">

@@ -102,7 +102,7 @@ export function ScenarioCard({ scenario, onDelete, onDuplicate, onCalibrate }: S
         </div>
       </div>
 
-      <ScenarioSummaryStats className="ml-[50px]" scenario={scenario} />
+      <ScenarioSummaryStats className="ml-[50px]" scenario={scenario} iconsSize="size-4" />
     </div>
   );
 }
