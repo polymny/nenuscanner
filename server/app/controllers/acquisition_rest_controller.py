@@ -44,14 +44,13 @@ blp = Blueprint('acquisition', __name__, description='Gestion des acquisitions')
 
 
 def _photo_to_dto(photo) -> dict:
-    rotation = photo.scenario_rotation
     led = photo.scenario_led
     shutter_speed = photo.scenario_shutter_speed
     return {
         'id': photo.id,
         'imageUrl': photo_path_to_url(photo.preview_path),
         'acquisitionId': photo.acquisition_id,
-        'rotationRadians': rotation.radians_value if rotation is not None else None,
+        'rotationIndex': photo.rotation_index,
         'ledValue': led.led_value if led is not None else None,
         'ledPower': led.led_power_value.value if led is not None else None,
         'shutterSpeedRelative': shutter_speed.shutter_speed_value.value if shutter_speed is not None else None,
@@ -141,7 +140,7 @@ class AcquisitionController(MethodView):
         if scenario is None:
             abort(404, message='scenario-not-found')
 
-        if payload['withManualRotations'] and len(scenario.rotations) == 0:
+        if payload['withManualRotations'] and scenario.rotations_count == 0:
             abort(400, message='manual-rotations-require-scenario-rotations')
 
         arms_position = get_last_arms_position(db_session)
@@ -261,7 +260,7 @@ class CalibrationController(MethodView):
         if scenario is None:
             abort(404, message='scenario-not-found')
 
-        if payload['withManualRotations'] and len(scenario.rotations) == 0:
+        if payload['withManualRotations'] and scenario.rotations_count == 0:
             abort(400, message='manual-rotations-require-scenario-rotations')
 
         arms_position = get_last_arms_position(db_session)

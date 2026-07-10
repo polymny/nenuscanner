@@ -4,21 +4,10 @@ import { toAbsoluteImageUrl } from '@/api/queries/acquisition.queries';
 
 interface AcquisitionPhotoCardProps {
   photo: AcquisitionPhoto;
-  manualRotations?: boolean;
-  rotationIndex?: number;
-  rotationTotal?: number;
+  rotationTotal: number;
 }
 
-export default function AcquisitionPhotoCard({
-  photo,
-  manualRotations = false,
-  rotationIndex,
-  rotationTotal,
-}: AcquisitionPhotoCardProps) {
-  const hasRotations = manualRotations
-    ? rotationIndex !== undefined && rotationTotal !== undefined
-    : photo.rotationRadians !== null;
-
+export default function AcquisitionPhotoCard({ photo, rotationTotal }: AcquisitionPhotoCardProps) {
   return (
     <div className="flex h-[250px] flex-col overflow-hidden rounded-lg border border-gray-200 bg-white">
       <div
@@ -33,12 +22,9 @@ export default function AcquisitionPhotoCard({
       />
       <div className="border-t border-gray-100 p-3">
         <ScenarioMetadata
-          manualRotations={manualRotations}
           rotation={{
-            index: rotationIndex,
+            index: photo.rotationIndex,
             total: rotationTotal,
-            radians: photo.rotationRadians,
-            hasRotations,
           }}
           led={{ value: photo.ledValue, power: photo.ledPower }}
           shutter={{ relative: photo.shutterSpeedRelative }}

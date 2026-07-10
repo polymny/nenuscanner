@@ -32,10 +32,8 @@ const step = (index?: number, total?: number) =>
 
 interface ScenarioMetadataProps {
   rotation?: {
-    index?: number;
-    total?: number;
-    radians: number | null;
-    hasRotations?: boolean;
+    index: number;
+    total: number;
   };
   led?: {
     index?: number;
@@ -49,7 +47,6 @@ interface ScenarioMetadataProps {
     relative: number | null;
   };
   showProgress?: boolean;
-  manualRotations?: boolean;
   className?: string;
 }
 
@@ -58,23 +55,13 @@ export default function ScenarioMetadata({
   led,
   shutter,
   showProgress = false,
-  manualRotations = false,
   className,
 }: ScenarioMetadataProps) {
   const ledPower =
     led?.value && led.value !== 'NO_LED' && led.power !== null ? `${Math.round(led.power * 100)} %` : undefined;
 
-  const rotationValue = (() => {
-    if (showProgress && !rotation?.hasRotations) return 'Sans rotation';
-    if (manualRotations && rotation?.hasRotations && rotation.index !== undefined && rotation.total !== undefined) {
-      return `Rotation ${rotation.index}/${rotation.total}`;
-    }
-    if (rotation?.radians !== null && rotation?.radians !== undefined) {
-      return `${rotation.radians.toFixed(2)} rad`;
-    }
-    if (rotation?.hasRotations === false) return 'Sans rotation';
-    return '—';
-  })();
+  const hasRotations = (rotation?.total ?? 0) > 0;
+  const rotationValue = hasRotations ? `Rotation ${rotation?.index ?? 0}/${rotation?.total ?? 0}` : 'Sans rotation';
 
   return (
     <div className={cn('flex flex-col gap-1.5 text-xs', className)}>
@@ -82,13 +69,9 @@ export default function ScenarioMetadata({
         <MetadataRow
           icon={<RotateCw className="size-4 shrink-0 text-violet-600" />}
           title="Rotation"
-          progress={
-            showProgress && rotation.hasRotations && !manualRotations
-              ? step(rotation.index, rotation.total)
-              : undefined
-          }
+          progress={showProgress && hasRotations ? step(rotation.index, rotation.total) : undefined}
           value={rotationValue}
-          muted={rotation.radians === null && !manualRotations}
+          muted={!hasRotations}
         />
       )}
       {led && (

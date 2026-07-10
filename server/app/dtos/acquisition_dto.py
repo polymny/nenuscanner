@@ -55,7 +55,7 @@ class AcquisitionPhotoReadSchema(Schema):
     id = fields.Integer(required=True)
     imageUrl = fields.String(required=True)
     acquisitionId = fields.Integer(required=True)
-    rotationRadians = fields.Float(required=True, allow_none=True)
+    rotationIndex = fields.Integer(required=True)
     ledValue = fields.String(required=True, allow_none=True)
     ledPower = fields.Float(required=True, allow_none=True)
     shutterSpeedRelative = fields.Float(required=True, allow_none=True)

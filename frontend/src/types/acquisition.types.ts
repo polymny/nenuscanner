@@ -45,7 +45,7 @@ export interface AcquisitionPhoto {
   id: number;
   imageUrl: string;
   acquisitionId: number;
-  rotationRadians: number | null;
+  rotationIndex: number;
   ledValue: LedValue | null;
   ledPower: number | null;
   shutterSpeedRelative: number | null;
@@ -67,7 +67,6 @@ export interface ScenarioProgressEvent {
   rotationIndex: number;
   rotationTotal: number;
   hasRotations: boolean;
-  rotationRadians: number | null;
   ledIndex: number;
   ledTotal: number;
   ledValue: LedValue;
