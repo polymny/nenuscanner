@@ -5,7 +5,7 @@ from server.app.constants.leds import LEDS_COUNT
 from .camera_settings_service import get_current_camera_settings
 from .gphoto2_service import set_camera_setting
 from ..models.acquisition import Acquisition, AcquisitionStatus
-from ... import config, leds
+from ... import config, leds, turntable
 
 
 class AcquisitionRunningError(Exception):
@@ -66,3 +66,8 @@ def leave_inspect_mode(session: Session) -> None:
         target_shutter_speed = float(camera_settings.absolute_shutter_speed_value) / LEDS_COUNT
 
         set_camera_setting('shutterspeed', target_shutter_speed)
+
+
+def turn_inspect_mode_rotation(session: Session, rotations_count: int) -> None:
+    _assert_no_running_acquisition(session)
+    turntable.get().turn(round(360 / (rotations_count + 1)))
