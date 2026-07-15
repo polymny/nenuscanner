@@ -22,7 +22,7 @@ ruff = "^0.15.11"
 
 [tool.poetry.scripts]
 nenuscanner = "server.__main__:main"
-db_init = "server.sa_db:main"
+db_init = "server.db:main"
 
 [build-system]
 requires = ["poetry-core>=1.8.0"]

@@ -38,7 +38,7 @@ from ..services.camera_settings_service import snapshot_current_camera_settings
 from ..services.profile_service import get_first_active_profile
 from ..services.scenario_service import scenario_summary_dto
 from ..services.sse_job_runner import sse_job_registry
-from ...sa_db import db_session
+from ...db import db_session
 
 blp = Blueprint('acquisition', __name__, description='Gestion des acquisitions')
 

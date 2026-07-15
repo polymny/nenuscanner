@@ -11,7 +11,7 @@ from ..models.acquisition_photo import AcquisitionPhoto
 from ..models.scenario import Scenario, ScenarioLED, ScenarioShutterSpeed
 from ..paths import SERVER_ROOT
 from ... import leds
-from ...sa_db import db_session
+from ...db import db_session
 
 _THUMBNAIL_TARGET_SHUTTER_RELATIVE = 1.0
 

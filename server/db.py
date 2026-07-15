@@ -8,7 +8,7 @@ from . import config
 
 
 def _default_sqlalchemy_url() -> str:
-    # Keep the existing SQLite DB file by default, but access it through SQLAlchemy.
+    # Use the existing SQLite DB file through SQLAlchemy.
     db_path = os.path.abspath(config.DATABASE_PATH)
     return f'sqlite+pysqlite:///{db_path}'
 

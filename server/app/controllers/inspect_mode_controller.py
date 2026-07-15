@@ -9,7 +9,7 @@ from ..services.inspect_mode_service import (
     set_shutter_speed_inspect_mode,
     turn_inspect_mode_rotation,
 )
-from ...sa_db import db_session
+from ...db import db_session
 
 blp = Blueprint('inspect-mode', __name__, description='Mode inspection')
 

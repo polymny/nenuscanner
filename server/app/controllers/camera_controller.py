@@ -15,7 +15,7 @@ from ..services.gphoto2_service import (
     trigger_autofocus,
 )
 from ... import config
-from ...sa_db import db_session
+from ...db import db_session
 
 blp = Blueprint('camera', __name__, description='Réglages caméra')
 

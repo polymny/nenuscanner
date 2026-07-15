@@ -3,7 +3,7 @@ from flask_smorest import Blueprint
 
 from ..dtos.shutter_speed_value_dto import ShutterSpeedValueReadSchema
 from ..models.shutter_speed_value import ShutterSpeedValue
-from ...sa_db import db_session
+from ...db import db_session
 
 blp = Blueprint('shutter-speed-value', __name__, description='Valeurs de temps de pose')
 

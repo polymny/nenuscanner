@@ -5,7 +5,7 @@ from datetime import datetime
 from sqlalchemy import Boolean, DateTime, Float, func
 from sqlalchemy.orm import Mapped, mapped_column
 
-from ...sa_db import Base
+from ...db import Base
 
 
 class CameraSettings(Base):

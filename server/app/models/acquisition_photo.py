@@ -5,7 +5,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .acquisition import Acquisition
 from .scenario import ScenarioLED, ScenarioShutterSpeed
-from ...sa_db import Base
+from ...db import Base
 
 
 class AcquisitionPhoto(Base):

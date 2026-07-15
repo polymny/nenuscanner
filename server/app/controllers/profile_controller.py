@@ -4,7 +4,7 @@ from flask_smorest import Blueprint, abort
 from ..dtos.profile_dto import ProfileCreateSchema, ProfileReadSchema, ProfileUpdateSchema
 from ..models.profile import Profile
 from ..services.profile_service import apply_profile_payload, select_profile
-from ...sa_db import db_session
+from ...db import db_session
 
 blp = Blueprint('profile', __name__, description='Gestion des profils')
 

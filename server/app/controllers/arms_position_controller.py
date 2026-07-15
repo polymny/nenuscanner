@@ -4,7 +4,7 @@ from flask_smorest import Blueprint
 from ..dtos.arms_position_dto import ArmsPositionReadSchema
 from ..models.arms_position import ArmsPosition
 from ..services.arms_position_service import get_last_arms_position, increase_arms_position
-from ...sa_db import db_session
+from ...db import db_session
 
 blp = Blueprint('arms-position', __name__, description='Positions des bras')
 

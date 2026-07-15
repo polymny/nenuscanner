@@ -3,7 +3,7 @@ from __future__ import annotations
 from sqlalchemy import Float
 from sqlalchemy.orm import Mapped, mapped_column
 
-from ...sa_db import Base
+from ...db import Base
 
 
 class ShutterSpeedValue(Base):

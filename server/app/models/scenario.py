@@ -8,7 +8,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .led_power_value import LedPowerValue
 from .shutter_speed_value import ShutterSpeedValue
-from ...sa_db import Base
+from ...db import Base
 
 if TYPE_CHECKING:
     from .acquisition import Acquisition

@@ -6,17 +6,17 @@ from flask_smorest import Api, abort
 from sqlalchemy.exc import OperationalError, SQLAlchemyError
 
 from . import config
-from .app.controllers.acquisition_rest_controller import blp as acquisition_blp
+from .app.controllers.acquisition_controller import blp as acquisition_blp
 from .app.controllers.arms_position_controller import blp as arms_position_blp
 from .app.controllers.artifact_controller import blp as artifact_blp
-from .app.controllers.camera_rest_controller import blp as camera_blp
+from .app.controllers.camera_controller import blp as camera_blp
 from .app.controllers.inspect_mode_controller import blp as inspect_mode_blp
 from .app.controllers.led_power_value_controller import blp as led_power_value_blp
 from .app.controllers.profile_controller import blp as profile_blp
 from .app.controllers.scenario_controller import blp as scenario_blp
 from .app.controllers.shutter_speed_value_controller import blp as shutter_speed_value_blp
 from .app.controllers.web_controller import blueprint as web_blueprint
-from .sa_db import db_session
+from .db import db_session
 
 app = Flask(__name__)
 

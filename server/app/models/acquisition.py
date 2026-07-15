@@ -14,7 +14,7 @@ if TYPE_CHECKING:
 from .artifact import Artifact
 from .profile import Profile
 from .scenario import Scenario
-from ...sa_db import Base
+from ...db import Base
 
 
 class AcquisitionStatus:
