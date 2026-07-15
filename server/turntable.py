@@ -24,7 +24,7 @@ class Turntable:
 
 class DummyTurntable(Turntable):
     def turn(self, degrees: float) -> None:
-        logger.info('DummyTurntable: E then TURN%d', round(degrees))
+        logger.info('DummyTurntable: E then TURN%d then E', round(degrees))
 
 
 class SerialTurntable(Turntable):
@@ -127,6 +127,8 @@ class SerialTurntable(Turntable):
                     )
             else:
                 raise RuntimeError(f'turntable-command-failed:{turn_command}')
+
+            self._send_until_ok('E')
 
     def close(self) -> None:
         with self._lock:
