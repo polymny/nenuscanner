@@ -70,7 +70,7 @@ def acquisition_thumbnail_url(photos: list[AcquisitionPhoto]) -> str | None:
     if not photos:
         return None
 
-    rotation_index = next((p.rotation_index for p in photos if p.rotation_index > 0), 0)
+    rotation_index = next((p.rotation_index for p in photos if p.rotation_index > 1), 1)
     pool = [p for p in photos if p.rotation_index == rotation_index]
     led_id = next(
         (p.scenario_led_id for p in pool if p.scenario_led and p.scenario_led.led_value == 'ALL_LEDS'),

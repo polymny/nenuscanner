@@ -63,7 +63,7 @@ class ScenarioCreateSchema(Schema):
 
     name = fields.String(required=True, validate=NAME_VALIDATE, pre_load=str.strip)
     leds = fields.List(fields.Nested(ScenarioLEDSchema), required=True, validate=validate.Length(min=1))
-    rotationsCount = fields.Integer(required=True, validate=validate.Range(min=0, max=12))
+    rotationsCount = fields.Integer(required=True, validate=validate.Range(min=1, max=12))
     shutterSpeedIds = fields.List(
         fields.Integer(validate=validate.Range(min=1)),
         required=True,

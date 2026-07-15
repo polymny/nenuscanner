@@ -16,10 +16,10 @@ const RotationsCountAlert = () => {
   const rotationsCount = useWatch({ control, name: 'rotationsCount' });
 
   return (
-    <Alert className={cn('border-success-200 bg-success-50 text-success-800', rotationsCount === 0 ? '' : 'opacity-0')}>
+    <Alert className={cn('border-success-200 bg-success-50 text-success-800', rotationsCount === 1 ? '' : 'opacity-0')}>
       <AlertTitle>Compatible sans plateau tournant</AlertTitle>
       <AlertDescription>
-        Avec 0 rotation, votre configuration est compatible avec un setup sans plateau tournant.
+        Avec 1 rotation, votre configuration est compatible avec un setup sans plateau tournant.
       </AlertDescription>
     </Alert>
   );
@@ -50,16 +50,16 @@ const RotationsFormSection = ({ disabled = false }: RotationsFormSectionProps) =
               <FormControl>
                 <SliderWithLabels
                   wrapperClassName="w-full"
-                  minLabel="0"
+                  minLabel="1"
                   maxLabel="12"
                   currentLabel={String(field.value)}
-                  min={0}
+                  min={1}
                   max={12}
                   step={1}
                   value={[field.value]}
                   disabled={disabled}
                   rangeBgColor={isInspectMode ? 'bg-warning-500' : undefined}
-                  onValueChange={(v) => field.onChange(v[0] ?? 0)}
+                  onValueChange={(v) => field.onChange(v[0] ?? 1)}
                 />
               </FormControl>
               <FormMessage />

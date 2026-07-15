@@ -88,7 +88,7 @@ const UpsertScenarioFormContent = ({ mode, scenarioId, onRequestDuplicate }: Ups
       name: existingScenario?.name ?? '',
       id: existingScenario?.id ?? undefined,
       leds: existingScenario?.leds ?? [],
-      rotationsCount: existingScenario?.rotationsCount ?? 0,
+      rotationsCount: existingScenario?.rotationsCount ?? 1,
       shutterSpeedIds: existingScenario?.shutterSpeedIds ?? [],
     },
     mode: 'onChange',

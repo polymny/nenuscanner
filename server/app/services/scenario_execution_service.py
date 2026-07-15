@@ -86,19 +86,19 @@ class ScenarioCaptureStep:
     shutter_speed_total: int
 
     @property
-    def has_rotations(self) -> bool:
-        return self.rotation_total > 0
+    def has_multiple_rotations(self) -> bool:
+        return self.rotation_total > 1
 
 
 def build_scenario_capture_steps(scenario: Scenario) -> list[ScenarioCaptureStep]:
     """
-    Ordre : pour chaque rotation (ou une position fixe si aucune), pour chaque LED, pour chaque temps de pose.
+    Ordre : pour chaque rotation, pour chaque LED, pour chaque temps de pose.
 
     Les LEDs sont appliquées dans l'ordre NO_LED, puis les valeurs numériques croissantes, puis ALL_LEDS.
     Les temps de pose sont appliqués par valeur relative croissante.
     """
     rotation_total = scenario.rotations_count
-    rotation_slots = list(range(1, rotation_total + 1)) if rotation_total > 0 else [0]
+    rotation_slots = list(range(1, rotation_total + 1))
     leds = sorted(
         scenario.leds,
         key=lambda led: (
@@ -140,7 +140,7 @@ def _scenario_progress_payload(step: ScenarioCaptureStep) -> dict:
         'step': step.step_index,
         'rotationIndex': step.rotation_index,
         'rotationTotal': step.rotation_total,
-        'hasRotations': step.has_rotations,
+        'hasMultipleRotations': step.has_multiple_rotations,
         'ledIndex': step.led_index,
         'ledTotal': step.led_total,
         'ledValue': step.led.led_value,
@@ -152,11 +152,9 @@ def _scenario_progress_payload(step: ScenarioCaptureStep) -> dict:
 
 
 def _is_end_of_rotation_block(step: ScenarioCaptureStep) -> bool:
-    if not step.has_rotations:
+    if not step.has_multiple_rotations or step.rotation_index >= step.rotation_total:
         return False
-    if step.led_index != step.led_total or step.shutter_speed_index != step.shutter_speed_total:
-        return False
-    return step.rotation_index < step.rotation_total or step.rotation_total == 1
+    return step.led_index == step.led_total and step.shutter_speed_index == step.shutter_speed_total
 
 
 def _steps_from_current(acquisition: Acquisition, steps: list[ScenarioCaptureStep]) -> list[ScenarioCaptureStep]:

@@ -140,8 +140,8 @@ class AcquisitionController(MethodView):
         if scenario is None:
             abort(404, message='scenario-not-found')
 
-        if payload['withManualRotations'] and scenario.rotations_count == 0:
-            abort(400, message='manual-rotations-require-scenario-rotations')
+        if payload['withManualRotations'] and scenario.rotations_count == 1:
+            abort(400, message='manual-rotations-require-multiple-rotations')
 
         arms_position = get_last_arms_position(db_session)
 
@@ -260,8 +260,8 @@ class CalibrationController(MethodView):
         if scenario is None:
             abort(404, message='scenario-not-found')
 
-        if payload['withManualRotations'] and scenario.rotations_count == 0:
-            abort(400, message='manual-rotations-require-scenario-rotations')
+        if payload['withManualRotations'] and scenario.rotations_count == 1:
+            abort(400, message='manual-rotations-require-multiple-rotations')
 
         arms_position = get_last_arms_position(db_session)
         active_profile = get_first_active_profile(db_session)

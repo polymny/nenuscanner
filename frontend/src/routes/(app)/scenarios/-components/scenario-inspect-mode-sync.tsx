@@ -56,7 +56,7 @@ const ScenarioInspectModeSync = () => {
   }, [activeInspectMode, leds, setLedMutation, setShutterSpeedMutation, shutterSpeedPreviewValue]);
 
   useEffect(() => {
-    if (activeInspectMode !== 'rotations' || rotationsCount < 1) return;
+    if (activeInspectMode !== 'rotations' || rotationsCount <= 1) return;
 
     const turn = () => turnRotationMutation({ rotationsCount });
     turn();

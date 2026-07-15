@@ -60,8 +60,10 @@ export default function ScenarioMetadata({
   const ledPower =
     led?.value && led.value !== 'NO_LED' && led.power !== null ? `${Math.round(led.power * 100)} %` : undefined;
 
-  const hasRotations = (rotation?.total ?? 0) > 0;
-  const rotationValue = hasRotations ? `Rotation ${rotation?.index ?? 0}/${rotation?.total ?? 0}` : 'Sans rotation';
+  const hasMultipleRotations = (rotation?.total ?? 1) > 1;
+  const rotationValue = hasMultipleRotations
+    ? `Rotation ${rotation?.index ?? 0}/${rotation?.total ?? 0}`
+    : 'Sans rotation';
 
   return (
     <div className={cn('flex flex-col gap-1.5 text-xs', className)}>
@@ -69,9 +71,9 @@ export default function ScenarioMetadata({
         <MetadataRow
           icon={<RotateCw className="size-4 shrink-0 text-violet-600" />}
           title="Rotation"
-          progress={showProgress && hasRotations ? step(rotation.index, rotation.total) : undefined}
+          progress={showProgress && hasMultipleRotations ? step(rotation.index, rotation.total) : undefined}
           value={rotationValue}
-          muted={!hasRotations}
+          muted={!hasMultipleRotations}
         />
       )}
       {led && (

@@ -66,7 +66,7 @@ export interface ScenarioProgressEvent {
   step: number;
   rotationIndex: number;
   rotationTotal: number;
-  hasRotations: boolean;
+  hasMultipleRotations: boolean;
   ledIndex: number;
   ledTotal: number;
   ledValue: LedValue;
