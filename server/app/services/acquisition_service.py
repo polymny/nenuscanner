@@ -31,7 +31,6 @@ def acquisition_photos_load_options():
         joinedload(Acquisition.photos)
         .joinedload(AcquisitionPhoto.scenario_led)
         .joinedload(ScenarioLED.led_power_value),
-        joinedload(Acquisition.photos).joinedload(AcquisitionPhoto.scenario_rotation),
         joinedload(Acquisition.photos)
         .joinedload(AcquisitionPhoto.scenario_shutter_speed)
         .joinedload(ScenarioShutterSpeed.shutter_speed_value),
@@ -41,7 +40,6 @@ def acquisition_photos_load_options():
 def acquisition_scenario_load_options():
     return (
         joinedload(Acquisition.scenario).joinedload(Scenario.leds).joinedload(ScenarioLED.led_power_value),
-        joinedload(Acquisition.scenario).joinedload(Scenario.rotations),
         joinedload(Acquisition.scenario)
         .joinedload(Scenario.shutter_speeds)
         .joinedload(ScenarioShutterSpeed.shutter_speed_value),
@@ -72,8 +70,8 @@ def acquisition_thumbnail_url(photos: list[AcquisitionPhoto]) -> str | None:
     if not photos:
         return None
 
-    rotation_id = next((p.scenario_rotation_id for p in photos if p.scenario_rotation_id is not None), None)
-    pool = [p for p in photos if p.scenario_rotation_id == rotation_id]
+    rotation_index = next((p.rotation_index for p in photos if p.rotation_index > 1), 1)
+    pool = [p for p in photos if p.rotation_index == rotation_index]
     led_id = next(
         (p.scenario_led_id for p in pool if p.scenario_led and p.scenario_led.led_value == 'ALL_LEDS'),
         next((p.scenario_led_id for p in pool if p.scenario_led_id is not None), None),

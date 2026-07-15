@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-from sqlalchemy import ForeignKey, String
+from sqlalchemy import ForeignKey, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .acquisition import Acquisition
-from .scenario import ScenarioLED, ScenarioRotation, ScenarioShutterSpeed
+from .scenario import ScenarioLED, ScenarioShutterSpeed
 from ...sa_db import Base
 
 
@@ -19,11 +19,7 @@ class AcquisitionPhoto(Base):
         nullable=False,
         index=True,
     )
-    scenario_rotation_id: Mapped[int | None] = mapped_column(
-        ForeignKey('scenario_rotation.id', ondelete='SET NULL'),
-        nullable=True,
-        index=True,
-    )
+    rotation_index: Mapped[int] = mapped_column(Integer, nullable=False, default=0, server_default='0')
     scenario_shutter_speed_id: Mapped[int | None] = mapped_column(
         ForeignKey('scenario_shutter_speed.id', ondelete='SET NULL'),
         nullable=True,
@@ -36,7 +32,6 @@ class AcquisitionPhoto(Base):
     )
 
     acquisition: Mapped[Acquisition] = relationship(back_populates='photos')
-    scenario_rotation: Mapped[ScenarioRotation | None] = relationship()
     scenario_shutter_speed: Mapped[ScenarioShutterSpeed | None] = relationship()
     scenario_led: Mapped[ScenarioLED | None] = relationship()
 

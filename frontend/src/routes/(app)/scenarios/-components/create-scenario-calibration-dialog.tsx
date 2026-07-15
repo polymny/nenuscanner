@@ -33,7 +33,7 @@ export default function CreateScenarioCalibrationDialog({
   setOpen,
   scenario,
 }: CreateScenarioCalibrationDialogProps) {
-  const hasRotations = (scenario?.rotationsCount ?? 0) > 0;
+  const hasMultipleRotations = (scenario?.rotationsCount ?? 1) > 1;
   const navigate = useNavigate();
   const { isPending, mutate: createCalibrationMutate } = useCreateCalibration({
     onSuccess: ({ id }, { name }) => {
@@ -102,7 +102,7 @@ export default function CreateScenarioCalibrationDialog({
                       <Switch
                         checked={field.value}
                         className="data-[state=checked]:bg-success-500"
-                        disabled={!hasRotations}
+                        disabled={!hasMultipleRotations}
                         onCheckedChange={field.onChange}
                       />
                     </FormControl>

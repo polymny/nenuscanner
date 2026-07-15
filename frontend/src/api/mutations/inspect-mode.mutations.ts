@@ -48,6 +48,25 @@ export const leaveInspectMode = async () => {
   await client.post('/inspect-mode/leave');
 };
 
+export interface InspectModeRotationPayload {
+  rotationsCount: number;
+}
+
+export const turnInspectModeRotation = async (payload: InspectModeRotationPayload) => {
+  await client.post('/inspect-mode/rotation', payload);
+};
+
+export const useTurnInspectModeRotation = (
+  options?: UseMutationOtherOptions<void, AxiosError<ApiError>, InspectModeRotationPayload>
+) => {
+  return useMutation({
+    ...options,
+    mutationFn: async (payload) => {
+      await turnInspectModeRotation(payload);
+    },
+  });
+};
+
 export const useLeaveInspectMode = (options?: UseMutationOtherOptions<void, AxiosError<ApiError>, void>) => {
   return useMutation({
     ...options,

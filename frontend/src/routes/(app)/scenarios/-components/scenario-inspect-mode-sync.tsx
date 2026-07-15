@@ -11,12 +11,14 @@ import {
   useLeaveInspectMode,
   useSetInspectModeLed,
   useSetInspectModeShutterSpeed,
+  useTurnInspectModeRotation,
 } from '@/api/mutations/inspect-mode.mutations';
 
 const ScenarioInspectModeSync = () => {
   const { activeInspectMode, shutterSpeedPreviewValue, clearInspectMode } = useScenarioInspectMode();
   const { control } = useFormContext<UpsertScenarioPayload>();
   const leds = useWatch({ control, name: 'leds' });
+  const rotationsCount = useWatch({ control, name: 'rotationsCount' });
 
   const handleInspectModeError = (message: string) => (error: AxiosError<ApiError>) => {
     if (error.response?.status === 409) {
@@ -32,6 +34,9 @@ const ScenarioInspectModeSync = () => {
   });
   const { mutate: setShutterSpeedMutation } = useSetInspectModeShutterSpeed({
     onError: handleInspectModeError("Impossible d'appliquer le temps de pose en mode inspect."),
+  });
+  const { mutate: turnRotationMutation } = useTurnInspectModeRotation({
+    onError: handleInspectModeError('Impossible de tourner le plateau en mode inspect.'),
   });
   const { mutate: leaveMutation } = useLeaveInspectMode();
   const prevActiveInspectMode = useRef(activeInspectMode);
@@ -49,6 +54,15 @@ const ScenarioInspectModeSync = () => {
       }
     }
   }, [activeInspectMode, leds, setLedMutation, setShutterSpeedMutation, shutterSpeedPreviewValue]);
+
+  useEffect(() => {
+    if (activeInspectMode !== 'rotations' || rotationsCount <= 1) return;
+
+    const turn = () => turnRotationMutation({ rotationsCount });
+    turn();
+    const intervalId = window.setInterval(turn, 30_000);
+    return () => window.clearInterval(intervalId);
+  }, [activeInspectMode, rotationsCount, turnRotationMutation]);
 
   useEffect(() => {
     if (prevActiveInspectMode.current !== null && activeInspectMode === null) {

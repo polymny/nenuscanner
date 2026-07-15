@@ -39,11 +39,7 @@ function RouteComponent() {
 
   const lastPhoto = acquisition.photos.at(-1);
   const displayImageUrl = lastImageUrl ?? (lastPhoto ? toAbsoluteImageUrl(lastPhoto.imageUrl) : null);
-  const rotationRadiansList = [
-    ...new Set(
-      acquisition.photos.map((photo) => photo.rotationRadians).filter((radians): radians is number => radians !== null)
-    ),
-  ].sort((a, b) => a - b);
+  const rotationTotal = acquisition.scenario.rotationsCount;
 
   return (
     <div className="bg-gray-25 flex h-full flex-col gap-6 px-20 py-8">
@@ -82,9 +78,7 @@ function RouteComponent() {
             </div>
           ) : (
             <>
-              {progress && (
-                <ScenarioProgressWidget progress={progress} manualRotations={acquisition.withManualRotations} />
-              )}
+              {progress && <ScenarioProgressWidget progress={progress} />}
               {acquisition.status === 'RUNNING' && (
                 <div className="absolute top-4 left-4 z-10">
                   <Button
@@ -161,20 +155,9 @@ function RouteComponent() {
         <div className="flex w-full flex-col gap-4">
           <h2 className="font-medium text-gray-900">Galerie ({acquisition.photos.length} photos)</h2>
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
-            {acquisition.photos.map((photo) => {
-              const rotationIndex =
-                photo.rotationRadians !== null ? rotationRadiansList.indexOf(photo.rotationRadians) + 1 : undefined;
-
-              return (
-                <AcquisitionPhotoCard
-                  key={photo.id}
-                  manualRotations={acquisition.withManualRotations}
-                  photo={photo}
-                  rotationIndex={rotationIndex}
-                  rotationTotal={rotationRadiansList.length || undefined}
-                />
-              );
-            })}
+            {acquisition.photos.map((photo) => (
+              <AcquisitionPhotoCard key={photo.id} photo={photo} rotationTotal={rotationTotal} />
+            ))}
           </div>
         </div>
       )}

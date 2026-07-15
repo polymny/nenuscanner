@@ -17,3 +17,10 @@ class InspectModeShutterSpeedSchema(Schema):
         ordered = True
 
     value = fields.Float(required=True, validate=validate.Range(min=SHUTTER_SPEED_MIN, max=SHUTTER_SPEED_MAX))
+
+
+class InspectModeRotationSchema(Schema):
+    class Meta:
+        ordered = True
+
+    rotationsCount = fields.Integer(required=True, validate=validate.Range(min=1, max=12))

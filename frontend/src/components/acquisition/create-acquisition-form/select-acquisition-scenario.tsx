@@ -41,7 +41,7 @@ const SelectAcquisitionScenario = ({
   );
   const showSkeleton = useMinimumLoadingDuration(isLoadingScenarios);
   const selectedScenario = scenarios?.find((scenario) => scenario.id === selectedScenarioId);
-  const hasRotations = (selectedScenario?.rotationsCount ?? 0) > 0;
+  const hasMultipleRotations = (selectedScenario?.rotationsCount ?? 1) > 1;
 
   return (
     <>
@@ -89,7 +89,7 @@ const SelectAcquisitionScenario = ({
                         const scenarioId = Number(newValue);
                         field.onChange(scenarioId);
                         const scenario = scenarios.find((item) => item.id === scenarioId);
-                        if (!scenario?.rotationsCount) {
+                        if (scenario?.rotationsCount === 1) {
                           form.setValue('withManualRotations', false);
                         }
                       }}
@@ -137,7 +137,7 @@ const SelectAcquisitionScenario = ({
                     <Switch
                       className="data-[state=checked]:bg-success-500"
                       checked={field.value}
-                      disabled={!hasRotations}
+                      disabled={!hasMultipleRotations}
                       onCheckedChange={field.onChange}
                     />
                   </FormControl>
