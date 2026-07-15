@@ -15,7 +15,7 @@ from ..models.acquisition import Acquisition, AcquisitionStatus
 from ..models.acquisition_photo import AcquisitionPhoto
 from ..models.scenario import Scenario, ScenarioLED, ScenarioShutterSpeed
 from ..paths import SERVER_ROOT
-from ... import config, leds
+from ... import config, leds, turntable
 
 STEP_DELAY_SECONDS = 1
 POC_IMAGE_SIZE = '800/600'
@@ -159,6 +159,34 @@ def _should_pause_for_manual_rotation(step: ScenarioCaptureStep, acquisition: Ac
     return step.led_index == step.led_total and step.shutter_speed_index == step.shutter_speed_total
 
 
+def _initial_last_rotation_index(
+    steps: list[ScenarioCaptureStep],
+    steps_to_run: list[ScenarioCaptureStep],
+) -> int | None:
+    if not steps_to_run or steps_to_run[0].step_index <= 1:
+        return None
+    return steps[steps_to_run[0].step_index - 2].rotation_index
+
+
+def _rotation_step_degrees(rotation_total: int) -> float:
+    return 360.0 / rotation_total
+
+
+def _apply_rotation(
+    plate: turntable.Turntable,
+    step: ScenarioCaptureStep,
+    acquisition: Acquisition,
+    last_rotation_index: int | None,
+) -> int | None:
+    if not step.has_rotations or acquisition.with_manual_rotations:
+        return step.rotation_index if step.has_rotations else last_rotation_index
+    if last_rotation_index is not None and step.rotation_index <= last_rotation_index:
+        return last_rotation_index
+    if step.rotation_index > 1:
+        plate.turn(_rotation_step_degrees(step.rotation_total))
+    return step.rotation_index
+
+
 def _steps_from_current(acquisition: Acquisition, steps: list[ScenarioCaptureStep]) -> list[ScenarioCaptureStep]:
     if acquisition.current_step is None:
         return steps
@@ -208,6 +236,8 @@ def execute_scenario(
     gpio_leds = leds.get()
     led_state = _LedState()
     gpio_leds.off()
+    plate = turntable.get()
+    last_rotation_index = _initial_last_rotation_index(steps, steps_to_run)
 
     # TODO : déclenchement autofocus temporaire au démarrage de l'acquisition
     # gpio_leds.on()
@@ -218,6 +248,7 @@ def execute_scenario(
         if context.is_cancelled():
             raise JobCancelled()
 
+        last_rotation_index = _apply_rotation(plate, step, acquisition, last_rotation_index)
         _apply_led_value(gpio_leds, step.led.led_value, led_state)
 
         base = (
