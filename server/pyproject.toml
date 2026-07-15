@@ -9,15 +9,10 @@ packages = [{ include = "server", from = ".." }]
 python = "^3.12"
 flask = "^3.0.0"
 waitress = "^3.0.0"
-numpy = "^2.0.0"
-scipy = "^1.13.0"
 sqlalchemy = "^2.0.0"
 marshmallow = "^4"
-marshmallow-sqlalchemy = "^1.5"
-
 gphoto2 = "^2.6.0"
 flask-cors = "^6.0.2"
-pillow = "^12.2.0"
 flask-smorest = "^0.47.0"
 emoji = "*"
 pyserial = "^3.5"
@@ -27,7 +22,6 @@ ruff = "^0.15.11"
 
 [tool.poetry.scripts]
 nenuscanner = "server.__main__:main"
-dev = "server.dev:main"
 db_init = "server.sa_db:main"
 
 [build-system]

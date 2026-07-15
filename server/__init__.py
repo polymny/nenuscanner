@@ -1,11 +1,11 @@
 import os
 
-from flask import Flask, send_file, send_from_directory, session
+from flask import Flask, send_file, send_from_directory
 from flask_cors import CORS
 from flask_smorest import Api, abort
 from sqlalchemy.exc import OperationalError, SQLAlchemyError
 
-from . import config, db, leds, utils
+from . import config
 from .app.controllers.acquisition_rest_controller import blp as acquisition_blp
 from .app.controllers.arms_position_controller import blp as arms_position_blp
 from .app.controllers.artifact_controller import blp as artifact_blp
@@ -35,32 +35,6 @@ except ImportError:
     with open('secret.py', 'w') as f:
         f.write(f'SECRET_KEY = "{secret}"')
     app.config['SECRET_KEY'] = secret
-
-
-# Middlewares to help us deal with stuff
-@app.context_processor
-def inject():
-    """
-    Returns a dictionnary with the uuids of leds and the calibration state.
-    """
-    conn = db.get()
-    return {
-        'calibration': utils.get_calibration(conn),
-        'leds': leds.get().leds,
-        'CalibrationState': db.CalibrationState,
-    }
-
-
-@app.before_request
-def manage_auto_use_last_calibration():
-    """
-    Automatically use the last calibration if the config is set accordingly.
-    """
-    if config.AUTO_USE_LAST_CALIBRATION and 'calibration_id' not in session:
-        conn = db.get()
-        last = db.Calibration.get_last(conn)
-        if last is not None:
-            session['calibration_id'] = last.id
 
 
 @app.teardown_appcontext
@@ -98,19 +72,9 @@ api.register_blueprint(scenario_blp, url_prefix='/scenario')
 api.register_blueprint(arms_position_blp, url_prefix='/arms-position')
 
 
-@app.route('/static/<path:path>')
-def send_static(path):
-    return send_from_directory('static', path)
-
-
 @app.route('/data/<path:path>')
 def send_data(path):
     return send_from_directory(config.DATA_DIR, path)
-
-
-@app.route('/tmp/<path:path>')
-def send_tmp(path):
-    return send_from_directory('/tmp', path)
 
 
 # If still nothing has been reached, send index.html
