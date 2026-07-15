@@ -151,40 +151,12 @@ def _scenario_progress_payload(step: ScenarioCaptureStep) -> dict:
     }
 
 
-def _should_pause_for_manual_rotation(step: ScenarioCaptureStep, acquisition: Acquisition) -> bool:
-    if not acquisition.with_manual_rotations or not step.has_rotations:
+def _is_end_of_rotation_block(step: ScenarioCaptureStep) -> bool:
+    if not step.has_rotations:
         return False
-    if step.rotation_index >= step.rotation_total:
+    if step.led_index != step.led_total or step.shutter_speed_index != step.shutter_speed_total:
         return False
-    return step.led_index == step.led_total and step.shutter_speed_index == step.shutter_speed_total
-
-
-def _initial_last_rotation_index(
-    steps: list[ScenarioCaptureStep],
-    steps_to_run: list[ScenarioCaptureStep],
-) -> int | None:
-    if not steps_to_run or steps_to_run[0].step_index <= 1:
-        return None
-    return steps[steps_to_run[0].step_index - 2].rotation_index
-
-
-def _rotation_step_degrees(rotation_total: int) -> float:
-    return 360.0 / rotation_total
-
-
-def _apply_rotation(
-    plate: turntable.Turntable,
-    step: ScenarioCaptureStep,
-    acquisition: Acquisition,
-    last_rotation_index: int | None,
-) -> int | None:
-    if not step.has_rotations or acquisition.with_manual_rotations:
-        return step.rotation_index if step.has_rotations else last_rotation_index
-    if last_rotation_index is not None and step.rotation_index <= last_rotation_index:
-        return last_rotation_index
-    if step.rotation_index > 1:
-        plate.turn(_rotation_step_degrees(step.rotation_total))
-    return step.rotation_index
+    return step.rotation_index < step.rotation_total or step.rotation_total == 1
 
 
 def _steps_from_current(acquisition: Acquisition, steps: list[ScenarioCaptureStep]) -> list[ScenarioCaptureStep]:
@@ -237,7 +209,6 @@ def execute_scenario(
     led_state = _LedState()
     gpio_leds.off()
     plate = turntable.get()
-    last_rotation_index = _initial_last_rotation_index(steps, steps_to_run)
 
     # TODO : déclenchement autofocus temporaire au démarrage de l'acquisition
     # gpio_leds.on()
@@ -248,13 +219,9 @@ def execute_scenario(
         if context.is_cancelled():
             raise JobCancelled()
 
-        last_rotation_index = _apply_rotation(plate, step, acquisition, last_rotation_index)
         _apply_led_value(gpio_leds, step.led.led_value, led_state)
 
-        base = (
-            f'photo-r{step.rotation_index}'
-            f'-l{step.led.id}-s{step.shutter_speed.id}-{step.step_index:04d}'
-        )
+        base = f'photo-r{step.rotation_index}-l{step.led.id}-s{step.shutter_speed.id}-{step.step_index:04d}'
         preview_relative_path = photo_relative_path(acquisition_id, f'{base}.jpg')
         raw_ext = getattr(config, 'CAMERA_RAW_EXTENSION', 'nef')  # repli sur l'extension RAW Nikon
         raw_relative_path = photo_relative_path(acquisition_id, f'{base}.{raw_ext}')
@@ -277,10 +244,7 @@ def execute_scenario(
             )
             write_jpeg_preview_from_raw(raw_file_path, preview_file_path)
         else:
-            seed = (
-                f'nenuscanner-{acquisition_id}-r{step.rotation_index}'
-                f'-l{step.led.id}-s{step.shutter_speed.id}'
-            )
+            seed = f'nenuscanner-{acquisition_id}-r{step.rotation_index}-l{step.led.id}-s{step.shutter_speed.id}'
             source_url = f'https://picsum.photos/seed/{seed}/{POC_IMAGE_SIZE}'
             urllib.request.urlretrieve(source_url, SERVER_ROOT / preview_relative_path)
             raw_relative_path = preview_relative_path
@@ -306,7 +270,7 @@ def execute_scenario(
         )
         session.commit()
 
-        if _should_pause_for_manual_rotation(step, acquisition):
+        if _is_end_of_rotation_block(step) and acquisition.with_manual_rotations:
             gpio_leds.off()
             acquisition.status = AcquisitionStatus.PAUSED
             acquisition.current_step = step.step_index + 1
@@ -314,6 +278,10 @@ def execute_scenario(
             time.sleep(0.7)
             context.emit('paused', {'acquisitionId': acquisition.id})
             raise AcquisitionPaused()
+
+        if _is_end_of_rotation_block(step) and not acquisition.with_manual_rotations:
+            plate.turn(round(360 / (scenario.rotations_count + 1)))
+            time.sleep(30)  # TODO : temporaire, pas d'ACK de la part du plateau pour l'instant
 
         if step.step_index < total and config.CAMERA != 'real':
             time.sleep(STEP_DELAY_SECONDS)
