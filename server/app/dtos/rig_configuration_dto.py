@@ -1,7 +1,7 @@
 from marshmallow import Schema, fields
 
 
-class ArmsPositionEmojisSchema(Schema):
+class RigConfigurationEmojisSchema(Schema):
     class Meta:
         ordered = True
 
@@ -9,7 +9,7 @@ class ArmsPositionEmojisSchema(Schema):
     emojiRight = fields.String(required=True)
 
 
-class ArmsPositionReadSchema(Schema):
+class RigConfigurationReadSchema(Schema):
     class Meta:
         ordered = True
 

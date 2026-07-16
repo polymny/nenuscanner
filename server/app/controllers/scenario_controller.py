@@ -66,7 +66,7 @@ class ScenarioController(MethodView):
                 Acquisition.id,
                 Acquisition.name,
                 Acquisition.scenario_id,
-                Acquisition.arms_position_id,
+                Acquisition.rig_configuration_id,
                 Acquisition.status,
             )
             .filter(
@@ -76,9 +76,9 @@ class ScenarioController(MethodView):
             .order_by(Acquisition.id.asc())
             .all()
         )
-        for cal_id, cal_name, scenario_id, arms_position_id, status in cal_rows:
+        for cal_id, cal_name, scenario_id, rig_configuration_id, status in cal_rows:
             calibrations_by_scenario_id[scenario_id].append(
-                {'id': cal_id, 'name': cal_name, 'armsPositionId': arms_position_id, 'status': status}
+                {'id': cal_id, 'name': cal_name, 'rigConfigurationId': rig_configuration_id, 'status': status}
             )
 
         return [

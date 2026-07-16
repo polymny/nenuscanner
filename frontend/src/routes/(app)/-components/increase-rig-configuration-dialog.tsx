@@ -12,21 +12,21 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { useGetLastArmsPosition } from '@/api/queries/arms-position.queries';
-import { useIncreaseArmsPosition } from '@/api/mutations/arms-position.mutations';
+import { useGetLastRigConfiguration } from '@/api/queries/rig-configuration.queries';
+import { useIncreaseRigConfiguration } from '@/api/mutations/rig-configuration.mutations';
 import { cn } from '@/lib/utils';
 
-export default function IncreaseArmsPositionDialog() {
+export default function IncreaseRigConfigurationDialog() {
   const [open, setOpen] = useState(false);
-  const { data: lastArmsPosition } = useGetLastArmsPosition();
+  const { data: lastRigConfiguration } = useGetLastRigConfiguration();
 
   const {
-    mutate: increaseArmsPosition,
+    mutate: increaseRigConfiguration,
     isSuccess,
     reset,
-  } = useIncreaseArmsPosition({
+  } = useIncreaseRigConfiguration({
     onSuccess: () => {
-      toast.success('Position des bras mise à jour.');
+      toast.success('Rig mis à jour.');
       setTimeout(() => {
         setOpen(false);
       }, 1200);
@@ -38,25 +38,25 @@ export default function IncreaseArmsPositionDialog() {
   }, [open, reset]);
 
   const [isPulsing, setIsPulsing] = useState(false);
-  const previousPositionKey = useRef<string | undefined>(undefined);
-  const positionKey = useMemo(
-    () => (lastArmsPosition ? `${lastArmsPosition.emojiLeft}-${lastArmsPosition.emojiRight}` : undefined),
-    [lastArmsPosition]
+  const previousRigKey = useRef<string | undefined>(undefined);
+  const RigKey = useMemo(
+    () => (lastRigConfiguration ? `${lastRigConfiguration.emojiLeft}-${lastRigConfiguration.emojiRight}` : undefined),
+    [lastRigConfiguration]
   );
 
   useEffect(() => {
-    if (!positionKey) return;
-    if (previousPositionKey.current === undefined) {
-      previousPositionKey.current = positionKey;
+    if (!RigKey) return;
+    if (previousRigKey.current === undefined) {
+      previousRigKey.current = RigKey;
       return;
     }
-    if (previousPositionKey.current === positionKey) return;
-    previousPositionKey.current = positionKey;
+    if (previousRigKey.current === RigKey) return;
+    previousRigKey.current = RigKey;
 
     setIsPulsing(true);
     const timeout = setTimeout(() => setIsPulsing(false), 400);
     return () => clearTimeout(timeout);
-  }, [positionKey]);
+  }, [RigKey]);
 
   return (
     <Dialog
@@ -71,11 +71,11 @@ export default function IncreaseArmsPositionDialog() {
           className="text-brand-600 h-[42px] overflow-hidden border-none bg-orange-300 p-0 hover:bg-orange-400"
         >
           <div className="flex items-center gap-2 px-3">
-            <DraftingCompass className="size-4" /> J'ai bougé les bras
+            <DraftingCompass className="size-4" /> Rig modifié
           </div>
           <div className="flex h-full min-w-[70px] items-center justify-center gap-1 bg-orange-100 px-3 text-lg text-gray-900">
-            <span>{lastArmsPosition?.emojiLeft}</span>
-            <span>{lastArmsPosition?.emojiRight}</span>
+            <span>{lastRigConfiguration?.emojiLeft}</span>
+            <span>{lastRigConfiguration?.emojiRight}</span>
           </div>
         </Button>
       </DialogTrigger>
@@ -83,13 +83,11 @@ export default function IncreaseArmsPositionDialog() {
         <DialogHeader>
           <DialogTitle className="text-center text-2xl">
             <span className={cn('inline-block transition-transform duration-500 ease-out', isPulsing && 'scale-150')}>
-              {lastArmsPosition?.emojiLeft}
-              {lastArmsPosition?.emojiRight}
+              {lastRigConfiguration?.emojiLeft}
+              {lastRigConfiguration?.emojiRight}
             </span>
           </DialogTitle>
-          <DialogDescription>
-            Vous avez bougé les bras ? Mettez à jour la position des bras pour continuer.
-          </DialogDescription>
+          <DialogDescription>Vous avez modifié le rig ? Mettez le à jour pour continuer.</DialogDescription>
         </DialogHeader>
         <DialogFooter className="items-center justify-between border-t-0">
           <Button
@@ -104,7 +102,7 @@ export default function IncreaseArmsPositionDialog() {
           </Button>
           <Button
             onClick={() => {
-              increaseArmsPosition();
+              increaseRigConfiguration();
             }}
             size="lg"
             variant="default"

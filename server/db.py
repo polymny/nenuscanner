@@ -39,11 +39,11 @@ def init_db() -> None:
     from .app.models import (
         acquisition,  # noqa: F401
         acquisition_photo,  # noqa: F401
-        arms_position,  # noqa: F401
         artifact,  # noqa: F401
         camera_settings,  # noqa: F401
         led_power_value,  # noqa: F401
         profile,  # noqa: F401
+        rig_configuration,  # noqa: F401
         scenario,  # noqa: F401
         shutter_speed_value,  # noqa: F401
     )

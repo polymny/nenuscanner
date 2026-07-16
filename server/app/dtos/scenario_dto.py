@@ -38,7 +38,7 @@ class ScenarioLinkedCalibrationSchema(Schema):
 
     id = fields.Integer(required=True)
     name = fields.String(required=True)
-    armsPositionId = fields.Integer(required=True)
+    rigConfigurationId = fields.Integer(required=True)
     status = fields.String(required=True, validate=validate.OneOf(ACQUISITION_STATUSES))
 
 

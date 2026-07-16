@@ -60,7 +60,7 @@ const SelectAcquisitionCalibration = ({ setOpen, setCurrentStep }: SelectAcquisi
   );
 
   const { data: calibrations = [], isPending: isLoadingCalibrations } = useGetCalibrations({
-    onlyCurrentArmsPosition: true,
+    onlyCurrentRigConfiguration: true,
     status: 'COMPLETED',
   });
   const filteredCalibrations = useMemo(() => {

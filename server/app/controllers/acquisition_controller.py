@@ -16,8 +16,8 @@ from ..dtos.acquisition_dto import (
     CalibrationListQuerySchema,
 )
 from ..models.acquisition import Acquisition, AcquisitionStatus
-from ..models.arms_position import ArmsPosition
 from ..models.artifact import Artifact
+from ..models.rig_configuration import RigConfiguration
 from ..models.scenario import Scenario
 from ..services.acquisition_download_service import (
     EXTERNAL_DISK_PATH,
@@ -33,9 +33,9 @@ from ..services.acquisition_service import (
     photo_path_to_url,
     run_acquisition,
 )
-from ..services.arms_position_service import get_last_arms_position
 from ..services.camera_settings_service import snapshot_current_camera_settings
 from ..services.profile_service import get_first_active_profile
+from ..services.rig_configuration_service import get_last_rig_configuration
 from ..services.scenario_service import scenario_summary_dto
 from ..services.sse_job_runner import sse_job_registry
 from ...db import db_session
@@ -71,10 +71,10 @@ def _acquisition_to_dto(
         'thumbnail': acquisition_thumbnail_url(acquisition.photos),
         'artifactId': acquisition.artifact_id,
         'calibrationId': acquisition.calibration_id,
-        'armsPositionId': acquisition.arms_position_id,
-        'armsPosition': {
-            'emojiLeft': acquisition.arms_position.emoji_left,
-            'emojiRight': acquisition.arms_position.emoji_right,
+        'rigConfigurationId': acquisition.rig_configuration_id,
+        'rigConfiguration': {
+            'emojiLeft': acquisition.rig_configuration.emoji_left,
+            'emojiRight': acquisition.rig_configuration.emoji_right,
         },
         'profileId': acquisition.profile_id,
         'withRotationAutofocus': acquisition.with_rotation_autofocus,
@@ -112,14 +112,14 @@ class AcquisitionController(MethodView):
             .options(
                 *acquisition_photos_load_options(),
                 *acquisition_scenario_load_options(),
-                joinedload(Acquisition.arms_position),
+                joinedload(Acquisition.rig_configuration),
             )
-            .join(Acquisition.arms_position)
+            .join(Acquisition.rig_configuration)
             .filter(
                 Acquisition.artifact_id == artifact_id,
                 Acquisition.is_calibration.is_(False),
             )
-            .order_by(ArmsPosition.index.desc())
+            .order_by(RigConfiguration.index.desc())
             .all()
         )
         return [_acquisition_to_dto(acquisition) for acquisition in acquisitions]
@@ -143,7 +143,7 @@ class AcquisitionController(MethodView):
         if payload['withManualRotations'] and scenario.rotations_count == 1:
             abort(400, message='manual-rotations-require-multiple-rotations')
 
-        arms_position = get_last_arms_position(db_session)
+        rig_configuration = get_last_rig_configuration(db_session)
 
         calibration_id = payload['calibrationId']
         if calibration_id is not None:
@@ -152,7 +152,7 @@ class AcquisitionController(MethodView):
                 .filter(
                     Acquisition.id == calibration_id,
                     Acquisition.is_calibration.is_(True),
-                    Acquisition.arms_position_id == arms_position.id,
+                    Acquisition.rig_configuration_id == rig_configuration.id,
                     Acquisition.status == AcquisitionStatus.COMPLETED,
                 )
                 .one_or_none()
@@ -172,7 +172,7 @@ class AcquisitionController(MethodView):
             db_session,
             artifact_id=payload['artifactId'],
             scenario_id=scenario_id,
-            arms_position_id=arms_position.id,
+            rig_configuration_id=rig_configuration.id,
             is_calibration=False,
         )
 
@@ -183,7 +183,7 @@ class AcquisitionController(MethodView):
             artifact_id=payload['artifactId'],
             scenario_id=scenario_id,
             calibration_id=calibration_id,
-            arms_position_id=arms_position.id,
+            rig_configuration_id=rig_configuration.id,
             profile_id=active_profile.id if active_profile is not None else None,
             camera_settings_id=camera_settings_snapshot.id,
             with_rotation_autofocus=payload['withRotationAutofocus'],
@@ -208,20 +208,20 @@ class CalibrationController(MethodView):
             .options(
                 *acquisition_photos_load_options(),
                 *acquisition_scenario_load_options(),
-                joinedload(Acquisition.arms_position),
+                joinedload(Acquisition.rig_configuration),
             )
             .filter(Acquisition.is_calibration.is_(True))
         )
 
-        if query_args['onlyCurrentArmsPosition']:
-            arms_position = get_last_arms_position(db_session)
-            query = query.filter(Acquisition.arms_position_id == arms_position.id)
+        if query_args['onlyCurrentRigConfiguration']:
+            rig_configuration = get_last_rig_configuration(db_session)
+            query = query.filter(Acquisition.rig_configuration_id == rig_configuration.id)
 
         status = query_args['status']
         if status is not None:
             query = query.filter(Acquisition.status == status)
 
-        calibrations = query.join(Acquisition.arms_position).order_by(ArmsPosition.index.desc()).all()
+        calibrations = query.join(Acquisition.rig_configuration).order_by(RigConfiguration.index.desc()).all()
 
         calibration_ids = [calibration.id for calibration in calibrations]
         acquisitions_by_calibration_id: dict[int, list[dict]] = {
@@ -263,14 +263,14 @@ class CalibrationController(MethodView):
         if payload['withManualRotations'] and scenario.rotations_count == 1:
             abort(400, message='manual-rotations-require-multiple-rotations')
 
-        arms_position = get_last_arms_position(db_session)
+        rig_configuration = get_last_rig_configuration(db_session)
         active_profile = get_first_active_profile(db_session)
 
         delete_pending_acquisitions(
             db_session,
             artifact_id=None,
             scenario_id=scenario_id,
-            arms_position_id=arms_position.id,
+            rig_configuration_id=rig_configuration.id,
             is_calibration=True,
         )
 
@@ -281,7 +281,7 @@ class CalibrationController(MethodView):
             artifact_id=None,
             scenario_id=scenario_id,
             calibration_id=None,
-            arms_position_id=arms_position.id,
+            rig_configuration_id=rig_configuration.id,
             profile_id=active_profile.id if active_profile is not None else None,
             camera_settings_id=camera_settings_snapshot.id,
             with_rotation_autofocus=payload['withRotationAutofocus'],
