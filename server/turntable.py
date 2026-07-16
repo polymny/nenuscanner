@@ -54,7 +54,7 @@ class SerialTurntable(Turntable):
                         stripped = line.strip()
                         if stripped:
                             self._rx_queue.put(stripped)
-                            logger.debug('Turntable RX: %s', stripped)
+                            logger.warning('Turntable RX: %s', stripped)
             except UnicodeDecodeError as exc:
                 logger.warning('Turntable RX decode error: %s', exc)
             sleep(0.01)
@@ -69,7 +69,7 @@ class SerialTurntable(Turntable):
                 break
             payload = command if command.endswith('\n') else f'{command}\n'
             self._ser.write(payload.encode('utf-8'))
-            logger.debug('Turntable TX: %s', command.strip())
+            logger.warning('Turntable TX: %s', command.strip())
 
     def _drain_rx_queue(self) -> None:
         while True:
@@ -83,31 +83,14 @@ class SerialTurntable(Turntable):
         self._tx_queue.put(command)
         try:
             response = self._rx_queue.get(timeout=COMMAND_TIMEOUT_SECONDS)
-            logger.debug('Turntable %s -> %s', command, response)
+            logger.warning('Turntable %s -> %s', command, response)
             return response
         except queue.Empty:
             logger.warning('Turntable timeout waiting for response to %s', command)
             return None
 
-    def _send_until_ok(self, command: str) -> None:
-        for attempt in range(1, MAX_COMMAND_RETRIES + 1):
-            response = self._send(command)
-            if response == 'OK':
-                return
-            if response is not None:
-                logger.warning(
-                    'Turntable unexpected response %r for %s (attempt %d/%d)',
-                    response,
-                    command,
-                    attempt,
-                    MAX_COMMAND_RETRIES,
-                )
-        raise RuntimeError(f'turntable-command-failed:{command}')
-
     def turn(self, degrees: float) -> None:
         with self._lock:
-            self._send_until_ok('E')
-
             turn_command = f'TURN{round(degrees)}'
             for attempt in range(1, MAX_COMMAND_RETRIES + 1):
                 response = self._send(turn_command)
@@ -115,7 +98,7 @@ class SerialTurntable(Turntable):
                     break
                 if response == 'ERR_ENA':
                     logger.warning('Turntable driver disabled, re-enabling before %s', turn_command)
-                    self._send_until_ok('E')
+                    self._send('E')
                     continue
                 if response is not None:
                     logger.warning(
@@ -128,7 +111,7 @@ class SerialTurntable(Turntable):
             else:
                 raise RuntimeError(f'turntable-command-failed:{turn_command}')
 
-            self._send_until_ok('E')
+            threading.Timer(5.0, lambda: self._send('E')).start()
 
     def close(self) -> None:
         with self._lock:
