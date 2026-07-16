@@ -1,7 +1,5 @@
 from sqlalchemy.orm import Session
 
-from server.app.constants.leds import LEDS_COUNT
-
 from .camera_settings_service import get_current_camera_settings
 from .gphoto2_service import set_camera_setting
 from ..models.acquisition import Acquisition, AcquisitionStatus
@@ -19,12 +17,12 @@ def _assert_no_running_acquisition(session: Session) -> None:
 
 def set_led_inspect_mode(session: Session, led_value: str) -> None:
     _assert_no_running_acquisition(session)
-    if config.CAMERA == 'real':
-        camera_settings = get_current_camera_settings(session)
+    # if config.CAMERA == 'real':
+    #     camera_settings = get_current_camera_settings(session)
 
-        # TODO : correction temporaire
-        target_shutter_speed = float(camera_settings.absolute_shutter_speed_value) / LEDS_COUNT
-        set_camera_setting('shutterspeed', target_shutter_speed)
+    #     # TODO : correction temporaire
+    #     target_shutter_speed = float(camera_settings.absolute_shutter_speed_value) / LEDS_COUNT
+    #     set_camera_setting('shutterspeed', target_shutter_speed)
 
     gpio_leds = leds.get()
 
@@ -51,7 +49,7 @@ def set_shutter_speed_inspect_mode(session: Session, relative_value: float) -> N
         target_shutter_speed = float(camera_settings.absolute_shutter_speed_value) * float(relative_value)
 
         # TODO : correction temporaire
-        target_shutter_speed /= LEDS_COUNT
+        # target_shutter_speed /= LEDS_COUNT
 
         set_camera_setting('shutterspeed', target_shutter_speed)
 
@@ -59,13 +57,13 @@ def set_shutter_speed_inspect_mode(session: Session, relative_value: float) -> N
 def leave_inspect_mode(session: Session) -> None:
     leds.get().off()
 
-    if config.CAMERA == 'real':
-        camera_settings = get_current_camera_settings(session)
+    # if config.CAMERA == 'real':
+    #     camera_settings = get_current_camera_settings(session)
 
-        # TODO : correction temporaire
-        target_shutter_speed = float(camera_settings.absolute_shutter_speed_value) / LEDS_COUNT
+    #     # TODO : correction temporaire
+    #     target_shutter_speed = float(camera_settings.absolute_shutter_speed_value) / LEDS_COUNT
 
-        set_camera_setting('shutterspeed', target_shutter_speed)
+    #     set_camera_setting('shutterspeed', target_shutter_speed)
 
     turntable.get().disable()
 

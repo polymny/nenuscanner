@@ -4,7 +4,11 @@ import { toast } from 'sonner';
 import CameraSettingSlider from './camera-setting-slider';
 import type { CameraSettings } from '@/types/camera.types';
 import { useTriggerCameraAutofocus, useUpdateCameraSetting } from '@/api/mutations/camera.mutations';
-import { useSetInspectModeLed } from '@/api/mutations/inspect-mode.mutations';
+import {
+  leaveInspectMode,
+  sendLeaveInspectModeOnPageExit,
+  useSetInspectModeLed,
+} from '@/api/mutations/inspect-mode.mutations';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 
@@ -41,18 +45,18 @@ const CameraSettingsForm = memo(function CameraSettingsForm({ isPending, isError
   });
 
   useEffect(() => {
-    // setLedMutation({ value: 'ALL_LEDS', powerId: 1 });
+    setLedMutation({ value: 'ALL_LEDS', powerId: 1 });
 
     const handlePageHide = (event: PageTransitionEvent) => {
       if (event.persisted) return;
-      // sendLeaveInspectModeOnPageExit();
+      sendLeaveInspectModeOnPageExit();
     };
 
     window.addEventListener('pagehide', handlePageHide);
 
     return () => {
       window.removeEventListener('pagehide', handlePageHide);
-      // void leaveInspectMode();
+      void leaveInspectMode();
     };
   }, [setLedMutation]);
 
