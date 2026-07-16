@@ -3,7 +3,7 @@ from flask_smorest import Blueprint
 
 from ..dtos.led_power_value_dto import LedPowerValueReadSchema
 from ..models.led_power_value import LedPowerValue
-from ...sa_db import db_session
+from ...db import db_session
 
 blp = Blueprint('led-power-value', __name__, description='Valeurs de puissance LED')
 

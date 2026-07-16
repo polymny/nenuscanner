@@ -1,106 +1,109 @@
-import json
-import time
+from datetime import datetime
 
-from flask import Blueprint, jsonify, render_template, request, send_file
+from flask.views import MethodView
+from flask_smorest import Blueprint, abort
 
-from ... import camera as C
+from ..dtos.camera_dto import CameraFocusAreaUpdateSchema, CameraSettingsSchema, CameraSettingUpdateSchema
+from ..paths import SERVER_ROOT
+from ..services.camera_settings_service import persist_current_camera_settings
+from ..services.exiftool_service import write_jpeg_preview_from_raw
+from ..services.gphoto2_service import (
+    capture_raw_to_file,
+    get_camera_settings,
+    set_camera_setting,
+    set_focus_area,
+    trigger_autofocus,
+)
+from ... import config
+from ...db import db_session
 
-blueprint = Blueprint('camera', __name__)
-
-
-@blueprint.route('/')
-def get():
-    """
-    Returns the page showing camera configuration for all parameters in capturesettings and imgsettings,
-    grouped by section.
-    """
-    return render_template('camera.html')
-
-
-@blueprint.route('/set', methods=['POST'])
-def set_camera_settings():
-    """
-    Receives and processes new camera settings for all parameters from the client.
-    """
-    data = request.get_json()
-    updated = {}
-    for key, value in data.items():
-        C.set_config(key, value)
-        updated[key] = value
-
-    try:
-        with C.get() as cam:
-            if hasattr(cam, 'capture_preview'):
-                n = C.PREVIEW_FLUSH_AFTER_SETTING
-                for i in range(n):
-                    cam.capture_preview()
-                    if i + 1 < n:
-                        time.sleep(C.PREVIEW_FLUSH_SLEEP_SEC)
-        return jsonify({'status': 'ok'})
-    except C.CameraException as e:
-        return jsonify({'status': 'error', 'error': str(e)}), 500
-
-    return {'status': 'ok', **updated}
+blp = Blueprint('camera', __name__, description='Réglages caméra')
 
 
-@blueprint.route('/feed.jpg', methods=['GET'])
-def camera_feed():
-    want_capture = request.args.get('capture', '1').lower() not in ('0', 'false', 'no')
-    if want_capture:
-        capture_preview()
-    resp = send_file('static/feed.jpg', mimetype='image/jpeg', max_age=0)
-    resp.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
-    return resp
+@blp.route('/settings')
+class CameraSettingsController(MethodView):
+    @blp.response(200, CameraSettingsSchema)
+    def get(self):
+        """Retourne les réglages ISO, temps de pose et ouverture de la caméra."""
+        return get_camera_settings()
+
+    @blp.arguments(CameraSettingUpdateSchema)
+    @blp.response(204)
+    def patch(self, payload):
+        """Applique un réglage caméra (ISO, temps de pose ou ouverture) et persiste l'état courant en DB."""
+        try:
+            set_camera_setting(payload['setting'], payload['value'])
+            persist_current_camera_settings(db_session)
+            db_session.commit()
+
+        except ValueError as error:
+            db_session.rollback()
+            abort(400, message=str(error))
+        except Exception:
+            db_session.rollback()
+            raise
 
 
-@blueprint.route('/config', methods=['GET'])
-def get_camera_config():
-    """
-    Returns grouped camera parameters as JSON for frontend JS.
-    """
-    try:
-        cam = C.get()
-        cam.config()
-    except C.CameraException as e:
-        return jsonify({'status': 'error', 'error': str(e)}), 500
-
-    with open('configCamera.json', 'r') as f:
-        config = json.load(f)
-
-    grouped_params = []
-    for section, settings in config['main'].items():
-        section_params = []
-        if isinstance(settings, dict):
-            for param_name, param in settings.items():
-                if 'Choices' in param and isinstance(param['Choices'], list) and param['Choices']:
-                    choices = [
-                        {'value': c.get('id', idx), 'label': c['label']} for idx, c in enumerate(param['Choices'])
-                    ]
-
-                    section_params.append(
-                        {
-                            'name': param_name,
-                            'label': param.get('Label', param_name.capitalize()),
-                            'choices': choices,
-                            'current': param.get('Current', ''),
-                            'Type': param.get('Type', 'Text'),
-                            'Readonly': param.get('Readonly', 0),
-                        }
-                    )
-
-        if section_params:
-            grouped_params.append({'section': section, 'params': section_params})
-
-    return jsonify(grouped_params)
+@blp.route('/autofocus')
+class CameraAutofocusController(MethodView):
+    @blp.response(204)
+    def post(self):
+        """Déclenche l'autofocus de la caméra."""
+        trigger_autofocus()
 
 
-def capture_preview():
-    """
-    Capture un aperçu avec gphoto2 et sauvegarde dans static/feed.jpg
-    """
-    try:
-        with C.get() as cam:
-            cam.capture_preview()
-            return jsonify({'status': 'ok'})
-    except C.CameraException as e:
-        return jsonify({'status': 'error', 'error': str(e)}), 500
+@blp.route('/focus-area')
+class CameraFocusAreaController(MethodView):
+    @blp.arguments(CameraFocusAreaUpdateSchema)
+    @blp.response(204)
+    def post(self, payload):
+        """Déplace la zone AF (format 3:2) puis déclenche l'autofocus."""
+        set_focus_area(payload['x'], payload['y'])
+
+
+@blp.route('/calibration-capture')
+class CameraCalibrationCaptureController(MethodView):
+    @blp.response(200)
+    def post(self):
+        """Capture une photo pour chaque temps de pose disponible sur la caméra."""
+        if config.CAMERA == 'dummy':
+            abort(400, 'camera-not-available')
+
+        settings = get_camera_settings()
+        shutter_speeds = settings['shutterSpeedValues']
+        iso_value = float(settings['currentIsoValue'])
+        aperture_value = float(settings['currentApertureValue'])
+
+        session_dir = SERVER_ROOT / 'data' / 'camera_calibration' / datetime.now().strftime('%Y%m%d-%H%M%S')
+        session_dir.mkdir(parents=True, exist_ok=True)
+
+        raw_ext = getattr(config, 'CAMERA_RAW_EXTENSION', 'nef')
+        photos: list[dict] = []
+
+        for index, shutter_speed in enumerate(shutter_speeds, start=1):
+            label = f'{float(shutter_speed):g}'.replace('.', '_')
+            base = f'{index:03d}-shutter-{label}'
+            raw_path = session_dir / f'{base}.{raw_ext}'
+            preview_path = session_dir / f'{base}.jpg'
+
+            capture_raw_to_file(
+                str(raw_path),
+                shutterspeed_value=float(shutter_speed),
+                iso_value=iso_value,
+                aperture_value=aperture_value,
+            )
+            write_jpeg_preview_from_raw(str(raw_path), str(preview_path))
+            saved_raw_path = raw_path
+
+            photos.append(
+                {
+                    'shutterSpeed': float(shutter_speed),
+                    'rawPath': str(saved_raw_path.relative_to(SERVER_ROOT)),
+                    'previewPath': str(preview_path.relative_to(SERVER_ROOT)),
+                }
+            )
+
+        return {
+            'directory': str(session_dir.relative_to(SERVER_ROOT)),
+            'photos': photos,
+        }

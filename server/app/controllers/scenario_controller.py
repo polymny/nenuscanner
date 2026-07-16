@@ -17,7 +17,7 @@ from ..services.scenario_service import (
     duplicate_scenario,
     scenario_summary_dto,
 )
-from ...sa_db import db_session
+from ...db import db_session
 
 blp = Blueprint('scenario', __name__, description='Gestion des scénarios')
 

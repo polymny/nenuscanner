@@ -3,7 +3,7 @@ from flask_smorest import Blueprint, abort
 
 from ..dtos.artifact_dto import ArtifactCreateSchema, ArtifactReadSchema, ArtifactUpdateSchema
 from ..models.artifact import Artifact
-from ...sa_db import db_session
+from ...db import db_session
 
 blp = Blueprint('artifact', __name__, description='Gestion des objets')
 
