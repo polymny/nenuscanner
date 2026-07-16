@@ -15,6 +15,15 @@ MAX_COMMAND_RETRIES = 5
 
 
 class Turntable:
+    def is_dummy(self) -> bool:
+        pass
+
+    def enable(self) -> None:
+        pass
+
+    def disable(self) -> None:
+        pass
+
     def turn(self, degrees: float) -> None:
         pass
 
@@ -23,8 +32,18 @@ class Turntable:
 
 
 class DummyTurntable(Turntable):
+    def is_dummy(self) -> bool:
+        return True
+
+    def enable(self) -> None:
+        logger.info('DummyTurntable: enable (TURN0, E if ERR_ENA)')
+
+    def disable(self) -> None:
+        logger.info('DummyTurntable: disable (TURN0, E if not ERR_ENA)')
+
     def turn(self, degrees: float) -> None:
-        logger.info('DummyTurntable: E then TURN%d then E', round(degrees))
+        self.enable()
+        logger.info('DummyTurntable: TURN%d', round(degrees))
 
 
 class SerialTurntable(Turntable):
@@ -89,29 +108,46 @@ class SerialTurntable(Turntable):
             logger.warning('Turntable timeout waiting for response to %s', command)
             return None
 
+    def _set_enabled(self, enabled: bool) -> None:
+        for attempt in range(1, MAX_COMMAND_RETRIES + 1):
+            response = self._send('TURN0')
+            if response == 'ERR_ENA':
+                if not enabled:
+                    return
+                self._send('E')
+                continue
+            if response == 'OK':
+                if enabled:
+                    return
+                self._send('E')
+                continue
+            if response is not None:
+                logger.warning(
+                    'Turntable unexpected response %r for TURN0 (attempt %d/%d)',
+                    response,
+                    attempt,
+                    MAX_COMMAND_RETRIES,
+                )
+        raise RuntimeError(f'turntable-{"enable" if enabled else "disable"}-failed')
+
+    def is_dummy(self) -> bool:
+        return False
+
+    def enable(self) -> None:
+        with self._lock:
+            self._set_enabled(True)
+
+    def disable(self) -> None:
+        with self._lock:
+            self._set_enabled(False)
+
     def turn(self, degrees: float) -> None:
         with self._lock:
+            self._set_enabled(True)
             turn_command = f'TURN{round(degrees)}'
-            for attempt in range(1, MAX_COMMAND_RETRIES + 1):
-                response = self._send(turn_command)
-                if response == 'OK':
-                    break
-                if response == 'ERR_ENA':
-                    logger.warning('Turntable driver disabled, re-enabling before %s', turn_command)
-                    self._send('E')
-                    continue
-                if response is not None:
-                    logger.warning(
-                        'Turntable unexpected response %r for %s (attempt %d/%d)',
-                        response,
-                        turn_command,
-                        attempt,
-                        MAX_COMMAND_RETRIES,
-                    )
-            else:
+            response = self._send(turn_command)
+            if response != 'OK':
                 raise RuntimeError(f'turntable-command-failed:{turn_command}')
-
-            threading.Timer(5.0, lambda: self._send('E')).start()
 
     def close(self) -> None:
         with self._lock:

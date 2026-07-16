@@ -279,7 +279,9 @@ def execute_scenario(
 
         if _is_end_of_rotation_block(step) and not acquisition.with_manual_rotations:
             plate.turn(round(360 / (scenario.rotations_count + 1)))
-            time.sleep(30)  # TODO : temporaire, pas d'ACK de la part du plateau pour l'instant
+            if not plate.is_dummy():
+                time.sleep(30)  # TODO : temporaire, pas d'ACK de la part du plateau pour l'instant
+                plate.disable()
 
         if step.step_index < total and config.CAMERA != 'real':
             time.sleep(STEP_DELAY_SECONDS)

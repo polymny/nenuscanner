@@ -67,6 +67,8 @@ def leave_inspect_mode(session: Session) -> None:
 
         set_camera_setting('shutterspeed', target_shutter_speed)
 
+    turntable.get().disable()
+
 
 def turn_inspect_mode_rotation(session: Session, rotations_count: int) -> None:
     _assert_no_running_acquisition(session)
