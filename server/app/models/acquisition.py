@@ -26,7 +26,7 @@ class AcquisitionStatus:
 
 
 class Acquisition(Base):
-    __tablename__ = 'artifact_acquisition'
+    __tablename__ = 'acquisition'
 
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(255), nullable=False)
@@ -41,7 +41,7 @@ class Acquisition(Base):
         index=True,
     )
     calibration_id: Mapped[int | None] = mapped_column(
-        ForeignKey('artifact_acquisition.id', ondelete='SET NULL'),
+        ForeignKey('acquisition.id', ondelete='SET NULL'),
         nullable=True,
         index=True,
     )

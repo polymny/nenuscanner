@@ -15,7 +15,7 @@ class AcquisitionPhoto(Base):
     preview_path: Mapped[str] = mapped_column(String(512), nullable=False)
     raw_path: Mapped[str] = mapped_column(String(512), nullable=False)
     acquisition_id: Mapped[int] = mapped_column(
-        ForeignKey('artifact_acquisition.id', ondelete='CASCADE'),
+        ForeignKey('acquisition.id', ondelete='CASCADE'),
         nullable=False,
         index=True,
     )
