@@ -7,7 +7,7 @@ import AcquisitionCard from '@/components/acquisition/acquisition-card';
 import CreateAcquisitionCard from '@/components/acquisition/create-acquisition-card';
 import { ComponentCardSkeleton } from '@/components/component-card';
 import { useGetCalibrations } from '@/api/queries/acquisition.queries';
-import { useGetLastArmsPosition } from '@/api/queries/arms-position.queries';
+import { useGetLastRigConfiguration } from '@/api/queries/rig-configuration.queries';
 import { useDownloadAcquisitions } from '@/api/mutations/acquisition.mutations';
 import { Button } from '@/components/ui/button';
 import { useMinimumLoadingDuration } from '@/hooks/use-minimum-loading-duration';
@@ -19,7 +19,7 @@ export const Route = createFileRoute('/(app)/calibrations/')({
 function RouteComponent() {
   const navigate = useNavigate();
   const { data: calibrations, isPending: isLoadingCalibrations } = useGetCalibrations();
-  const { data: lastArmsPosition } = useGetLastArmsPosition();
+  const { data: lastRigConfiguration } = useGetLastRigConfiguration();
   const showSkeleton = useMinimumLoadingDuration(isLoadingCalibrations);
 
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
@@ -83,7 +83,9 @@ function RouteComponent() {
             {calibrations?.map((calibration) => (
               <AcquisitionCard
                 acquisition={calibration}
-                dimmed={lastArmsPosition !== undefined && calibration.armsPositionId !== lastArmsPosition.id}
+                dimmed={
+                  lastRigConfiguration !== undefined && calibration.rigConfigurationId !== lastRigConfiguration.id
+                }
                 key={calibration.id}
                 onClick={() => navigate({ to: `/acquisitions/${calibration.id}` })}
                 onDelete={() => {

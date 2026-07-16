@@ -8,8 +8,8 @@ from sqlalchemy.orm import Mapped, mapped_column
 from ...db import Base
 
 
-class ArmsPosition(Base):
-    __tablename__ = 'arms_position'
+class RigConfiguration(Base):
+    __tablename__ = 'rig_configuration'
 
     id: Mapped[int] = mapped_column(primary_key=True)
     index: Mapped[int] = mapped_column(nullable=False, index=True)
@@ -23,6 +23,6 @@ class ArmsPosition(Base):
 
     def __repr__(self) -> str:
         return (
-            f'ArmsPosition(id={self.id!r}, index={self.index!r}, '
+            f'RigConfiguration(id={self.id!r}, index={self.index!r}, '
             f'emoji_left={self.emoji_left!r}, emoji_right={self.emoji_right!r})'
         )

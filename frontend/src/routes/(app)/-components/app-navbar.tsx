@@ -2,7 +2,7 @@ import { Link } from '@tanstack/react-router';
 import { memo } from 'react';
 import ProfileMenuWidget from './profile-menu-widget';
 import CreateGlobalAcquisitionDialog from './create-global-acquisition-dialog';
-import IncreaseArmsPositionDialog from './increase-arms-position-dialog';
+import IncreaseRigConfigurationDialog from './increase-rig-configuration-dialog';
 import { cn } from '@/lib/utils';
 
 interface AppNavbarProps {
@@ -65,7 +65,7 @@ const AppNavbar = memo(function AppNavbar({ pathname }: AppNavbarProps) {
             <h3>NenuScanner</h3>
           </Link>
           <CreateGlobalAcquisitionDialog />
-          <IncreaseArmsPositionDialog />
+          <IncreaseRigConfigurationDialog />
         </div>
         <div className="flex items-center gap-2">
           <AppNavLinks pathname={pathname} />

@@ -174,7 +174,7 @@ def delete_pending_acquisitions(
     *,
     artifact_id: int | None,
     scenario_id: int,
-    arms_position_id: int,
+    rig_configuration_id: int,
     is_calibration: bool = False,
 ) -> None:
     artifact_filter = (
@@ -185,7 +185,7 @@ def delete_pending_acquisitions(
         .filter(
             artifact_filter,
             Acquisition.scenario_id == scenario_id,
-            Acquisition.arms_position_id == arms_position_id,
+            Acquisition.rig_configuration_id == rig_configuration_id,
             Acquisition.status == AcquisitionStatus.PENDING,
             Acquisition.is_calibration.is_(is_calibration),
         )

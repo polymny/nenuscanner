@@ -1,5 +1,5 @@
 import type { VariantProps } from 'class-variance-authority';
-import type { ArmsPositionEmojis } from './arms-position.types';
+import type { RigConfigurationEmojis } from './rig-configuration.types';
 import type { LedValue } from './led.types';
 import type { ScenarioSummary } from './scenario.types';
 import type { badgeVariants } from '@/components/ui/badge';
@@ -25,8 +25,8 @@ export interface Acquisition {
   artifactId: number | null;
   scenario: ScenarioSummary;
   calibrationId: number | null;
-  armsPositionId: number;
-  armsPosition: ArmsPositionEmojis;
+  rigConfigurationId: number;
+  rigConfiguration: RigConfigurationEmojis;
   withRotationAutofocus: boolean;
   withManualRotations: boolean;
   status: AcquisitionStatus;

@@ -16,7 +16,7 @@ export interface ScenarioSummary {
 
 export interface Scenario extends ScenarioSummary {
   acquisitions: Array<{ id: number; name: string }>;
-  calibrations: Array<{ id: number; name: string; armsPositionId: number; status: AcquisitionStatus }>;
+  calibrations: Array<{ id: number; name: string; rigConfigurationId: number; status: AcquisitionStatus }>;
   updatedAt: string;
 }
 

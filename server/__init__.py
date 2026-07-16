@@ -7,12 +7,12 @@ from sqlalchemy.exc import OperationalError, SQLAlchemyError
 
 from . import config
 from .app.controllers.acquisition_controller import blp as acquisition_blp
-from .app.controllers.arms_position_controller import blp as arms_position_blp
 from .app.controllers.artifact_controller import blp as artifact_blp
 from .app.controllers.camera_controller import blp as camera_blp
 from .app.controllers.inspect_mode_controller import blp as inspect_mode_blp
 from .app.controllers.led_power_value_controller import blp as led_power_value_blp
 from .app.controllers.profile_controller import blp as profile_blp
+from .app.controllers.rig_configuration_controller import blp as rig_configuration_blp
 from .app.controllers.scenario_controller import blp as scenario_blp
 from .app.controllers.shutter_speed_value_controller import blp as shutter_speed_value_blp
 from .app.controllers.web_controller import blueprint as web_blueprint
@@ -69,7 +69,7 @@ api.register_blueprint(led_power_value_blp, url_prefix='/led-power-value')
 api.register_blueprint(shutter_speed_value_blp, url_prefix='/shutter-speed-value')
 api.register_blueprint(profile_blp, url_prefix='/profile')
 api.register_blueprint(scenario_blp, url_prefix='/scenario')
-api.register_blueprint(arms_position_blp, url_prefix='/arms-position')
+api.register_blueprint(rig_configuration_blp, url_prefix='/rig-configuration')
 
 
 @app.route('/data/<path:path>')

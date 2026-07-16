@@ -1,11 +1,10 @@
-export type ArmsPositionEmojis = {
+export type RigConfigurationEmojis = {
   emojiLeft: string;
   emojiRight: string;
 };
 
-export type ArmsPosition = ArmsPositionEmojis & {
+export type RigConfiguration = RigConfigurationEmojis & {
   id: number;
   index: number;
   createdAt: string;
 };
-

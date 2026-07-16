@@ -6,8 +6,8 @@ from typing import TYPE_CHECKING
 from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, event, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from .arms_position import ArmsPosition
 from .camera_settings import CameraSettings
+from .rig_configuration import RigConfiguration
 
 if TYPE_CHECKING:
     from .acquisition_photo import AcquisitionPhoto
@@ -45,8 +45,8 @@ class Acquisition(Base):
         nullable=True,
         index=True,
     )
-    arms_position_id: Mapped[int] = mapped_column(
-        ForeignKey('arms_position.id', ondelete='RESTRICT'),
+    rig_configuration_id: Mapped[int] = mapped_column(
+        ForeignKey('rig_configuration.id', ondelete='RESTRICT'),
         nullable=False,
         index=True,
     )
@@ -83,7 +83,7 @@ class Acquisition(Base):
         remote_side=[id],
         foreign_keys=[calibration_id],
     )
-    arms_position: Mapped[ArmsPosition] = relationship()
+    rig_configuration: Mapped[RigConfiguration] = relationship()
     profile: Mapped[Profile | None] = relationship()
     camera_settings: Mapped[CameraSettings] = relationship(
         cascade='all, delete-orphan',

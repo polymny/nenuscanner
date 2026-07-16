@@ -155,9 +155,9 @@ export default function AcquisitionCard({
               </Badge>
             )
           )}
-          <span className="flex items-center gap-1 rounded-lg bg-white p-1 text-xs" title="Position des bras">
-            <span>{acquisition.armsPosition.emojiLeft}</span>
-            <span>{acquisition.armsPosition.emojiRight}</span>
+          <span className="flex items-center gap-1 rounded-lg bg-white p-1 text-xs" title="Rig">
+            <span>{acquisition.rigConfiguration.emojiLeft}</span>
+            <span>{acquisition.rigConfiguration.emojiRight}</span>
           </span>
         </div>
         <div
