@@ -68,6 +68,6 @@ def leave_inspect_mode(session: Session) -> None:
     turntable.get().disable()
 
 
-def turn_inspect_mode_rotation(session: Session, rotations_count: int) -> None:
+def turn_inspect_mode_pose(session: Session, poses_count: int) -> None:
     _assert_no_running_acquisition(session)
-    turntable.get().turn(round(360 / rotations_count))
+    turntable.get().turn(round(360 / poses_count))

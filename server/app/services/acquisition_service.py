@@ -63,15 +63,15 @@ def acquisition_size_bytes(photos: list[AcquisitionPhoto]) -> int:
 def acquisition_thumbnail_url(photos: list[AcquisitionPhoto]) -> str | None:
     """
     Choisit une URL de photo représentative :
-    - première rotation,
+    - première pose,
     - ALL_LEDS (ou première LED),
     - temps de pose le plus proche de 1.
     """
     if not photos:
         return None
 
-    rotation_index = next((p.rotation_index for p in photos if p.rotation_index > 1), 1)
-    pool = [p for p in photos if p.rotation_index == rotation_index]
+    pose_index = next((p.pose_index for p in photos if p.pose_index > 1), 1)
+    pool = [p for p in photos if p.pose_index == pose_index]
     led_id = next(
         (p.scenario_led_id for p in pool if p.scenario_led and p.scenario_led.led_value == 'ALL_LEDS'),
         next((p.scenario_led_id for p in pool if p.scenario_led_id is not None), None),

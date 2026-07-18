@@ -22,7 +22,7 @@ POC_IMAGE_SIZE = '800/600'
 
 
 class AcquisitionPaused(Exception):
-    """Levée lorsqu'une acquisition avec rotations manuelles est mise en pause."""
+    """Levée lorsqu'une acquisition avec poses manuelles est mise en pause."""
 
 
 @dataclass
@@ -76,8 +76,8 @@ def _apply_led_value(gpio_leds: leds.Leds, led_value: str, state: _LedState) -> 
 @dataclass(frozen=True)
 class ScenarioCaptureStep:
     step_index: int
-    rotation_index: int
-    rotation_total: int
+    pose_index: int
+    pose_total: int
     led: ScenarioLED
     shutter_speed: ScenarioShutterSpeed
     led_index: int
@@ -86,19 +86,19 @@ class ScenarioCaptureStep:
     shutter_speed_total: int
 
     @property
-    def has_multiple_rotations(self) -> bool:
-        return self.rotation_total > 1
+    def has_multiple_poses(self) -> bool:
+        return self.pose_total > 1
 
 
 def build_scenario_capture_steps(scenario: Scenario) -> list[ScenarioCaptureStep]:
     """
-    Ordre : pour chaque rotation, pour chaque LED, pour chaque temps de pose.
+    Ordre : pour chaque pose, pour chaque LED, pour chaque temps de pose.
 
     Les LEDs sont appliquées dans l'ordre NO_LED, puis les valeurs numériques croissantes, puis ALL_LEDS.
     Les temps de pose sont appliqués par valeur relative croissante.
     """
-    rotation_total = scenario.rotations_count
-    rotation_slots = list(range(1, rotation_total + 1))
+    pose_total = scenario.poses_count
+    pose_slots = list(range(1, pose_total + 1))
     leds = sorted(
         scenario.leds,
         key=lambda led: (
@@ -115,15 +115,15 @@ def build_scenario_capture_steps(scenario: Scenario) -> list[ScenarioCaptureStep
 
     steps: list[ScenarioCaptureStep] = []
     step_index = 0
-    for rotation_index in rotation_slots:
+    for pose_index in pose_slots:
         for led_index, led in enumerate(leds):
             for shutter_speed_index, shutter_speed in enumerate(shutter_speeds):
                 step_index += 1
                 steps.append(
                     ScenarioCaptureStep(
                         step_index=step_index,
-                        rotation_index=rotation_index,
-                        rotation_total=rotation_total,
+                        pose_index=pose_index,
+                        pose_total=pose_total,
                         led=led,
                         shutter_speed=shutter_speed,
                         led_index=led_index + 1,
@@ -138,9 +138,9 @@ def build_scenario_capture_steps(scenario: Scenario) -> list[ScenarioCaptureStep
 def _scenario_progress_payload(step: ScenarioCaptureStep) -> dict:
     return {
         'step': step.step_index,
-        'rotationIndex': step.rotation_index,
-        'rotationTotal': step.rotation_total,
-        'hasMultipleRotations': step.has_multiple_rotations,
+        'poseIndex': step.pose_index,
+        'poseTotal': step.pose_total,
+        'hasMultiplePoses': step.has_multiple_poses,
         'ledIndex': step.led_index,
         'ledTotal': step.led_total,
         'ledValue': step.led.led_value,
@@ -151,8 +151,8 @@ def _scenario_progress_payload(step: ScenarioCaptureStep) -> dict:
     }
 
 
-def _is_end_of_rotation_block(step: ScenarioCaptureStep) -> bool:
-    if not step.has_multiple_rotations or step.rotation_index >= step.rotation_total:
+def _is_end_of_pose_block(step: ScenarioCaptureStep) -> bool:
+    if not step.has_multiple_poses or step.pose_index >= step.pose_total:
         return False
     return step.led_index == step.led_total and step.shutter_speed_index == step.shutter_speed_total
 
@@ -219,7 +219,7 @@ def execute_scenario(
 
         _apply_led_value(gpio_leds, step.led.led_value, led_state)
 
-        base = f'photo-r{step.rotation_index}-l{step.led.id}-s{step.shutter_speed.id}-{step.step_index:04d}'
+        base = f'photo-r{step.pose_index}-l{step.led.id}-s{step.shutter_speed.id}-{step.step_index:04d}'
         preview_relative_path = photo_relative_path(acquisition_id, f'{base}.jpg')
         raw_ext = getattr(config, 'CAMERA_RAW_EXTENSION', 'nef')  # repli sur l'extension RAW Nikon
         raw_relative_path = photo_relative_path(acquisition_id, f'{base}.{raw_ext}')
@@ -242,7 +242,7 @@ def execute_scenario(
             )
             write_jpeg_preview_from_raw(raw_file_path, preview_file_path)
         else:
-            seed = f'nenuscanner-{acquisition_id}-r{step.rotation_index}-l{step.led.id}-s{step.shutter_speed.id}'
+            seed = f'nenuscanner-{acquisition_id}-r{step.pose_index}-l{step.led.id}-s{step.shutter_speed.id}'
             source_url = f'https://picsum.photos/seed/{seed}/{POC_IMAGE_SIZE}'
             urllib.request.urlretrieve(source_url, SERVER_ROOT / preview_relative_path)
             raw_relative_path = preview_relative_path
@@ -251,7 +251,7 @@ def execute_scenario(
             preview_path=preview_relative_path,
             raw_path=raw_relative_path,
             acquisition_id=acquisition_id,
-            rotation_index=step.rotation_index,
+            pose_index=step.pose_index,
             scenario_shutter_speed_id=step.shutter_speed.id,
             scenario_led_id=step.led.id,
         )
@@ -268,7 +268,7 @@ def execute_scenario(
         )
         session.commit()
 
-        if _is_end_of_rotation_block(step) and acquisition.with_manual_rotations:
+        if _is_end_of_pose_block(step) and acquisition.with_manual_poses:
             gpio_leds.off()
             acquisition.status = AcquisitionStatus.PAUSED
             acquisition.current_step = step.step_index + 1
@@ -277,8 +277,8 @@ def execute_scenario(
             context.emit('paused', {'acquisitionId': acquisition.id})
             raise AcquisitionPaused()
 
-        if _is_end_of_rotation_block(step) and not acquisition.with_manual_rotations:
-            plate.turn(round(360 / scenario.rotations_count))
+        if _is_end_of_pose_block(step) and not acquisition.with_manual_poses:
+            plate.turn(round(360 / scenario.poses_count))
             if not plate.is_dummy():
                 time.sleep(30)  # TODO : temporaire, pas d'ACK de la part du plateau pour l'instant
                 plate.disable()

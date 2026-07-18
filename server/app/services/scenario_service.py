@@ -12,7 +12,7 @@ def scenario_summary_dto(scenario: Scenario) -> dict:
         'id': scenario.id,
         'name': scenario.name,
         'leds': [{'value': led.led_value, 'powerId': led.led_power_value_id} for led in scenario.leds],
-        'rotationsCount': scenario.rotations_count,
+        'posesCount': scenario.poses_count,
         'shutterSpeedIds': [ss.shutter_speed_value_id for ss in scenario.shutter_speeds],
     }
 
@@ -24,7 +24,7 @@ def apply_scenario_payload(scenario: Scenario, payload: dict) -> None:
     scenario.shutter_speeds = [
         ScenarioShutterSpeed(shutter_speed_value_id=shutter_speed_id) for shutter_speed_id in payload['shutterSpeedIds']
     ]
-    scenario.rotations_count = payload['rotationsCount']
+    scenario.poses_count = payload['posesCount']
 
     scenario.updated_at = func.now()
 
@@ -47,8 +47,8 @@ def scenarios_have_same_shutter_speeds(a: Scenario, b: Scenario) -> bool:
     return shutter_speeds_a == shutter_speeds_b
 
 
-def scenarios_have_same_rotations_count(a: Scenario, b: Scenario) -> bool:
-    return a.rotations_count == b.rotations_count
+def scenarios_have_same_poses_count(a: Scenario, b: Scenario) -> bool:
+    return a.poses_count == b.poses_count
 
 
 def scenario_compatibility(reference: Scenario, other: Scenario) -> dict:
@@ -56,7 +56,7 @@ def scenario_compatibility(reference: Scenario, other: Scenario) -> dict:
         'id': other.id,
         'sameLedPowerValues': scenarios_have_same_led_power_values(reference, other),
         'sameShutterSpeeds': scenarios_have_same_shutter_speeds(reference, other),
-        'sameRotationsCount': scenarios_have_same_rotations_count(reference, other),
+        'samePosesCount': scenarios_have_same_poses_count(reference, other),
     }
 
 
@@ -78,12 +78,12 @@ def compatible_scenarios_details(reference: Scenario, all_scenarios: list[Scenar
 #     return (
 #         scenarios_have_same_leds(a, b)
 #         and scenarios_have_same_shutter_speeds(a, b)
-#         and scenarios_have_same_rotations_count(a, b)
+#         and scenarios_have_same_poses_count(a, b)
 #     )
 
 
 def duplicate_scenario(source: Scenario, new_name: str) -> Scenario:
-    duplicated = Scenario(name=new_name, is_custom=True, rotations_count=source.rotations_count)
+    duplicated = Scenario(name=new_name, is_custom=True, poses_count=source.poses_count)
 
     duplicated.leds = [
         ScenarioLED(led_value=led.led_value, led_power_value_id=led.led_power_value_id) for led in source.leds

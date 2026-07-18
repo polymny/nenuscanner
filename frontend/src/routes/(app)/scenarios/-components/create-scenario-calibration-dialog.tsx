@@ -33,7 +33,7 @@ export default function CreateScenarioCalibrationDialog({
   setOpen,
   scenario,
 }: CreateScenarioCalibrationDialogProps) {
-  const hasMultipleRotations = (scenario?.rotationsCount ?? 1) > 1;
+  const hasMultiplePoses = (scenario?.posesCount ?? 1) > 1;
   const navigate = useNavigate();
   const { isPending, mutate: createCalibrationMutate } = useCreateCalibration({
     onSuccess: ({ id }, { name }) => {
@@ -48,8 +48,8 @@ export default function CreateScenarioCalibrationDialog({
     defaultValues: {
       name: '',
       scenarioId: scenario?.id ?? null,
-      withManualRotations: false,
-      withRotationAutofocus: false,
+      withManualPoses: false,
+      withPoseAutofocus: false,
     },
   });
 
@@ -59,8 +59,8 @@ export default function CreateScenarioCalibrationDialog({
     form.reset({
       name: '',
       scenarioId: scenario?.id ?? null,
-      withManualRotations: false,
-      withRotationAutofocus: false,
+      withManualPoses: false,
+      withPoseAutofocus: false,
     });
   }, [form, open, scenario]);
 
@@ -95,26 +95,24 @@ export default function CreateScenarioCalibrationDialog({
               <Separator />
               <FormField
                 control={form.control}
-                name="withManualRotations"
+                name="withManualPoses"
                 render={({ field }) => (
                   <FormItem className="flex w-full flex-row items-center gap-2">
                     <FormControl>
                       <Switch
                         checked={field.value}
                         className="data-[state=checked]:bg-success-500"
-                        disabled={!hasMultipleRotations}
+                        disabled={!hasMultiplePoses}
                         onCheckedChange={field.onChange}
                       />
                     </FormControl>
-                    <span className="text-sm font-medium text-gray-700">
-                      Je souhaite effectuer les rotations manuellement
-                    </span>
+                    <span className="text-sm font-medium text-gray-700">Je souhaite changer de pose manuellement</span>
                   </FormItem>
                 )}
               />
               <FormField
                 control={form.control}
-                name="withRotationAutofocus"
+                name="withPoseAutofocus"
                 render={({ field }) => (
                   <FormItem className="flex w-full flex-row items-center gap-2">
                     <FormControl>

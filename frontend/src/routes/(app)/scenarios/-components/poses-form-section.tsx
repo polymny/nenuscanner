@@ -7,27 +7,27 @@ import { SliderWithLabels } from '@/components/ui/slider-with-labels';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { cn } from '@/lib/utils';
 
-interface RotationsFormSectionProps {
+interface PosesFormSectionProps {
   disabled?: boolean;
 }
 
-const RotationsCountAlert = () => {
+const PosesCountAlert = () => {
   const { control } = useFormContext<UpsertScenarioPayload>();
-  const rotationsCount = useWatch({ control, name: 'rotationsCount' });
+  const posesCount = useWatch({ control, name: 'posesCount' });
 
   return (
-    <Alert className={cn('border-success-200 bg-success-50 text-success-800', rotationsCount === 1 ? '' : 'opacity-0')}>
+    <Alert className={cn('border-success-200 bg-success-50 text-success-800', posesCount === 1 ? '' : 'opacity-0')}>
       <AlertTitle>Compatible sans plateau tournant</AlertTitle>
       <AlertDescription>
-        Avec 1 rotation, votre configuration est compatible avec un setup sans plateau tournant.
+        Avec 1 pose, votre configuration est compatible avec un setup sans plateau tournant.
       </AlertDescription>
     </Alert>
   );
 };
 
-const RotationsFormSection = ({ disabled = false }: RotationsFormSectionProps) => {
+const PosesFormSection = ({ disabled = false }: PosesFormSectionProps) => {
   const form = useFormContext<UpsertScenarioPayload>();
-  const { isInspectMode, toggleInspectMode } = useScenarioInspectModeTarget('rotations');
+  const { isInspectMode, toggleInspectMode } = useScenarioInspectModeTarget('poses');
 
   return (
     <div
@@ -37,16 +37,16 @@ const RotationsFormSection = ({ disabled = false }: RotationsFormSectionProps) =
       )}
     >
       <div className="flex items-center justify-between gap-4">
-        <h3 className="text-brand-600">Gestion des rotations</h3>
+        <h3 className="text-brand-600">Gestion des poses</h3>
         <InspectModeToggle active={isInspectMode} onToggle={toggleInspectMode} />
       </div>
       <div className="flex flex-col gap-3">
         <FormField
           control={form.control}
-          name="rotationsCount"
+          name="posesCount"
           render={({ field }) => (
             <FormItem className="w-full">
-              <FormLabel>Nombre de rotations</FormLabel>
+              <FormLabel>Nombre de poses</FormLabel>
               <FormControl>
                 <SliderWithLabels
                   wrapperClassName="w-full"
@@ -66,10 +66,10 @@ const RotationsFormSection = ({ disabled = false }: RotationsFormSectionProps) =
             </FormItem>
           )}
         />
-        <RotationsCountAlert />
+        <PosesCountAlert />
       </div>
     </div>
   );
 };
 
-export default RotationsFormSection;
+export default PosesFormSection;

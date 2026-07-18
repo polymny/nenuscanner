@@ -32,8 +32,8 @@ class AcquisitionReadSchema(Schema):
     rigConfigurationId = fields.Integer(required=True)
     rigConfiguration = fields.Nested(RigConfigurationEmojisSchema, required=True)
     profileId = fields.Integer(required=True, allow_none=True)
-    withRotationAutofocus = fields.Boolean(required=True)
-    withManualRotations = fields.Boolean(required=True)
+    withPoseAutofocus = fields.Boolean(required=True)
+    withManualPoses = fields.Boolean(required=True)
     status = fields.String(required=True, validate=validate.OneOf(ACQUISITION_STATUSES))
     isoValue = fields.Float(required=True)
     absoluteShutterSpeedValue = fields.Float(required=True)
@@ -55,7 +55,7 @@ class AcquisitionPhotoReadSchema(Schema):
     id = fields.Integer(required=True)
     imageUrl = fields.String(required=True)
     acquisitionId = fields.Integer(required=True)
-    rotationIndex = fields.Integer(required=True)
+    poseIndex = fields.Integer(required=True)
     ledValue = fields.String(required=True, allow_none=True)
     ledPower = fields.Float(required=True, allow_none=True)
     shutterSpeedRelative = fields.Float(required=True, allow_none=True)
@@ -89,8 +89,8 @@ class AcquisitionCreateSchema(Schema):
     artifactId = fields.Integer(required=True, validate=validate.Range(min=1))
     scenarioId = fields.Integer(required=True, allow_none=True, validate=validate.Range(min=1))
     calibrationId = fields.Integer(required=True, allow_none=True, validate=validate.Range(min=1))
-    withRotationAutofocus = fields.Boolean(required=True)
-    withManualRotations = fields.Boolean(required=True)
+    withPoseAutofocus = fields.Boolean(required=True)
+    withManualPoses = fields.Boolean(required=True)
 
 
 class AcquisitionCreateReturnSchema(Schema):
@@ -116,8 +116,8 @@ class CalibrationCreateSchema(Schema):
 
     name = fields.String(required=True, validate=NAME_VALIDATE, pre_load=str.strip)
     scenarioId = fields.Integer(required=True, allow_none=True, validate=validate.Range(min=1))
-    withRotationAutofocus = fields.Boolean(required=True)
-    withManualRotations = fields.Boolean(required=True)
+    withPoseAutofocus = fields.Boolean(required=True)
+    withManualPoses = fields.Boolean(required=True)
 
 
 class AcquisitionDownloadSchema(Schema):

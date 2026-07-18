@@ -44,7 +44,7 @@ export default function AcquisitionCard({
       const compatibility = compatibilityById.get(scenario.id);
       if (!compatibility) return false;
 
-      return compatibility.sameLedPowerValues || compatibility.sameShutterSpeeds || compatibility.sameRotationsCount;
+      return compatibility.sameLedPowerValues || compatibility.sameShutterSpeeds || compatibility.samePosesCount;
     })
     .sort((a, b) => a.name.localeCompare(b.name));
   const hasCompatibleScenarios = acquisition.isCalibration && otherScenarios.length > 0;

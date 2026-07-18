@@ -13,9 +13,9 @@ export default function ScenarioProgressWidget({ progress }: ScenarioProgressWid
       </p>
       <ScenarioMetadata
         showProgress
-        rotation={{
-          index: progress.rotationIndex,
-          total: progress.rotationTotal,
+        pose={{
+          index: progress.poseIndex,
+          total: progress.poseTotal,
         }}
         led={{
           index: progress.ledIndex,

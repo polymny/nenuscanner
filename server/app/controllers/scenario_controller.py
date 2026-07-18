@@ -93,7 +93,7 @@ class ScenarioController(MethodView):
     @blp.arguments(ScenarioCreateSchema)
     @blp.response(204)
     def post(self, payload):
-        """Crée un scénario (avec LEDs, temps de pose, rotations)."""
+        """Crée un scénario (avec LEDs, temps de pose, poses)."""
         scenario = Scenario(name=payload['name'], is_custom=True)
         apply_scenario_payload(scenario, payload)
         db_session.add(scenario)

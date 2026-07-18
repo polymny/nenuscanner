@@ -20,7 +20,7 @@ class Scenario(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     is_custom: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
-    rotations_count: Mapped[int] = mapped_column(Integer, nullable=False, default=1, server_default='1')
+    poses_count: Mapped[int] = mapped_column(Integer, nullable=False, default=1, server_default='1')
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,

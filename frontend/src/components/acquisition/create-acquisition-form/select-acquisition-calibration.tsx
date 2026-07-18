@@ -24,7 +24,7 @@ import { Switch } from '@/components/ui/switch';
 export interface CompatibilityCriteria {
   sameLedPowerValues: boolean;
   sameShutterSpeeds: boolean;
-  sameRotationsCount: boolean;
+  samePosesCount: boolean;
 }
 
 export function matchesCompatibilityCriteria(
@@ -34,7 +34,7 @@ export function matchesCompatibilityCriteria(
   return (
     (!criteria.sameLedPowerValues || compatibility.sameLedPowerValues) &&
     (!criteria.sameShutterSpeeds || compatibility.sameShutterSpeeds) &&
-    (!criteria.sameRotationsCount || compatibility.sameRotationsCount)
+    (!criteria.samePosesCount || compatibility.samePosesCount)
   );
 }
 
@@ -50,7 +50,7 @@ const SelectAcquisitionCalibration = ({ setOpen, setCurrentStep }: SelectAcquisi
   const [compatibilityCriteria, setCompatibilityCriteria] = useState<CompatibilityCriteria>({
     sameLedPowerValues: true,
     sameShutterSpeeds: true,
-    sameRotationsCount: true,
+    samePosesCount: true,
   });
 
   const { data: compatibleScenarios = [] } = useGetCompatibleScenarios(selectedScenarioId ?? 0, !!selectedScenarioId);
@@ -127,14 +127,14 @@ const SelectAcquisitionCalibration = ({ setOpen, setCurrentStep }: SelectAcquisi
             </div>
             <div className="flex w-full flex-row items-center gap-2">
               <Switch
-                checked={compatibilityCriteria.sameRotationsCount}
+                checked={compatibilityCriteria.samePosesCount}
                 className="data-[state=checked]:bg-success-500"
                 onCheckedChange={(checked) => {
-                  setCompatibilityCriteria((current) => ({ ...current, sameRotationsCount: checked }));
+                  setCompatibilityCriteria((current) => ({ ...current, samePosesCount: checked }));
                 }}
               />
               <span className="inline-flex items-center gap-1 text-sm font-medium text-gray-700">
-                Même nombre de rotations
+                Même nombre de poses
                 <RotateCw className="size-4 text-violet-600" />
               </span>
             </div>
@@ -166,11 +166,11 @@ const SelectAcquisitionCalibration = ({ setOpen, setCurrentStep }: SelectAcquisi
                       {filteredCalibrations.map((calibration) => {
                         const isExactMatch = calibration.scenario.id === selectedScenarioId;
                         const compatibility = isExactMatch
-                          ? { sameLedPowerValues: true, sameShutterSpeeds: true, sameRotationsCount: true }
+                          ? { sameLedPowerValues: true, sameShutterSpeeds: true, samePosesCount: true }
                           : (compatibilityByScenarioId.get(calibration.scenario.id) ?? {
                               sameLedPowerValues: false,
                               sameShutterSpeeds: false,
-                              sameRotationsCount: false,
+                              samePosesCount: false,
                             });
 
                         return (

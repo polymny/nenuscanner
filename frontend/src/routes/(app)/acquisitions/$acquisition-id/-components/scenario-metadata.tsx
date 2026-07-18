@@ -31,7 +31,7 @@ const step = (index?: number, total?: number) =>
   index !== undefined && total !== undefined ? `${index}/${total}` : undefined;
 
 interface ScenarioMetadataProps {
-  rotation?: {
+  pose?: {
     index: number;
     total: number;
   };
@@ -51,7 +51,7 @@ interface ScenarioMetadataProps {
 }
 
 export default function ScenarioMetadata({
-  rotation,
+  pose,
   led,
   shutter,
   showProgress = false,
@@ -60,20 +60,18 @@ export default function ScenarioMetadata({
   const ledPower =
     led?.value && led.value !== 'NO_LED' && led.power !== null ? `${Math.round(led.power * 100)} %` : undefined;
 
-  const hasMultipleRotations = (rotation?.total ?? 1) > 1;
-  const rotationValue = hasMultipleRotations
-    ? `Rotation ${rotation?.index ?? 0}/${rotation?.total ?? 0}`
-    : 'Sans rotation';
+  const hasMultiplePoses = (pose?.total ?? 1) > 1;
+  const poseValue = hasMultiplePoses ? `Pose ${pose?.index ?? 0}/${pose?.total ?? 0}` : 'Pose unique';
 
   return (
     <div className={cn('flex flex-col gap-1.5 text-xs', className)}>
-      {rotation && (
+      {pose && (
         <MetadataRow
           icon={<RotateCw className="size-4 shrink-0 text-violet-600" />}
-          title="Rotation"
-          progress={showProgress && hasMultipleRotations ? step(rotation.index, rotation.total) : undefined}
-          value={rotationValue}
-          muted={!hasMultipleRotations}
+          title="Pose"
+          progress={showProgress && hasMultiplePoses ? step(pose.index, pose.total) : undefined}
+          value={poseValue}
+          muted={!hasMultiplePoses}
         />
       )}
       {led && (

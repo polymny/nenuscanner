@@ -19,7 +19,7 @@ class AcquisitionPhoto(Base):
         nullable=False,
         index=True,
     )
-    rotation_index: Mapped[int] = mapped_column(Integer, nullable=False, default=0, server_default='0')
+    pose_index: Mapped[int] = mapped_column(Integer, nullable=False, default=0, server_default='0')
     scenario_shutter_speed_id: Mapped[int | None] = mapped_column(
         ForeignKey('scenario_shutter_speed.id', ondelete='SET NULL'),
         nullable=True,

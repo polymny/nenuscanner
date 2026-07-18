@@ -27,8 +27,8 @@ export interface Acquisition {
   calibrationId: number | null;
   rigConfigurationId: number;
   rigConfiguration: RigConfigurationEmojis;
-  withRotationAutofocus: boolean;
-  withManualRotations: boolean;
+  withPoseAutofocus: boolean;
+  withManualPoses: boolean;
   status: AcquisitionStatus;
   isoValue: number;
   absoluteShutterSpeedValue: number;
@@ -45,7 +45,7 @@ export interface AcquisitionPhoto {
   id: number;
   imageUrl: string;
   acquisitionId: number;
-  rotationIndex: number;
+  poseIndex: number;
   ledValue: LedValue | null;
   ledPower: number | null;
   shutterSpeedRelative: number | null;
@@ -64,9 +64,9 @@ export interface ScenarioProgressEvent {
   total: number;
   imageUrl?: string;
   step: number;
-  rotationIndex: number;
-  rotationTotal: number;
-  hasMultipleRotations: boolean;
+  poseIndex: number;
+  poseTotal: number;
+  hasMultiplePoses: boolean;
   ledIndex: number;
   ledTotal: number;
   ledValue: LedValue;

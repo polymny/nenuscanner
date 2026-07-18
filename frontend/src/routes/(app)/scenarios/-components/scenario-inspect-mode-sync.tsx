@@ -11,14 +11,14 @@ import {
   useLeaveInspectMode,
   useSetInspectModeLed,
   useSetInspectModeShutterSpeed,
-  useTurnInspectModeRotation,
+  useTurnInspectModePose,
 } from '@/api/mutations/inspect-mode.mutations';
 
 const ScenarioInspectModeSync = () => {
   const { activeInspectMode, shutterSpeedPreviewValue, clearInspectMode } = useScenarioInspectMode();
   const { control } = useFormContext<UpsertScenarioPayload>();
   const leds = useWatch({ control, name: 'leds' });
-  const rotationsCount = useWatch({ control, name: 'rotationsCount' });
+  const posesCount = useWatch({ control, name: 'posesCount' });
 
   const handleInspectModeError = (message: string) => (error: AxiosError<ApiError>) => {
     if (error.response?.status === 409) {
@@ -35,7 +35,7 @@ const ScenarioInspectModeSync = () => {
   const { mutate: setShutterSpeedMutation } = useSetInspectModeShutterSpeed({
     onError: handleInspectModeError("Impossible d'appliquer le temps de pose en mode inspect."),
   });
-  const { mutate: turnRotationMutation } = useTurnInspectModeRotation({
+  const { mutate: turnPoseMutation } = useTurnInspectModePose({
     onError: handleInspectModeError('Impossible de tourner le plateau en mode inspect.'),
   });
   const { mutate: leaveMutation } = useLeaveInspectMode();
@@ -56,13 +56,13 @@ const ScenarioInspectModeSync = () => {
   }, [activeInspectMode, leds, setLedMutation, setShutterSpeedMutation, shutterSpeedPreviewValue]);
 
   useEffect(() => {
-    if (activeInspectMode !== 'rotations' || rotationsCount <= 1) return;
+    if (activeInspectMode !== 'poses' || posesCount <= 1) return;
 
-    const turn = () => turnRotationMutation({ rotationsCount });
+    const turn = () => turnPoseMutation({ posesCount });
     turn();
     const intervalId = window.setInterval(turn, 30_000);
     return () => window.clearInterval(intervalId);
-  }, [activeInspectMode, rotationsCount, turnRotationMutation]);
+  }, [activeInspectMode, posesCount, turnPoseMutation]);
 
   useEffect(() => {
     if (prevActiveInspectMode.current !== null && activeInspectMode === null) {

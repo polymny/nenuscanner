@@ -18,7 +18,7 @@ export const upsertScenarioSchema = vine.create(
         })
       )
       .minLength(1),
-    rotationsCount: vine.number().withoutDecimals().min(1).max(12),
+    posesCount: vine.number().withoutDecimals().min(1).max(12),
     shutterSpeedIds: vine.array(vine.number().withoutDecimals().positive()).minLength(1),
   })
 );

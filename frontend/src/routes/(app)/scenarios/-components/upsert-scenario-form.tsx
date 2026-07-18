@@ -6,7 +6,7 @@ import { useNavigate } from '@tanstack/react-router';
 import { vineResolver } from '@hookform/resolvers/vine';
 import ShutterSpeedsFormSection from './shutter-speeds-form-section';
 import LedsFormSection from './leds-form-section';
-import RotationsFormSection from './rotations-form-section';
+import PosesFormSection from './poses-form-section';
 import { ScenarioInspectModeProvider } from './scenario-inspect-mode-context';
 import ScenarioInspectModeSync from './scenario-inspect-mode-sync';
 import type { UpsertScenarioPayload } from '@/schemas/scenario.schemas';
@@ -88,7 +88,7 @@ const UpsertScenarioFormContent = ({ mode, scenarioId, onRequestDuplicate }: Ups
       name: existingScenario?.name ?? '',
       id: existingScenario?.id ?? undefined,
       leds: existingScenario?.leds ?? [],
-      rotationsCount: existingScenario?.rotationsCount ?? 1,
+      posesCount: existingScenario?.posesCount ?? 1,
       shutterSpeedIds: existingScenario?.shutterSpeedIds ?? [],
     },
     mode: 'onChange',
@@ -146,7 +146,7 @@ const UpsertScenarioFormContent = ({ mode, scenarioId, onRequestDuplicate }: Ups
 
         <ShutterSpeedsFormSection disabled={isLockedForEdition} />
 
-        <RotationsFormSection disabled={isLockedForEdition} />
+        <PosesFormSection disabled={isLockedForEdition} />
 
         {isLockedForEdition ? (
           <Button size="lg" type="button" onClick={onRequestDuplicate}>

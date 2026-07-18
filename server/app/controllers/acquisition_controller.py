@@ -50,7 +50,7 @@ def _photo_to_dto(photo) -> dict:
         'id': photo.id,
         'imageUrl': photo_path_to_url(photo.preview_path),
         'acquisitionId': photo.acquisition_id,
-        'rotationIndex': photo.rotation_index,
+        'poseIndex': photo.pose_index,
         'ledValue': led.led_value if led is not None else None,
         'ledPower': led.led_power_value.value if led is not None else None,
         'shutterSpeedRelative': shutter_speed.shutter_speed_value.value if shutter_speed is not None else None,
@@ -77,8 +77,8 @@ def _acquisition_to_dto(
             'emojiRight': acquisition.rig_configuration.emoji_right,
         },
         'profileId': acquisition.profile_id,
-        'withRotationAutofocus': acquisition.with_rotation_autofocus,
-        'withManualRotations': acquisition.with_manual_rotations,
+        'withPoseAutofocus': acquisition.with_pose_autofocus,
+        'withManualPoses': acquisition.with_manual_poses,
         'status': acquisition.status,
         'isoValue': camera_settings.iso_value,
         'absoluteShutterSpeedValue': camera_settings.absolute_shutter_speed_value,
@@ -140,8 +140,8 @@ class AcquisitionController(MethodView):
         if scenario is None:
             abort(404, message='scenario-not-found')
 
-        if payload['withManualRotations'] and scenario.rotations_count == 1:
-            abort(400, message='manual-rotations-require-multiple-rotations')
+        if payload['withManualPoses'] and scenario.poses_count == 1:
+            abort(400, message='manual-poses-require-multiple-poses')
 
         rig_configuration = get_last_rig_configuration(db_session)
 
@@ -186,8 +186,8 @@ class AcquisitionController(MethodView):
             rig_configuration_id=rig_configuration.id,
             profile_id=active_profile.id if active_profile is not None else None,
             camera_settings_id=camera_settings_snapshot.id,
-            with_rotation_autofocus=payload['withRotationAutofocus'],
-            with_manual_rotations=payload['withManualRotations'],
+            with_pose_autofocus=payload['withPoseAutofocus'],
+            with_manual_poses=payload['withManualPoses'],
             status=AcquisitionStatus.PENDING,
             is_calibration=False,
         )
@@ -260,8 +260,8 @@ class CalibrationController(MethodView):
         if scenario is None:
             abort(404, message='scenario-not-found')
 
-        if payload['withManualRotations'] and scenario.rotations_count == 1:
-            abort(400, message='manual-rotations-require-multiple-rotations')
+        if payload['withManualPoses'] and scenario.poses_count == 1:
+            abort(400, message='manual-poses-require-multiple-poses')
 
         rig_configuration = get_last_rig_configuration(db_session)
         active_profile = get_first_active_profile(db_session)
@@ -284,8 +284,8 @@ class CalibrationController(MethodView):
             rig_configuration_id=rig_configuration.id,
             profile_id=active_profile.id if active_profile is not None else None,
             camera_settings_id=camera_settings_snapshot.id,
-            with_rotation_autofocus=payload['withRotationAutofocus'],
-            with_manual_rotations=payload['withManualRotations'],
+            with_pose_autofocus=payload['withPoseAutofocus'],
+            with_manual_poses=payload['withManualPoses'],
             status=AcquisitionStatus.PENDING,
             is_calibration=True,
         )

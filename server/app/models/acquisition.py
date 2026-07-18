@@ -60,8 +60,8 @@ class Acquisition(Base):
         nullable=False,
         index=True,
     )
-    with_rotation_autofocus: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
-    with_manual_rotations: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    with_pose_autofocus: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    with_manual_poses: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     current_step: Mapped[int | None] = mapped_column(Integer, nullable=True)
     status: Mapped[str] = mapped_column(String(255), nullable=False)
     is_calibration: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)

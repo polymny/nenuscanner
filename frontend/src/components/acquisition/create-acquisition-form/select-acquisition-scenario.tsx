@@ -41,7 +41,7 @@ const SelectAcquisitionScenario = ({
   );
   const showSkeleton = useMinimumLoadingDuration(isLoadingScenarios);
   const selectedScenario = scenarios?.find((scenario) => scenario.id === selectedScenarioId);
-  const hasMultipleRotations = (selectedScenario?.rotationsCount ?? 1) > 1;
+  const hasMultiplePoses = (selectedScenario?.posesCount ?? 1) > 1;
 
   return (
     <>
@@ -58,8 +58,7 @@ const SelectAcquisitionScenario = ({
           <AlertOctagon className="text-warning-800! size-5" />
           <AlertTitle>Plateau tournant déconnecté</AlertTitle>
           <AlertDescription>
-            Le plateau tournant de votre NeNuScanner n'est pas connecté. Vous devrez effectuer les rotations
-            manuellement.
+            Le plateau tournant de votre NeNuScanner n'est pas connecté. Vous devrez effectuer les poses manuellement.
           </AlertDescription>
         </Alert>
         <div className="text-sm font-bold text-gray-500">Scénarios disponibles</div>
@@ -89,8 +88,8 @@ const SelectAcquisitionScenario = ({
                         const scenarioId = Number(newValue);
                         field.onChange(scenarioId);
                         const scenario = scenarios.find((item) => item.id === scenarioId);
-                        if (scenario?.rotationsCount === 1) {
-                          form.setValue('withManualRotations', false);
+                        if (scenario?.posesCount === 1) {
+                          form.setValue('withManualPoses', false);
                         }
                       }}
                       value={field.value?.toString() ?? ''}
@@ -107,11 +106,11 @@ const SelectAcquisitionScenario = ({
                                 isCalibration
                                   ? (compatibility ??
                                     (isSelected
-                                      ? { sameLedPowerValues: true, sameShutterSpeeds: true, sameRotationsCount: true }
+                                      ? { sameLedPowerValues: true, sameShutterSpeeds: true, samePosesCount: true }
                                       : {
                                           sameLedPowerValues: false,
                                           sameShutterSpeeds: false,
-                                          sameRotationsCount: false,
+                                          samePosesCount: false,
                                         }))
                                   : undefined
                               }
@@ -130,26 +129,24 @@ const SelectAcquisitionScenario = ({
             <Separator />
             <FormField
               control={form.control}
-              name="withManualRotations"
+              name="withManualPoses"
               render={({ field }) => (
                 <FormItem className="flex w-full flex-row items-center gap-2">
                   <FormControl>
                     <Switch
                       className="data-[state=checked]:bg-success-500"
                       checked={field.value}
-                      disabled={!hasMultipleRotations}
+                      disabled={!hasMultiplePoses}
                       onCheckedChange={field.onChange}
                     />
                   </FormControl>
-                  <span className="text-sm font-medium text-gray-700">
-                    Je souhaite effectuer les rotations manuellement
-                  </span>
+                  <span className="text-sm font-medium text-gray-700">Je souhaite changer de pose manuellement</span>
                 </FormItem>
               )}
             />
             <FormField
               control={form.control}
-              name="withRotationAutofocus"
+              name="withPoseAutofocus"
               render={({ field }) => (
                 <FormItem className="flex w-full flex-row items-center gap-2">
                   <FormControl>

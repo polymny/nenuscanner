@@ -10,7 +10,7 @@ export interface ScenarioSummary {
   id: number;
   name: string;
   leds: Array<ScenarioLed>;
-  rotationsCount: number;
+  posesCount: number;
   shutterSpeedIds: Array<number>;
 }
 
@@ -24,5 +24,5 @@ export interface ScenarioCompatibility {
   id: number;
   sameLedPowerValues: boolean;
   sameShutterSpeeds: boolean;
-  sameRotationsCount: boolean;
+  samePosesCount: boolean;
 }

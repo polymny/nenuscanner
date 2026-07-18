@@ -46,10 +46,10 @@ def _folder_name(acquisition: Acquisition) -> str:
 def _photo_leaf_path(photo: AcquisitionPhoto) -> str:
     led = photo.scenario_led
     shutter = photo.scenario_shutter_speed
-    rotation_name = f'rotation_{photo.rotation_index}'
+    pose_name = f'pose_{photo.pose_index}'
     led_name = 'led_unknown' if led is None else f'led_{led.led_value}'
     shutter_name = 'shutter_unknown' if shutter is None else f'shutter_{shutter.shutter_speed_value.value:g}'
-    return f'{rotation_name}/{led_name}/{shutter_name}'
+    return f'{pose_name}/{led_name}/{shutter_name}'
 
 
 def _add_photos_to_zip(

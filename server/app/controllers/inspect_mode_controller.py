@@ -1,13 +1,13 @@
 from flask.views import MethodView
 from flask_smorest import Blueprint, abort
 
-from ..dtos.inspect_mode_dto import InspectModeLedSchema, InspectModeRotationSchema, InspectModeShutterSpeedSchema
+from ..dtos.inspect_mode_dto import InspectModeLedSchema, InspectModePoseSchema, InspectModeShutterSpeedSchema
 from ..services.inspect_mode_service import (
     AcquisitionRunningError,
     leave_inspect_mode,
     set_led_inspect_mode,
     set_shutter_speed_inspect_mode,
-    turn_inspect_mode_rotation,
+    turn_inspect_mode_pose,
 )
 from ...db import db_session
 
@@ -40,14 +40,14 @@ class InspectModeShutterSpeedController(MethodView):
             abort(400, message=str(error))
 
 
-@blp.route('/rotation')
-class InspectModeRotationController(MethodView):
-    @blp.arguments(InspectModeRotationSchema)
+@blp.route('/pose')
+class InspectModePoseController(MethodView):
+    @blp.arguments(InspectModePoseSchema)
     @blp.response(204)
     def post(self, payload):
-        """Tourne le plateau d'un pas selon le nombre de rotations du scénario."""
+        """Tourne le plateau d'un pas selon le nombre de poses du scénario."""
         try:
-            turn_inspect_mode_rotation(db_session, payload['rotationsCount'])
+            turn_inspect_mode_pose(db_session, payload['posesCount'])
         except AcquisitionRunningError:
             abort(409, message='acquisition-running')
 
