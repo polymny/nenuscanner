@@ -89,7 +89,7 @@ const SelectAcquisitionScenario = ({
                         field.onChange(scenarioId);
                         const scenario = scenarios.find((item) => item.id === scenarioId);
                         if (scenario?.posesCount === 1) {
-                          form.setValue('withManualPoses', false);
+                          form.setValue('automaticPoseChange', true);
                         }
                       }}
                       value={field.value?.toString() ?? ''}
@@ -129,7 +129,7 @@ const SelectAcquisitionScenario = ({
             <Separator />
             <FormField
               control={form.control}
-              name="withManualPoses"
+              name="automaticPoseChange"
               render={({ field }) => (
                 <FormItem className="flex w-full flex-row items-center gap-2">
                   <FormControl>
@@ -140,7 +140,7 @@ const SelectAcquisitionScenario = ({
                       onCheckedChange={field.onChange}
                     />
                   </FormControl>
-                  <span className="text-sm font-medium text-gray-700">Je souhaite changer de pose manuellement</span>
+                  <span className="text-sm font-medium text-gray-700">Je souhaite changer de pose automatiquement</span>
                 </FormItem>
               )}
             />

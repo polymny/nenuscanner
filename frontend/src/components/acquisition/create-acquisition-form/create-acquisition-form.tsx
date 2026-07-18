@@ -43,7 +43,7 @@ const CreateAcquisitionForm = ({
       artifactId,
       scenarioId: null,
       calibrationId: null,
-      withManualPoses: false,
+      automaticPoseChange: true,
       withPoseAutofocus: false,
     },
   });

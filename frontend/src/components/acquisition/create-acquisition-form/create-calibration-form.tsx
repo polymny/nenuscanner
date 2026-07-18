@@ -41,7 +41,7 @@ const CreateCalibrationForm = ({
     defaultValues: {
       name: '',
       scenarioId: null,
-      withManualPoses: false,
+      automaticPoseChange: true,
       withPoseAutofocus: false,
     },
   });

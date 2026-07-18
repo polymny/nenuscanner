@@ -78,7 +78,7 @@ def _acquisition_to_dto(
         },
         'profileId': acquisition.profile_id,
         'withPoseAutofocus': acquisition.with_pose_autofocus,
-        'withManualPoses': acquisition.with_manual_poses,
+        'automaticPoseChange': acquisition.automatic_pose_change,
         'status': acquisition.status,
         'isoValue': camera_settings.iso_value,
         'absoluteShutterSpeedValue': camera_settings.absolute_shutter_speed_value,
@@ -140,8 +140,8 @@ class AcquisitionController(MethodView):
         if scenario is None:
             abort(404, message='scenario-not-found')
 
-        if payload['withManualPoses'] and scenario.poses_count == 1:
-            abort(400, message='manual-poses-require-multiple-poses')
+        if not payload['automaticPoseChange'] and scenario.poses_count == 1:
+            abort(400, message='manual-pose-change-require-multiple-poses')
 
         rig_configuration = get_last_rig_configuration(db_session)
 
@@ -187,7 +187,7 @@ class AcquisitionController(MethodView):
             profile_id=active_profile.id if active_profile is not None else None,
             camera_settings_id=camera_settings_snapshot.id,
             with_pose_autofocus=payload['withPoseAutofocus'],
-            with_manual_poses=payload['withManualPoses'],
+            automatic_pose_change=payload['automaticPoseChange'],
             status=AcquisitionStatus.PENDING,
             is_calibration=False,
         )
@@ -260,8 +260,8 @@ class CalibrationController(MethodView):
         if scenario is None:
             abort(404, message='scenario-not-found')
 
-        if payload['withManualPoses'] and scenario.poses_count == 1:
-            abort(400, message='manual-poses-require-multiple-poses')
+        if not payload['automaticPoseChange'] and scenario.poses_count == 1:
+            abort(400, message='manual-pose-change-require-multiple-poses')
 
         rig_configuration = get_last_rig_configuration(db_session)
         active_profile = get_first_active_profile(db_session)
@@ -285,7 +285,7 @@ class CalibrationController(MethodView):
             profile_id=active_profile.id if active_profile is not None else None,
             camera_settings_id=camera_settings_snapshot.id,
             with_pose_autofocus=payload['withPoseAutofocus'],
-            with_manual_poses=payload['withManualPoses'],
+            automatic_pose_change=payload['automaticPoseChange'],
             status=AcquisitionStatus.PENDING,
             is_calibration=True,
         )

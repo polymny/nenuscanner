@@ -33,7 +33,7 @@ class AcquisitionReadSchema(Schema):
     rigConfiguration = fields.Nested(RigConfigurationEmojisSchema, required=True)
     profileId = fields.Integer(required=True, allow_none=True)
     withPoseAutofocus = fields.Boolean(required=True)
-    withManualPoses = fields.Boolean(required=True)
+    automaticPoseChange = fields.Boolean(required=True)
     status = fields.String(required=True, validate=validate.OneOf(ACQUISITION_STATUSES))
     isoValue = fields.Float(required=True)
     absoluteShutterSpeedValue = fields.Float(required=True)
@@ -90,7 +90,7 @@ class AcquisitionCreateSchema(Schema):
     scenarioId = fields.Integer(required=True, allow_none=True, validate=validate.Range(min=1))
     calibrationId = fields.Integer(required=True, allow_none=True, validate=validate.Range(min=1))
     withPoseAutofocus = fields.Boolean(required=True)
-    withManualPoses = fields.Boolean(required=True)
+    automaticPoseChange = fields.Boolean(required=True)
 
 
 class AcquisitionCreateReturnSchema(Schema):
@@ -117,7 +117,7 @@ class CalibrationCreateSchema(Schema):
     name = fields.String(required=True, validate=NAME_VALIDATE, pre_load=str.strip)
     scenarioId = fields.Integer(required=True, allow_none=True, validate=validate.Range(min=1))
     withPoseAutofocus = fields.Boolean(required=True)
-    withManualPoses = fields.Boolean(required=True)
+    automaticPoseChange = fields.Boolean(required=True)
 
 
 class AcquisitionDownloadSchema(Schema):

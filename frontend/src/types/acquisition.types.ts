@@ -28,7 +28,7 @@ export interface Acquisition {
   rigConfigurationId: number;
   rigConfiguration: RigConfigurationEmojis;
   withPoseAutofocus: boolean;
-  withManualPoses: boolean;
+  automaticPoseChange: boolean;
   status: AcquisitionStatus;
   isoValue: number;
   absoluteShutterSpeedValue: number;

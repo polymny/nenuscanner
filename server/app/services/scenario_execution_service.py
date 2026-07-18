@@ -268,7 +268,7 @@ def execute_scenario(
         )
         session.commit()
 
-        if _is_end_of_pose_block(step) and acquisition.with_manual_poses:
+        if _is_end_of_pose_block(step) and not acquisition.automatic_pose_change:
             gpio_leds.off()
             acquisition.status = AcquisitionStatus.PAUSED
             acquisition.current_step = step.step_index + 1
@@ -277,7 +277,7 @@ def execute_scenario(
             context.emit('paused', {'acquisitionId': acquisition.id})
             raise AcquisitionPaused()
 
-        if _is_end_of_pose_block(step) and not acquisition.with_manual_poses:
+        if _is_end_of_pose_block(step) and acquisition.automatic_pose_change:
             plate.turn(round(360 / scenario.poses_count))
             if not plate.is_dummy():
                 time.sleep(30)  # TODO : temporaire, pas d'ACK de la part du plateau pour l'instant
