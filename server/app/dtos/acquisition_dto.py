@@ -44,11 +44,11 @@ class AcquisitionReadSchema(Schema):
     thumbnail = fields.String(required=True, allow_none=True)
     scenario = fields.Nested(ScenarioSummarySchema, required=True)
     acquisitions = fields.List(fields.Nested(CalibrationLinkedAcquisitionSchema), required=False)
-    photosCount = fields.Integer(required=True, dump_default=0)
+    imagesCount = fields.Integer(required=True, dump_default=0)
     sizeBytes = fields.Integer(required=True, dump_default=0)
 
 
-class AcquisitionPhotoReadSchema(Schema):
+class AcquisitionImageReadSchema(Schema):
     class Meta:
         ordered = True
 
@@ -62,7 +62,7 @@ class AcquisitionPhotoReadSchema(Schema):
 
 
 class AcquisitionDetailSchema(AcquisitionReadSchema):
-    photos = fields.Nested(AcquisitionPhotoReadSchema, many=True, required=True)
+    images = fields.Nested(AcquisitionImageReadSchema, many=True, required=True)
 
 
 class AcquisitionRunStartSchema(Schema):

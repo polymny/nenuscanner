@@ -10,7 +10,7 @@ from .camera_settings import CameraSettings
 from .rig_configuration import RigConfiguration
 
 if TYPE_CHECKING:
-    from .acquisition_photo import AcquisitionPhoto
+    from .acquisition_image import AcquisitionImage
 from .artifact import Artifact
 from .profile import Profile
 from .scenario import Scenario
@@ -89,11 +89,11 @@ class Acquisition(Base):
         cascade='all, delete-orphan',
         single_parent=True,
     )
-    photos: Mapped[list['AcquisitionPhoto']] = relationship(
-        'AcquisitionPhoto',
+    images: Mapped[list['AcquisitionImage']] = relationship(
+        'AcquisitionImage',
         back_populates='acquisition',
         cascade='all, delete-orphan',
-        order_by='AcquisitionPhoto.id',
+        order_by='AcquisitionImage.id',
     )
 
     def __repr__(self) -> str:

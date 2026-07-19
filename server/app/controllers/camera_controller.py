@@ -78,7 +78,7 @@ class CameraCalibrationCaptureController(MethodView):
         session_dir.mkdir(parents=True, exist_ok=True)
 
         raw_ext = getattr(config, 'CAMERA_RAW_EXTENSION', 'nef')
-        photos: list[dict] = []
+        images: list[dict] = []
 
         for index, shutter_speed in enumerate(shutter_speeds, start=1):
             label = f'{float(shutter_speed):g}'.replace('.', '_')
@@ -95,7 +95,7 @@ class CameraCalibrationCaptureController(MethodView):
             write_jpeg_preview_from_raw(str(raw_path), str(preview_path))
             saved_raw_path = raw_path
 
-            photos.append(
+            images.append(
                 {
                     'shutterSpeed': float(shutter_speed),
                     'rawPath': str(saved_raw_path.relative_to(SERVER_ROOT)),
@@ -105,5 +105,5 @@ class CameraCalibrationCaptureController(MethodView):
 
         return {
             'directory': str(session_dir.relative_to(SERVER_ROOT)),
-            'photos': photos,
+            'images': images,
         }

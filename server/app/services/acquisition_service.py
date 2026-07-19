@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session, joinedload
 from .scenario_execution_service import AcquisitionPaused, execute_scenario
 from .sse_job_runner import JobCancelled, SseJobContext
 from ..models.acquisition import Acquisition, AcquisitionStatus
-from ..models.acquisition_photo import AcquisitionPhoto
+from ..models.acquisition_image import AcquisitionImage
 from ..models.scenario import Scenario, ScenarioLED, ScenarioShutterSpeed
 from ..paths import SERVER_ROOT
 from ... import leds
@@ -16,23 +16,23 @@ from ...db import db_session
 _THUMBNAIL_TARGET_SHUTTER_RELATIVE = 1.0
 
 
-def photo_relative_path(acquisition_id: int, filename: str) -> str:
+def image_relative_path(acquisition_id: int, filename: str) -> str:
     return f'data/acquisitions/{acquisition_id}/{filename}'.replace('\\', '/')
 
 
-def photo_path_to_url(path: str) -> str:
+def image_path_to_url(path: str) -> str:
     if path.startswith('data/'):
         return f'/{path}'
     return f'/data/{path}'
 
 
-def acquisition_photos_load_options():
+def acquisition_images_load_options():
     return (
-        joinedload(Acquisition.photos)
-        .joinedload(AcquisitionPhoto.scenario_led)
+        joinedload(Acquisition.images)
+        .joinedload(AcquisitionImage.scenario_led)
         .joinedload(ScenarioLED.led_power_value),
-        joinedload(Acquisition.photos)
-        .joinedload(AcquisitionPhoto.scenario_shutter_speed)
+        joinedload(Acquisition.images)
+        .joinedload(AcquisitionImage.scenario_shutter_speed)
         .joinedload(ScenarioShutterSpeed.shutter_speed_value),
     )
 
@@ -46,11 +46,11 @@ def acquisition_scenario_load_options():
     )
 
 
-def acquisition_size_bytes(photos: list[AcquisitionPhoto]) -> int:
+def acquisition_size_bytes(images: list[AcquisitionImage]) -> int:
     total = 0
     seen_paths: set[str] = set()
-    for photo in photos:
-        for relative_path in (photo.raw_path, photo.preview_path):
+    for image in images:
+        for relative_path in (image.raw_path, image.preview_path):
             if relative_path in seen_paths:
                 continue
             seen_paths.add(relative_path)
@@ -60,18 +60,18 @@ def acquisition_size_bytes(photos: list[AcquisitionPhoto]) -> int:
     return total
 
 
-def acquisition_thumbnail_url(photos: list[AcquisitionPhoto]) -> str | None:
+def acquisition_thumbnail_url(images: list[AcquisitionImage]) -> str | None:
     """
     Choisit une URL de photo représentative :
     - première pose,
     - ALL_LEDS (ou première LED),
     - temps de pose le plus proche de 1.
     """
-    if not photos:
+    if not images:
         return None
 
-    pose_index = next((p.pose_index for p in photos if p.pose_index > 1), 1)
-    pool = [p for p in photos if p.pose_index == pose_index]
+    pose_index = next((p.pose_index for p in images if p.pose_index > 1), 1)
+    pool = [p for p in images if p.pose_index == pose_index]
     led_id = next(
         (p.scenario_led_id for p in pool if p.scenario_led and p.scenario_led.led_value == 'ALL_LEDS'),
         next((p.scenario_led_id for p in pool if p.scenario_led_id is not None), None),
@@ -88,7 +88,7 @@ def acquisition_thumbnail_url(photos: list[AcquisitionPhoto]) -> str | None:
             else float('inf')
         ),
     )
-    return photo_path_to_url(best.preview_path)
+    return image_path_to_url(best.preview_path)
 
 
 def run_acquisition(context: SseJobContext, acquisition_id: int) -> None:
@@ -105,8 +105,8 @@ def run_acquisition(context: SseJobContext, acquisition_id: int) -> None:
             context,
             session,
             acquisition,
-            photo_relative_path=photo_relative_path,
-            photo_path_to_url=photo_path_to_url,
+            image_relative_path=image_relative_path,
+            image_path_to_url=image_path_to_url,
         )
 
         acquisition = session.get(Acquisition, acquisition_id)
@@ -136,25 +136,25 @@ def run_acquisition(context: SseJobContext, acquisition_id: int) -> None:
 
 
 def delete_acquisition_files(acquisition_id: int) -> None:
-    photos_dir = SERVER_ROOT / 'data' / 'acquisitions' / str(acquisition_id)
-    if photos_dir.is_dir():
-        shutil.rmtree(photos_dir)
+    images_dir = SERVER_ROOT / 'data' / 'acquisitions' / str(acquisition_id)
+    if images_dir.is_dir():
+        shutil.rmtree(images_dir)
 
 
-def clear_acquisition_photos(session: Session, acquisition_id: int) -> None:
-    session.query(AcquisitionPhoto).filter(AcquisitionPhoto.acquisition_id == acquisition_id).delete()
+def clear_acquisition_images(session: Session, acquisition_id: int) -> None:
+    session.query(AcquisitionImage).filter(AcquisitionImage.acquisition_id == acquisition_id).delete()
     delete_acquisition_files(acquisition_id)
 
 
 def delete_acquisition(session: Session, acquisition: Acquisition) -> None:
-    clear_acquisition_photos(session, acquisition.id)
+    clear_acquisition_images(session, acquisition.id)
     session.delete(acquisition)
 
 
 def _reset_acquisition_to_pending(session: Session, acquisition_id: int) -> None:
     acquisition = session.get(Acquisition, acquisition_id)
     if acquisition is not None:
-        clear_acquisition_photos(session, acquisition_id)
+        clear_acquisition_images(session, acquisition_id)
         acquisition.status = AcquisitionStatus.PENDING
         acquisition.current_step = None
         session.commit()
@@ -163,7 +163,7 @@ def _reset_acquisition_to_pending(session: Session, acquisition_id: int) -> None
 def _mark_acquisition_failed(session: Session, acquisition_id: int) -> None:
     acquisition = session.get(Acquisition, acquisition_id)
     if acquisition is not None:
-        clear_acquisition_photos(session, acquisition_id)
+        clear_acquisition_images(session, acquisition_id)
         acquisition.status = AcquisitionStatus.FAILED
         acquisition.current_step = None
         session.commit()

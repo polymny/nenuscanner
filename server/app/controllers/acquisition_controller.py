@@ -24,13 +24,13 @@ from ..services.acquisition_download_service import (
     copy_acquisitions_data_to_disk,
 )
 from ..services.acquisition_service import (
-    acquisition_photos_load_options,
+    acquisition_images_load_options,
     acquisition_scenario_load_options,
     acquisition_size_bytes,
     acquisition_thumbnail_url,
     delete_acquisition,
     delete_pending_acquisitions,
-    photo_path_to_url,
+    image_path_to_url,
     run_acquisition,
 )
 from ..services.camera_settings_service import snapshot_current_camera_settings
@@ -43,14 +43,14 @@ from ...db import db_session
 blp = Blueprint('acquisition', __name__, description='Gestion des acquisitions')
 
 
-def _photo_to_dto(photo) -> dict:
-    led = photo.scenario_led
-    shutter_speed = photo.scenario_shutter_speed
+def _image_to_dto(image) -> dict:
+    led = image.scenario_led
+    shutter_speed = image.scenario_shutter_speed
     return {
-        'id': photo.id,
-        'imageUrl': photo_path_to_url(photo.preview_path),
-        'acquisitionId': photo.acquisition_id,
-        'poseIndex': photo.pose_index,
+        'id': image.id,
+        'imageUrl': image_path_to_url(image.preview_path),
+        'acquisitionId': image.acquisition_id,
+        'poseIndex': image.pose_index,
         'ledValue': led.led_value if led is not None else None,
         'ledPower': led.led_power_value.value if led is not None else None,
         'shutterSpeedRelative': shutter_speed.shutter_speed_value.value if shutter_speed is not None else None,
@@ -61,14 +61,14 @@ def _acquisition_to_dto(
     acquisition: Acquisition,
     *,
     scenario: Scenario | None = None,
-    include_photos: bool = False,
+    include_images: bool = False,
     acquisitions: list[dict] | None = None,
 ) -> dict:
     camera_settings = acquisition.camera_settings
     payload = {
         'id': acquisition.id,
         'name': acquisition.name,
-        'thumbnail': acquisition_thumbnail_url(acquisition.photos),
+        'thumbnail': acquisition_thumbnail_url(acquisition.images),
         'artifactId': acquisition.artifact_id,
         'calibrationId': acquisition.calibration_id,
         'rigConfigurationId': acquisition.rig_configuration_id,
@@ -86,14 +86,14 @@ def _acquisition_to_dto(
         'isCalibration': acquisition.is_calibration,
         'createdAt': acquisition.created_at,
         'updatedAt': acquisition.updated_at,
-        'photosCount': len(acquisition.photos),
-        'sizeBytes': acquisition_size_bytes(acquisition.photos),
+        'imagesCount': len(acquisition.images),
+        'sizeBytes': acquisition_size_bytes(acquisition.images),
         'scenario': scenario_summary_dto(scenario if scenario is not None else acquisition.scenario),
     }
     if acquisitions is not None:
         payload['acquisitions'] = acquisitions
-    if include_photos:
-        payload['photos'] = [_photo_to_dto(photo) for photo in acquisition.photos]
+    if include_images:
+        payload['images'] = [_image_to_dto(image) for image in acquisition.images]
     return payload
 
 
@@ -110,7 +110,7 @@ class AcquisitionController(MethodView):
         acquisitions = (
             db_session.query(Acquisition)
             .options(
-                *acquisition_photos_load_options(),
+                *acquisition_images_load_options(),
                 *acquisition_scenario_load_options(),
                 joinedload(Acquisition.rig_configuration),
             )
@@ -206,7 +206,7 @@ class CalibrationController(MethodView):
         query = (
             db_session.query(Acquisition)
             .options(
-                *acquisition_photos_load_options(),
+                *acquisition_images_load_options(),
                 *acquisition_scenario_load_options(),
                 joinedload(Acquisition.rig_configuration),
             )
@@ -325,13 +325,13 @@ class AcquisitionByIdController(MethodView):
         """Détail d'une acquisition avec ses photos."""
         acquisition = (
             db_session.query(Acquisition)
-            .options(*acquisition_photos_load_options(), *acquisition_scenario_load_options())
+            .options(*acquisition_images_load_options(), *acquisition_scenario_load_options())
             .filter(Acquisition.id == acquisition_id)
             .one_or_none()
         )
         if acquisition is None:
             abort(404, message='acquisition-not-found')
-        return _acquisition_to_dto(acquisition, include_photos=True)
+        return _acquisition_to_dto(acquisition, include_images=True)
 
     @blp.response(204)
     def delete(self, acquisition_id):

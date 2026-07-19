@@ -12,7 +12,7 @@ from .gphoto2_service import capture_raw_to_file
 from .sse_job_runner import JobCancelled, SseJobContext
 from ..constants.leds import LEDS_COUNT
 from ..models.acquisition import Acquisition, AcquisitionStatus
-from ..models.acquisition_photo import AcquisitionPhoto
+from ..models.acquisition_image import AcquisitionImage
 from ..models.scenario import Scenario, ScenarioLED, ScenarioShutterSpeed
 from ..paths import SERVER_ROOT
 from ... import config, leds, turntable
@@ -170,12 +170,12 @@ def execute_scenario(
     session: Session,
     acquisition: Acquisition,
     *,
-    photo_relative_path: Callable[[int, str], str],
-    photo_path_to_url: Callable[[str], str],
+    image_relative_path: Callable[[int, str], str],
+    image_path_to_url: Callable[[str], str],
 ) -> list[str]:
     """
     Exécute toutes les étapes du scénario ;
-    persiste les photos et émet des événements SSE. Retourne les URLs des images.
+    persiste les photos et émet des événements SSE. Retourne les URLs des photos.
     """
     scenario = (
         session.query(Scenario)
@@ -219,10 +219,10 @@ def execute_scenario(
 
         _apply_led_value(gpio_leds, step.led.led_value, led_state)
 
-        base = f'photo-r{step.pose_index}-l{step.led.id}-s{step.shutter_speed.id}-{step.step_index:04d}'
-        preview_relative_path = photo_relative_path(acquisition_id, f'{base}.jpg')
+        base = f'image-r{step.pose_index}-l{step.led.id}-s{step.shutter_speed.id}-{step.step_index:04d}'
+        preview_relative_path = image_relative_path(acquisition_id, f'{base}.jpg')
         raw_ext = getattr(config, 'CAMERA_RAW_EXTENSION', 'nef')  # repli sur l'extension RAW Nikon
-        raw_relative_path = photo_relative_path(acquisition_id, f'{base}.{raw_ext}')
+        raw_relative_path = image_relative_path(acquisition_id, f'{base}.{raw_ext}')
 
         if config.CAMERA == 'real':
             cam = acquisition.camera_settings
@@ -247,7 +247,7 @@ def execute_scenario(
             urllib.request.urlretrieve(source_url, SERVER_ROOT / preview_relative_path)
             raw_relative_path = preview_relative_path
 
-        photo = AcquisitionPhoto(
+        image = AcquisitionImage(
             preview_path=preview_relative_path,
             raw_path=raw_relative_path,
             acquisition_id=acquisition_id,
@@ -255,14 +255,14 @@ def execute_scenario(
             scenario_shutter_speed_id=step.shutter_speed.id,
             scenario_led_id=step.led.id,
         )
-        session.add(photo)
+        session.add(image)
         session.flush()
 
         context.emit(
-            'photo_ready',
+            'image_ready',
             {
                 'total': total,
-                'imageUrl': photo_path_to_url(preview_relative_path),
+                'imageUrl': image_path_to_url(preview_relative_path),
                 **_scenario_progress_payload(step),
             },
         )

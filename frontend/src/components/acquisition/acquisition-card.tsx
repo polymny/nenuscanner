@@ -177,7 +177,7 @@ export default function AcquisitionCard({
                 ·
               </span>
               <span className="flex items-center gap-0.5">
-                {acquisition.photosCount}
+                {acquisition.imagesCount}
                 <Camera className="size-3" />
               </span>
             </>

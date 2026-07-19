@@ -8,9 +8,9 @@ from pathlib import Path
 from flask import Response
 from sqlalchemy.orm import Session, joinedload
 
-from .acquisition_service import acquisition_photos_load_options
+from .acquisition_service import acquisition_images_load_options
 from ..models.acquisition import Acquisition
-from ..models.acquisition_photo import AcquisitionPhoto
+from ..models.acquisition_image import AcquisitionImage
 from ..paths import SERVER_ROOT
 from ...archive import ZipSender
 
@@ -43,25 +43,25 @@ def _folder_name(acquisition: Acquisition) -> str:
     return name.encode('ascii', 'ignore').decode('ascii') or str(acquisition.id)
 
 
-def _photo_leaf_path(photo: AcquisitionPhoto) -> str:
-    led = photo.scenario_led
-    shutter = photo.scenario_shutter_speed
-    pose_name = f'pose_{photo.pose_index}'
+def _image_leaf_path(image: AcquisitionImage) -> str:
+    led = image.scenario_led
+    shutter = image.scenario_shutter_speed
+    pose_name = f'pose_{image.pose_index}'
     led_name = 'led_unknown' if led is None else f'led_{led.led_value}'
     shutter_name = 'shutter_unknown' if shutter is None else f'shutter_{shutter.shutter_speed_value.value:g}'
     return f'{pose_name}/{led_name}/{shutter_name}'
 
 
-def _add_photos_to_zip(
+def _add_images_to_zip(
     zip_sender: ZipSender,
     *,
     section: str,
     folder_name: str,
-    photos: list[AcquisitionPhoto],
+    images: list[AcquisitionImage],
 ) -> None:
-    for photo in photos:
-        folder_path = f'data/{section}/{folder_name}/{_photo_leaf_path(photo)}'
-        for relative_path in (photo.raw_path, photo.preview_path):
+    for image in images:
+        folder_path = f'data/{section}/{folder_name}/{_image_leaf_path(image)}'
+        for relative_path in (image.raw_path, image.preview_path):
             disk_path = SERVER_ROOT / relative_path
             if not disk_path.is_file():
                 continue
@@ -77,11 +77,11 @@ def _build_acquisitions_zip(acquisitions: list[Acquisition], calibrations: list[
     calibration_by_id = {calibration.id: calibration for calibration in calibrations}
 
     for calibration in calibrations:
-        _add_photos_to_zip(
+        _add_images_to_zip(
             zip_sender,
             section='calibrations',
             folder_name=_folder_name(calibration),
-            photos=list(calibration.photos),
+            images=list(calibration.images),
         )
 
     for acquisition in acquisitions:
@@ -96,11 +96,11 @@ def _build_acquisitions_zip(acquisitions: list[Acquisition], calibrations: list[
         metadata_file = temp_path / f'metadata_{acquisition.id}.yaml'
         metadata_file.write_text(metadata_content, encoding='utf-8')
         zip_sender.add_file(f'data/acquisitions/{folder_name}/metadata.yaml', str(metadata_file))
-        _add_photos_to_zip(
+        _add_images_to_zip(
             zip_sender,
             section='acquisitions',
             folder_name=folder_name,
-            photos=list(acquisition.photos),
+            images=list(acquisition.images),
         )
 
     return zip_sender
@@ -116,7 +116,7 @@ def _load_acquisitions_for_download(
     if acquisition_ids:
         acquisitions = (
             session.query(Acquisition)
-            .options(*acquisition_photos_load_options(), joinedload(Acquisition.calibration))
+            .options(*acquisition_images_load_options(), joinedload(Acquisition.calibration))
             .filter(Acquisition.id.in_(acquisition_ids))
             .all()
         )
@@ -128,7 +128,7 @@ def _load_acquisitions_for_download(
     if calibration_ids:
         calibrations = (
             session.query(Acquisition)
-            .options(*acquisition_photos_load_options())
+            .options(*acquisition_images_load_options())
             .filter(Acquisition.id.in_(calibration_ids))
             .all()
         )
@@ -138,8 +138,8 @@ def _load_acquisitions_for_download(
 
 def download_acquisitions_data(session: Session, acquisitions: list[Acquisition]) -> Response:
     """Construit une archive zip avec les données d'acquisition et d'étalonnage associées."""
-    acquisitions_with_photos, calibrations = _load_acquisitions_for_download(session, acquisitions)
-    zip_sender = _build_acquisitions_zip(acquisitions_with_photos, calibrations)
+    acquisitions_with_images, calibrations = _load_acquisitions_for_download(session, acquisitions)
+    zip_sender = _build_acquisitions_zip(acquisitions_with_images, calibrations)
     return zip_sender.response()
 
 

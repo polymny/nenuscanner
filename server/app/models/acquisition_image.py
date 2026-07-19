@@ -8,8 +8,8 @@ from .scenario import ScenarioLED, ScenarioShutterSpeed
 from ...db import Base
 
 
-class AcquisitionPhoto(Base):
-    __tablename__ = 'acquisition_photo'
+class AcquisitionImage(Base):
+    __tablename__ = 'acquisition_image'
 
     id: Mapped[int] = mapped_column(primary_key=True)
     preview_path: Mapped[str] = mapped_column(String(512), nullable=False)
@@ -31,12 +31,12 @@ class AcquisitionPhoto(Base):
         index=True,
     )
 
-    acquisition: Mapped[Acquisition] = relationship(back_populates='photos')
+    acquisition: Mapped[Acquisition] = relationship(back_populates='images')
     scenario_shutter_speed: Mapped[ScenarioShutterSpeed | None] = relationship()
     scenario_led: Mapped[ScenarioLED | None] = relationship()
 
     def __repr__(self) -> str:
         return (
-            f'AcquisitionPhoto(id={self.id!r}, acquisition_id={self.acquisition_id!r}, '
+            f'AcquisitionImage(id={self.id!r}, acquisition_id={self.acquisition_id!r}, '
             f'preview_path={self.preview_path!r}, raw_path={self.raw_path!r})'
         )

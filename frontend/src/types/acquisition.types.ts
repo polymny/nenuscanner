@@ -35,13 +35,13 @@ export interface Acquisition {
   apertureValue: number;
   isCalibration: boolean;
   acquisitions?: Array<{ id: number; name: string }>;
-  photosCount: number;
+  imagesCount: number;
   sizeBytes: number;
   createdAt: string;
   updatedAt: string;
 }
 
-export interface AcquisitionPhoto {
+export interface AcquisitionImage {
   id: number;
   imageUrl: string;
   acquisitionId: number;
@@ -52,7 +52,7 @@ export interface AcquisitionPhoto {
 }
 
 export interface AcquisitionDetail extends Acquisition {
-  photos: Array<AcquisitionPhoto>;
+  images: Array<AcquisitionImage>;
 }
 
 export interface AcquisitionRunStartOrResumeResponse {
