@@ -33,7 +33,7 @@ def acquisition_images_load_options():
         .joinedload(ScenarioLED.led_power_value),
         joinedload(Acquisition.images)
         .joinedload(AcquisitionImage.scenario_shutter_speed)
-        .joinedload(ScenarioShutterSpeed.shutter_speed_value),
+        .joinedload(ScenarioShutterSpeed.relative_shutter_speed_value),
     )
 
 
@@ -42,7 +42,7 @@ def acquisition_scenario_load_options():
         joinedload(Acquisition.scenario).joinedload(Scenario.leds).joinedload(ScenarioLED.led_power_value),
         joinedload(Acquisition.scenario)
         .joinedload(Scenario.shutter_speeds)
-        .joinedload(ScenarioShutterSpeed.shutter_speed_value),
+        .joinedload(ScenarioShutterSpeed.relative_shutter_speed_value),
     )
 
 
@@ -83,7 +83,7 @@ def acquisition_thumbnail_url(images: list[AcquisitionImage]) -> str | None:
     best = min(
         pool,
         key=lambda p: (
-            abs(p.scenario_shutter_speed.shutter_speed_value.value - _THUMBNAIL_TARGET_SHUTTER_RELATIVE)
+            abs(p.scenario_shutter_speed.relative_shutter_speed_value.value - _THUMBNAIL_TARGET_SHUTTER_RELATIVE)
             if p.scenario_shutter_speed
             else float('inf')
         ),

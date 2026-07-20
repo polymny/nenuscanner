@@ -43,9 +43,9 @@ def init_db() -> None:
         camera_settings,  # noqa: F401
         led_power_value,  # noqa: F401
         profile,  # noqa: F401
+        relative_shutter_speed_value,  # noqa: F401
         rig_configuration,  # noqa: F401
         scenario,  # noqa: F401
-        shutter_speed_value,  # noqa: F401
     )
 
     Base.metadata.create_all(bind=engine)

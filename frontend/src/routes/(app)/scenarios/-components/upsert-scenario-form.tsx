@@ -16,8 +16,8 @@ import { Button } from '@/components/ui/button';
 import { useUpsertScenario } from '@/api/mutations/scenario.mutations';
 import { useGetScenarios } from '@/api/queries/scenario.queries';
 import { useGetLedPowerValues } from '@/api/queries/led-power-value.queries';
-import { useGetShutterSpeedValues } from '@/api/queries/shutter-speed-value.queries';
-import { SHUTTER_SPEED_REFERENCE } from '@/types/shutter-speed-value.types';
+import { useGetRelativeShutterSpeedValues } from '@/api/queries/relative-shutter-speed-value.queries';
+import { RELATIVE_SHUTTER_SPEED_REFERENCE } from '@/types/relative-shutter-speed-value.types';
 import { Input } from '@/components/ui/input';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { LED_VALUES } from '@/types/led.types';
@@ -48,7 +48,7 @@ const UpsertScenarioFormContent = ({ mode, scenarioId, onRequestDuplicate }: Ups
   const navigate = useNavigate();
   const { data: scenarios } = useGetScenarios();
   const { data: powerOptions = [] } = useGetLedPowerValues();
-  const { data: shutterSpeedOptions = [] } = useGetShutterSpeedValues();
+  const { data: relativeShutterSpeedOptions = [] } = useGetRelativeShutterSpeedValues();
 
   const defaultCreateLeds = useMemo(() => {
     if (powerOptions.length === 0) return null;
@@ -62,12 +62,14 @@ const UpsertScenarioFormContent = ({ mode, scenarioId, onRequestDuplicate }: Ups
     }));
   }, [powerOptions]);
 
-  const defaultCreateShutterSpeedIds = useMemo(() => {
-    if (shutterSpeedOptions.length === 0) return null;
+  const defaultCreateRelativeShutterSpeedIds = useMemo(() => {
+    if (relativeShutterSpeedOptions.length === 0) return null;
 
-    const referenceOption = shutterSpeedOptions.find((option) => option.value === SHUTTER_SPEED_REFERENCE);
+    const referenceOption = relativeShutterSpeedOptions.find(
+      (option) => option.value === RELATIVE_SHUTTER_SPEED_REFERENCE
+    );
     return referenceOption ? [referenceOption.id] : null;
-  }, [shutterSpeedOptions]);
+  }, [relativeShutterSpeedOptions]);
 
   const existingScenario = scenarios?.find((scenario) => scenario.id === scenarioId);
   const isLockedForEdition = useMemo(() => {
@@ -89,7 +91,7 @@ const UpsertScenarioFormContent = ({ mode, scenarioId, onRequestDuplicate }: Ups
       id: existingScenario?.id ?? undefined,
       leds: existingScenario?.leds ?? [],
       posesCount: existingScenario?.posesCount ?? 1,
-      shutterSpeedIds: existingScenario?.shutterSpeedIds ?? [],
+      relativeShutterSpeedIds: existingScenario?.relativeShutterSpeedIds ?? [],
     },
     mode: 'onChange',
   });
@@ -100,9 +102,9 @@ const UpsertScenarioFormContent = ({ mode, scenarioId, onRequestDuplicate }: Ups
   }, [defaultCreateLeds, form, mode]);
 
   useEffect(() => {
-    if (mode !== 'create' || !defaultCreateShutterSpeedIds) return;
-    form.setValue('shutterSpeedIds', defaultCreateShutterSpeedIds, { shouldValidate: true });
-  }, [defaultCreateShutterSpeedIds, form, mode]);
+    if (mode !== 'create' || !defaultCreateRelativeShutterSpeedIds) return;
+    form.setValue('relativeShutterSpeedIds', defaultCreateRelativeShutterSpeedIds, { shouldValidate: true });
+  }, [defaultCreateRelativeShutterSpeedIds, form, mode]);
 
   return (
     <Form {...form}>

@@ -1,7 +1,7 @@
 from marshmallow import Schema, fields, validate
 
 from ..constants.leds import LED_VALUES
-from ..constants.shutter_speeds import SHUTTER_SPEED_MAX, SHUTTER_SPEED_MIN
+from ..constants.shutter_speeds import RELATIVE_SHUTTER_SPEED_MAX, RELATIVE_SHUTTER_SPEED_MIN
 
 
 class InspectModeLedSchema(Schema):
@@ -16,7 +16,9 @@ class InspectModeShutterSpeedSchema(Schema):
     class Meta:
         ordered = True
 
-    value = fields.Float(required=True, validate=validate.Range(min=SHUTTER_SPEED_MIN, max=SHUTTER_SPEED_MAX))
+    relative_value = fields.Float(
+        required=True, validate=validate.Range(min=RELATIVE_SHUTTER_SPEED_MIN, max=RELATIVE_SHUTTER_SPEED_MAX)
+    )
 
 
 class InspectModePoseSchema(Schema):

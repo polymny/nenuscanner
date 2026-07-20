@@ -13,7 +13,7 @@ def scenario_summary_dto(scenario: Scenario) -> dict:
         'name': scenario.name,
         'leds': [{'value': led.led_value, 'powerId': led.led_power_value_id} for led in scenario.leds],
         'posesCount': scenario.poses_count,
-        'shutterSpeedIds': [ss.shutter_speed_value_id for ss in scenario.shutter_speeds],
+        'relativeShutterSpeedIds': [ss.relative_shutter_speed_value_id for ss in scenario.shutter_speeds],
     }
 
 
@@ -22,7 +22,8 @@ def apply_scenario_payload(scenario: Scenario, payload: dict) -> None:
 
     scenario.leds = [ScenarioLED(led_value=led['value'], led_power_value_id=led['powerId']) for led in payload['leds']]
     scenario.shutter_speeds = [
-        ScenarioShutterSpeed(shutter_speed_value_id=shutter_speed_id) for shutter_speed_id in payload['shutterSpeedIds']
+        ScenarioShutterSpeed(relative_shutter_speed_value_id=relative_shutter_speed_id)
+        for relative_shutter_speed_id in payload['relativeShutterSpeedIds']
     ]
     scenario.poses_count = payload['posesCount']
 
@@ -42,8 +43,8 @@ def scenarios_have_same_led_power_values(a: Scenario, b: Scenario) -> bool:
 
 
 def scenarios_have_same_shutter_speeds(a: Scenario, b: Scenario) -> bool:
-    shutter_speeds_a = sorted(ss.shutter_speed_value_id for ss in a.shutter_speeds)
-    shutter_speeds_b = sorted(ss.shutter_speed_value_id for ss in b.shutter_speeds)
+    shutter_speeds_a = sorted(ss.relative_shutter_speed_value_id for ss in a.shutter_speeds)
+    shutter_speeds_b = sorted(ss.relative_shutter_speed_value_id for ss in b.shutter_speeds)
     return shutter_speeds_a == shutter_speeds_b
 
 
@@ -89,7 +90,8 @@ def duplicate_scenario(source: Scenario, new_name: str) -> Scenario:
         ScenarioLED(led_value=led.led_value, led_power_value_id=led.led_power_value_id) for led in source.leds
     ]
     duplicated.shutter_speeds = [
-        ScenarioShutterSpeed(shutter_speed_value_id=ss.shutter_speed_value_id) for ss in source.shutter_speeds
+        ScenarioShutterSpeed(relative_shutter_speed_value_id=ss.relative_shutter_speed_value_id)
+        for ss in source.shutter_speeds
     ]
 
     duplicated.updated_at = func.now()

@@ -1,7 +1,7 @@
 from marshmallow import Schema, fields
 
 
-class ShutterSpeedValueReadSchema(Schema):
+class RelativeShutterSpeedValueReadSchema(Schema):
     class Meta:
         ordered = True
 

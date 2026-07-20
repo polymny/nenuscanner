@@ -11,7 +11,7 @@ export interface ScenarioSummary {
   name: string;
   leds: Array<ScenarioLed>;
   posesCount: number;
-  shutterSpeedIds: Array<number>;
+  relativeShutterSpeedIds: Array<number>;
 }
 
 export interface Scenario extends ScenarioSummary {

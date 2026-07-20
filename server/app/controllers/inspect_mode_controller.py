@@ -33,7 +33,7 @@ class InspectModeShutterSpeedController(MethodView):
     def post(self, payload):
         """Applique un temps de pose relatif en mode inspection."""
         try:
-            set_shutter_speed_inspect_mode(db_session, payload['value'])
+            set_shutter_speed_inspect_mode(db_session, payload['relative_value'])
         except AcquisitionRunningError:
             abort(409, message='acquisition-running')
         except ValueError as error:

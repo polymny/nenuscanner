@@ -7,7 +7,7 @@ from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .led_power_value import LedPowerValue
-from .shutter_speed_value import ShutterSpeedValue
+from .relative_shutter_speed_value import RelativeShutterSpeedValue
 from ...db import Base
 
 if TYPE_CHECKING:
@@ -85,17 +85,17 @@ class ScenarioShutterSpeed(Base):
         nullable=False,
         index=True,
     )
-    shutter_speed_value_id: Mapped[int] = mapped_column(
-        ForeignKey('shutter_speed_value.id', ondelete='RESTRICT'),
+    relative_shutter_speed_value_id: Mapped[int] = mapped_column(
+        ForeignKey('relative_shutter_speed_value.id', ondelete='RESTRICT'),
         nullable=False,
         index=True,
     )
 
     scenario: Mapped[Scenario] = relationship(back_populates='shutter_speeds')
-    shutter_speed_value: Mapped[ShutterSpeedValue] = relationship()
+    relative_shutter_speed_value: Mapped[RelativeShutterSpeedValue] = relationship()
 
     def __repr__(self) -> str:
         return (
             f'ScenarioShutterSpeed(id={self.id!r}, scenario_id={self.scenario_id!r}, '
-            f'shutter_speed_value_id={self.shutter_speed_value_id!r})'
+            f'relative_shutter_speed_value_id={self.relative_shutter_speed_value_id!r})'
         )

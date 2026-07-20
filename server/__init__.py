@@ -12,9 +12,9 @@ from .app.controllers.camera_controller import blp as camera_blp
 from .app.controllers.inspect_mode_controller import blp as inspect_mode_blp
 from .app.controllers.led_power_value_controller import blp as led_power_value_blp
 from .app.controllers.profile_controller import blp as profile_blp
+from .app.controllers.relative_shutter_speed_value_controller import blp as relative_shutter_speed_value_blp
 from .app.controllers.rig_configuration_controller import blp as rig_configuration_blp
 from .app.controllers.scenario_controller import blp as scenario_blp
-from .app.controllers.shutter_speed_value_controller import blp as shutter_speed_value_blp
 from .app.controllers.web_controller import blueprint as web_blueprint
 from .db import db_session
 
@@ -66,7 +66,7 @@ api.register_blueprint(artifact_blp, url_prefix='/artifact')
 api.register_blueprint(camera_blp, url_prefix='/camera')
 api.register_blueprint(inspect_mode_blp, url_prefix='/inspect-mode')
 api.register_blueprint(led_power_value_blp, url_prefix='/led-power-value')
-api.register_blueprint(shutter_speed_value_blp, url_prefix='/shutter-speed-value')
+api.register_blueprint(relative_shutter_speed_value_blp, url_prefix='/relative-shutter-speed-value')
 api.register_blueprint(profile_blp, url_prefix='/profile')
 api.register_blueprint(scenario_blp, url_prefix='/scenario')
 api.register_blueprint(rig_configuration_blp, url_prefix='/rig-configuration')

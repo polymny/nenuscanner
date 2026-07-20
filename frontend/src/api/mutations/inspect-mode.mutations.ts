@@ -26,7 +26,7 @@ export const useSetInspectModeLed = (
 };
 
 export interface InspectModeShutterSpeedPayload {
-  value: number;
+  relative_value: number;
 }
 
 export const setInspectModeShutterSpeed = async (payload: InspectModeShutterSpeedPayload) => {

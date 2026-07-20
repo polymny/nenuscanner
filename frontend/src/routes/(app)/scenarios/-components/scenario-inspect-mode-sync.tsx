@@ -50,7 +50,7 @@ const ScenarioInspectModeSync = () => {
     }
     if (activeInspectMode === 'shutter-speeds') {
       if (shutterSpeedPreviewValue !== null) {
-        setShutterSpeedMutation({ value: shutterSpeedPreviewValue });
+        setShutterSpeedMutation({ relative_value: shutterSpeedPreviewValue });
       }
     }
   }, [activeInspectMode, leds, setLedMutation, setShutterSpeedMutation, shutterSpeedPreviewValue]);

@@ -53,7 +53,7 @@ def _image_to_dto(image) -> dict:
         'poseIndex': image.pose_index,
         'ledValue': led.led_value if led is not None else None,
         'ledPower': led.led_power_value.value if led is not None else None,
-        'shutterSpeedRelative': shutter_speed.shutter_speed_value.value if shutter_speed is not None else None,
+        'shutterSpeedRelative': shutter_speed.relative_shutter_speed_value.value if shutter_speed is not None else None,
     }
 
 

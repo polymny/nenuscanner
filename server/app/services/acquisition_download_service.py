@@ -48,7 +48,7 @@ def _image_leaf_path(image: AcquisitionImage) -> str:
     shutter = image.scenario_shutter_speed
     pose_name = f'pose_{image.pose_index}'
     led_name = 'led_unknown' if led is None else f'led_{led.led_value}'
-    shutter_name = 'shutter_unknown' if shutter is None else f'shutter_{shutter.shutter_speed_value.value:g}'
+    shutter_name = 'shutter_unknown' if shutter is None else f'shutter_{shutter.relative_shutter_speed_value.value:g}'
     return f'{pose_name}/{led_name}/{shutter_name}'
 
 

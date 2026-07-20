@@ -106,7 +106,7 @@ def build_scenario_capture_steps(scenario: Scenario) -> list[ScenarioCaptureStep
             0 if led.led_value in ('NO_LED', 'ALL_LEDS') else int(led.led_value),
         ),
     )
-    shutter_speeds = sorted(scenario.shutter_speeds, key=lambda ss: ss.shutter_speed_value.value)
+    shutter_speeds = sorted(scenario.shutter_speeds, key=lambda ss: ss.relative_shutter_speed_value.value)
     if not leds or not shutter_speeds:
         raise ValueError('scenario-missing-leds-or-shutter-speeds')
 
@@ -147,7 +147,7 @@ def _scenario_progress_payload(step: ScenarioCaptureStep) -> dict:
         'ledPower': step.led.led_power_value.value,
         'shutterSpeedIndex': step.shutter_speed_index,
         'shutterSpeedTotal': step.shutter_speed_total,
-        'shutterSpeedRelative': step.shutter_speed.shutter_speed_value.value,
+        'shutterSpeedRelative': step.shutter_speed.relative_shutter_speed_value.value,
     }
 
 
@@ -181,7 +181,7 @@ def execute_scenario(
         session.query(Scenario)
         .options(
             joinedload(Scenario.leds).joinedload(ScenarioLED.led_power_value),
-            joinedload(Scenario.shutter_speeds).joinedload(ScenarioShutterSpeed.shutter_speed_value),
+            joinedload(Scenario.shutter_speeds).joinedload(ScenarioShutterSpeed.relative_shutter_speed_value),
         )
         .filter(Scenario.id == acquisition.scenario_id)
         .one()
@@ -227,7 +227,7 @@ def execute_scenario(
         if config.CAMERA == 'real':
             cam = acquisition.camera_settings
             target_shutter_speed = float(cam.absolute_shutter_speed_value) * float(
-                step.shutter_speed.shutter_speed_value.value
+                step.shutter_speed.relative_shutter_speed_value.value
             )
             # TODO : correction temporaire pour ALL_LEDS
             if step.led.led_value == 'ALL_LEDS':

@@ -4,7 +4,7 @@ import { ScenarioLedIcon } from '@/components/scenario/scenario-led-icon';
 import { cn, pluralize } from '@/lib/utils';
 
 interface ScenarioSummaryStatsProps {
-  scenario: Pick<ScenarioSummary, 'leds' | 'shutterSpeedIds' | 'posesCount'>;
+  scenario: Pick<ScenarioSummary, 'leds' | 'relativeShutterSpeedIds' | 'posesCount'>;
   className?: string;
   iconsSize?: string;
 }
@@ -14,7 +14,7 @@ export default function ScenarioSummaryStats({ scenario, className, iconsSize = 
   const hasNoLed = ledValues.includes('NO_LED');
   const hasAllLeds = ledValues.includes('ALL_LEDS');
   const ledsCount = ledValues.filter((l) => l !== 'NO_LED' && l !== 'ALL_LEDS').length;
-  const shutterSpeedsCount = scenario.shutterSpeedIds.length;
+  const shutterSpeedsCount = scenario.relativeShutterSpeedIds.length;
   const posesCount = scenario.posesCount;
 
   return (
