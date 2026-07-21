@@ -2,9 +2,12 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from sqlalchemy import Boolean, DateTime, Float, func
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy import Boolean, DateTime, Float, ForeignKey, func
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
+from .absolute_shutter_speed_value import AbsoluteShutterSpeedValue
+from .aperture_value import ApertureValue
+from .iso_value import IsoValue
 from ...db import Base
 
 
@@ -16,6 +19,22 @@ class CameraSettings(Base):
     aperture_value: Mapped[float] = mapped_column(Float, nullable=False)
     iso_value: Mapped[float] = mapped_column(Float, nullable=False)
     absolute_shutter_speed_value: Mapped[float] = mapped_column(Float, nullable=False)
+
+    aperture_value_id: Mapped[int | None] = mapped_column(
+        ForeignKey('aperture_value.id', ondelete='RESTRICT'),
+        nullable=True,
+        index=True,
+    )
+    iso_value_id: Mapped[int | None] = mapped_column(
+        ForeignKey('iso_value.id', ondelete='RESTRICT'),
+        nullable=True,
+        index=True,
+    )
+    absolute_shutter_speed_value_id: Mapped[int | None] = mapped_column(
+        ForeignKey('absolute_shutter_speed_value.id', ondelete='RESTRICT'),
+        nullable=True,
+        index=True,
+    )
 
     # Il doit exister au plus une ligne "courante" à un instant T (garanti par la logique applicative).
     is_current: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, index=True)
@@ -30,6 +49,12 @@ class CameraSettings(Base):
         nullable=False,
         server_default=func.now(),
         onupdate=func.now(),
+    )
+
+    aperture_value_ref: Mapped[ApertureValue | None] = relationship(foreign_keys=[aperture_value_id])
+    iso_value_ref: Mapped[IsoValue | None] = relationship(foreign_keys=[iso_value_id])
+    absolute_shutter_speed_value_ref: Mapped[AbsoluteShutterSpeedValue | None] = relationship(
+        foreign_keys=[absolute_shutter_speed_value_id]
     )
 
     def __repr__(self) -> str:

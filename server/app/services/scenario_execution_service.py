@@ -11,6 +11,7 @@ from .exiftool_service import write_jpeg_preview_from_raw
 from .gphoto2_service import capture_raw_to_file
 from .sse_job_runner import JobCancelled, SseJobContext
 from ..constants.leds import LEDS_COUNT
+from ..models.absolute_shutter_speed_value import AbsoluteShutterSpeedValue
 from ..models.acquisition import Acquisition, AcquisitionStatus
 from ..models.acquisition_image import AcquisitionImage
 from ..models.scenario import Scenario, ScenarioLED, ScenarioShutterSpeed
@@ -224,19 +225,20 @@ def execute_scenario(
         raw_ext = getattr(config, 'CAMERA_RAW_EXTENSION', 'nef')  # repli sur l'extension RAW Nikon
         raw_relative_path = image_relative_path(acquisition_id, f'{base}.{raw_ext}')
 
+        cam = acquisition.camera_settings
+        effective_shutter_speed = float(cam.absolute_shutter_speed_value) * float(
+            step.shutter_speed.relative_shutter_speed_value.value
+        )
+        # TODO : correction temporaire pour ALL_LEDS
+        if step.led.led_value == 'ALL_LEDS':
+            effective_shutter_speed /= LEDS_COUNT
+
         if config.CAMERA == 'real':
-            cam = acquisition.camera_settings
-            target_shutter_speed = float(cam.absolute_shutter_speed_value) * float(
-                step.shutter_speed.relative_shutter_speed_value.value
-            )
-            # TODO : correction temporaire pour ALL_LEDS
-            if step.led.led_value == 'ALL_LEDS':
-                target_shutter_speed /= LEDS_COUNT
             raw_file_path = str(SERVER_ROOT / raw_relative_path)
             preview_file_path = str(SERVER_ROOT / preview_relative_path)
             capture_raw_to_file(
                 raw_file_path,
-                shutterspeed_value=target_shutter_speed,
+                shutterspeed_value=effective_shutter_speed,
                 iso_value=float(cam.iso_value),
                 aperture_value=float(cam.aperture_value),
             )
@@ -247,6 +249,11 @@ def execute_scenario(
             urllib.request.urlretrieve(source_url, SERVER_ROOT / preview_relative_path)
             raw_relative_path = preview_relative_path
 
+        nearest_shutter = min(
+            session.query(AbsoluteShutterSpeedValue).all(),
+            key=lambda row: abs(float(row.value) - effective_shutter_speed),
+        )
+
         image = AcquisitionImage(
             preview_path=preview_relative_path,
             raw_path=raw_relative_path,
@@ -254,6 +261,7 @@ def execute_scenario(
             pose_index=step.pose_index,
             scenario_shutter_speed_id=step.shutter_speed.id,
             scenario_led_id=step.led.id,
+            effective_shutter_speed_value_id=nearest_shutter.id,
         )
         session.add(image)
         session.flush()

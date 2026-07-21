@@ -5,11 +5,14 @@ from flask_smorest import Blueprint, abort
 
 from ..dtos.camera_dto import CameraFocusAreaUpdateSchema, CameraSettingsSchema, CameraSettingUpdateSchema
 from ..paths import SERVER_ROOT
-from ..services.camera_settings_service import persist_current_camera_settings
+from ..services.camera_settings_service import (
+    get_camera_settings,
+    persist_current_camera_settings,
+    refresh_available_camera_values,
+)
 from ..services.exiftool_service import write_jpeg_preview_from_raw
 from ..services.gphoto2_service import (
     capture_raw_to_file,
-    get_camera_settings,
     set_camera_setting,
     set_focus_area,
     trigger_autofocus,
@@ -25,7 +28,7 @@ class CameraSettingsController(MethodView):
     @blp.response(200, CameraSettingsSchema)
     def get(self):
         """Retourne les réglages ISO, temps de pose et ouverture de la caméra."""
-        return get_camera_settings()
+        return get_camera_settings(db_session)
 
     @blp.arguments(CameraSettingUpdateSchema)
     @blp.response(204)
@@ -39,6 +42,19 @@ class CameraSettingsController(MethodView):
         except ValueError as error:
             db_session.rollback()
             abort(400, message=str(error))
+        except Exception:
+            db_session.rollback()
+            raise
+
+
+@blp.route('/change')
+class CameraChangeController(MethodView):
+    @blp.response(204)
+    def post(self):
+        """Réinitialise les valeurs caméra disponibles depuis l'appareil connecté."""
+        try:
+            refresh_available_camera_values(db_session)
+            db_session.commit()
         except Exception:
             db_session.rollback()
             raise
@@ -69,7 +85,7 @@ class CameraCalibrationCaptureController(MethodView):
         if config.CAMERA == 'dummy':
             abort(400, 'camera-not-available')
 
-        settings = get_camera_settings()
+        settings = get_camera_settings(db_session)
         shutter_speeds = settings['shutterSpeedValues']
         iso_value = float(settings['currentIsoValue'])
         aperture_value = float(settings['currentApertureValue'])

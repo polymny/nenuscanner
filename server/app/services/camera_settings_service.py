@@ -2,8 +2,12 @@ from __future__ import annotations
 
 from sqlalchemy.orm import Session
 
-from .gphoto2_service import get_camera_settings
+from .gphoto2_service import get_gphoto2_camera_settings
+from ..models.absolute_shutter_speed_value import AbsoluteShutterSpeedValue
+from ..models.aperture_value import ApertureValue
 from ..models.camera_settings import CameraSettings
+from ..models.iso_value import IsoValue
+from ... import config
 
 
 def _current_values_from_camera() -> dict[str, float]:
@@ -36,6 +40,24 @@ def get_current_camera_settings(session: Session) -> CameraSettings:
     return _get_or_create_current(session)
 
 
+def get_camera_settings(session: Session) -> dict:
+    """Retourne les listes de valeurs et les réglages courants depuis la DB."""
+    current = _get_or_create_current(session)
+    return {
+        'apertureValues': [
+            float(row.value) for row in session.query(ApertureValue).order_by(ApertureValue.id.asc()).all()
+        ],
+        'currentApertureValue': float(current.aperture_value),
+        'isoValues': [float(row.value) for row in session.query(IsoValue).order_by(IsoValue.id.asc()).all()],
+        'currentIsoValue': float(current.iso_value),
+        'shutterSpeedValues': [
+            float(row.value)
+            for row in session.query(AbsoluteShutterSpeedValue).order_by(AbsoluteShutterSpeedValue.id.asc()).all()
+        ],
+        'currentShutterSpeedValue': float(current.absolute_shutter_speed_value),
+    }
+
+
 def persist_current_camera_settings(session: Session) -> None:
     """Met à jour la ligne courante en DB depuis la caméra (crée la ligne si besoin)."""
     current = _get_or_create_current(session)
@@ -57,3 +79,38 @@ def snapshot_current_camera_settings(session: Session) -> CameraSettings:
     session.add(snapshot)
     session.flush()
     return snapshot
+
+
+def fill_available_camera_values(session: Session) -> None:
+    """Remplit aperture/iso/shutter si vides."""
+    if config.CAMERA != 'real':
+        return
+
+    tables = (
+        (ApertureValue, 'apertureValues'),
+        (IsoValue, 'isoValues'),
+        (AbsoluteShutterSpeedValue, 'shutterSpeedValues'),
+    )
+    empty_models = [model for model, _key in tables if session.query(model).count() == 0]
+    if not empty_models:
+        return
+
+    settings = get_gphoto2_camera_settings()
+
+    for model, values_key in tables:
+        if model not in empty_models:
+            continue
+        for index, value in enumerate(settings.get(values_key, [])):
+            session.add(model(value=float(value), api_key=str(index + 1)))
+
+
+def refresh_available_camera_values(session: Session) -> None:
+    """Vide puis remplit les tables de valeurs caméra."""
+    if config.CAMERA != 'real':
+        return
+
+    session.query(ApertureValue).delete()
+    session.query(IsoValue).delete()
+    session.query(AbsoluteShutterSpeedValue).delete()
+    session.flush()
+    fill_available_camera_values(session)

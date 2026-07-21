@@ -37,10 +37,13 @@ Base.query = db_session.query_property()
 def init_db() -> None:
     # Import models so they register on Base.metadata before create_all.
     from .app.models import (
+        absolute_shutter_speed_value,  # noqa: F401
         acquisition,  # noqa: F401
         acquisition_image,  # noqa: F401
+        aperture_value,  # noqa: F401
         artifact,  # noqa: F401
         camera_settings,  # noqa: F401
+        iso_value,  # noqa: F401
         led_power_value,  # noqa: F401
         profile,  # noqa: F401
         relative_shutter_speed_value,  # noqa: F401
