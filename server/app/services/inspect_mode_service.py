@@ -21,7 +21,7 @@ def set_led_inspect_mode(session: Session, led_value: str) -> None:
     #     camera_settings = get_current_camera_settings(session)
 
     #     # TODO : correction temporaire
-    #     target_shutter_speed = float(camera_settings.absolute_shutter_speed_value) / LEDS_COUNT
+    #     target_shutter_speed = float(camera_settings.absolute_shutter_speed_value.value) / LEDS_COUNT
     #     set_camera_setting('shutterspeed', target_shutter_speed)
 
     gpio_leds = leds.get()
@@ -46,7 +46,7 @@ def set_shutter_speed_inspect_mode(session: Session, relative_value: float) -> N
 
     if config.CAMERA == 'real':
         camera_settings = get_current_camera_settings(session)
-        target_shutter_speed = float(camera_settings.absolute_shutter_speed_value) * float(relative_value)
+        target_shutter_speed = float(camera_settings.absolute_shutter_speed_value.value) * float(relative_value)
 
         # TODO : correction temporaire
         # target_shutter_speed /= LEDS_COUNT
@@ -61,7 +61,7 @@ def leave_inspect_mode(session: Session) -> None:
     #     camera_settings = get_current_camera_settings(session)
 
     #     # TODO : correction temporaire
-    #     target_shutter_speed = float(camera_settings.absolute_shutter_speed_value) / LEDS_COUNT
+    #     target_shutter_speed = float(camera_settings.absolute_shutter_speed_value.value) / LEDS_COUNT
 
     #     set_camera_setting('shutterspeed', target_shutter_speed)
 

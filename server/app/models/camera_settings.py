@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from sqlalchemy import Boolean, DateTime, Float, ForeignKey, func
+from sqlalchemy import Boolean, DateTime, ForeignKey, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .absolute_shutter_speed_value import AbsoluteShutterSpeedValue
@@ -16,21 +16,17 @@ class CameraSettings(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
 
-    aperture_value: Mapped[float] = mapped_column(Float, nullable=False)
-    iso_value: Mapped[float] = mapped_column(Float, nullable=False)
-    absolute_shutter_speed_value: Mapped[float] = mapped_column(Float, nullable=False)
-
-    aperture_value_id: Mapped[int | None] = mapped_column(
+    aperture_value_id: Mapped[int] = mapped_column(
         ForeignKey('aperture_value.id', ondelete='RESTRICT'),
         nullable=False,
         index=True,
     )
-    iso_value_id: Mapped[int | None] = mapped_column(
+    iso_value_id: Mapped[int] = mapped_column(
         ForeignKey('iso_value.id', ondelete='RESTRICT'),
         nullable=False,
         index=True,
     )
-    absolute_shutter_speed_value_id: Mapped[int | None] = mapped_column(
+    absolute_shutter_speed_value_id: Mapped[int] = mapped_column(
         ForeignKey('absolute_shutter_speed_value.id', ondelete='RESTRICT'),
         nullable=False,
         index=True,
@@ -51,15 +47,16 @@ class CameraSettings(Base):
         onupdate=func.now(),
     )
 
-    aperture_value_ref: Mapped[ApertureValue | None] = relationship(foreign_keys=[aperture_value_id])
-    iso_value_ref: Mapped[IsoValue | None] = relationship(foreign_keys=[iso_value_id])
-    absolute_shutter_speed_value_ref: Mapped[AbsoluteShutterSpeedValue | None] = relationship(
-        foreign_keys=[absolute_shutter_speed_value_id]
+    aperture_value: Mapped[ApertureValue] = relationship(foreign_keys=[aperture_value_id], lazy='joined')
+    iso_value: Mapped[IsoValue] = relationship(foreign_keys=[iso_value_id], lazy='joined')
+    absolute_shutter_speed_value: Mapped[AbsoluteShutterSpeedValue] = relationship(
+        foreign_keys=[absolute_shutter_speed_value_id],
+        lazy='joined',
     )
 
     def __repr__(self) -> str:
         return (
             f'CameraSettings(id={self.id!r}, is_current={self.is_current!r}, '
-            f'iso_value={self.iso_value!r}, aperture_value={self.aperture_value!r}, '
-            f'absolute_shutter_speed_value={self.absolute_shutter_speed_value!r})'
+            f'iso_value_id={self.iso_value_id!r}, aperture_value_id={self.aperture_value_id!r}, '
+            f'absolute_shutter_speed_value_id={self.absolute_shutter_speed_value_id!r})'
         )

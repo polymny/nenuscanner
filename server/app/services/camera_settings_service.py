@@ -10,12 +10,22 @@ from ..models.iso_value import IsoValue
 from ... import config
 
 
-def _current_values_from_camera() -> dict[str, float]:
-    camera = get_camera_settings()
+def _nearest_value_id(session: Session, model: type, value: float) -> int:
+    rows = session.query(model).all()
+    if not rows:
+        raise ValueError(f'no-{model.__tablename__}-rows')
+    nearest = min(rows, key=lambda row: abs(float(row.value) - float(value)))
+    return int(nearest.id)
+
+
+def _current_ids_from_camera(session: Session) -> dict[str, int]:
+    camera = get_gphoto2_camera_settings()
     return {
-        'aperture_value': float(camera['currentApertureValue']),
-        'iso_value': float(camera['currentIsoValue']),
-        'absolute_shutter_speed_value': float(camera['currentShutterSpeedValue']),
+        'aperture_value_id': _nearest_value_id(session, ApertureValue, camera['currentApertureValue']),
+        'iso_value_id': _nearest_value_id(session, IsoValue, camera['currentIsoValue']),
+        'absolute_shutter_speed_value_id': _nearest_value_id(
+            session, AbsoluteShutterSpeedValue, camera['currentShutterSpeedValue']
+        ),
     }
 
 
@@ -29,7 +39,7 @@ def _get_or_create_current(session: Session) -> CameraSettings:
     if current is not None:
         return current
 
-    current = CameraSettings(**_current_values_from_camera(), is_current=True)
+    current = CameraSettings(**_current_ids_from_camera(session), is_current=True)
     session.add(current)
     session.flush()
     return current
@@ -47,33 +57,33 @@ def get_camera_settings(session: Session) -> dict:
         'apertureValues': [
             float(row.value) for row in session.query(ApertureValue).order_by(ApertureValue.id.asc()).all()
         ],
-        'currentApertureValue': float(current.aperture_value),
+        'currentApertureValue': float(current.aperture_value.value),
         'isoValues': [float(row.value) for row in session.query(IsoValue).order_by(IsoValue.id.asc()).all()],
-        'currentIsoValue': float(current.iso_value),
+        'currentIsoValue': float(current.iso_value.value),
         'shutterSpeedValues': [
             float(row.value)
             for row in session.query(AbsoluteShutterSpeedValue).order_by(AbsoluteShutterSpeedValue.id.asc()).all()
         ],
-        'currentShutterSpeedValue': float(current.absolute_shutter_speed_value),
+        'currentShutterSpeedValue': float(current.absolute_shutter_speed_value.value),
     }
 
 
 def persist_current_camera_settings(session: Session) -> None:
     """Met à jour la ligne courante en DB depuis la caméra (crée la ligne si besoin)."""
     current = _get_or_create_current(session)
-    values = _current_values_from_camera()
-    current.aperture_value = values['aperture_value']
-    current.iso_value = values['iso_value']
-    current.absolute_shutter_speed_value = values['absolute_shutter_speed_value']
+    ids = _current_ids_from_camera(session)
+    current.aperture_value_id = ids['aperture_value_id']
+    current.iso_value_id = ids['iso_value_id']
+    current.absolute_shutter_speed_value_id = ids['absolute_shutter_speed_value_id']
 
 
 def snapshot_current_camera_settings(session: Session) -> CameraSettings:
     """Duplique la ligne courante pour figer les réglages d'une acquisition."""
     current = _get_or_create_current(session)
     snapshot = CameraSettings(
-        aperture_value=current.aperture_value,
-        iso_value=current.iso_value,
-        absolute_shutter_speed_value=current.absolute_shutter_speed_value,
+        aperture_value_id=current.aperture_value_id,
+        iso_value_id=current.iso_value_id,
+        absolute_shutter_speed_value_id=current.absolute_shutter_speed_value_id,
         is_current=False,
     )
     session.add(snapshot)

@@ -226,7 +226,7 @@ def execute_scenario(
         raw_relative_path = image_relative_path(acquisition_id, f'{base}.{raw_ext}')
 
         cam = acquisition.camera_settings
-        effective_shutter_speed = float(cam.absolute_shutter_speed_value) * float(
+        effective_shutter_speed = float(cam.absolute_shutter_speed_value.value) * float(
             step.shutter_speed.relative_shutter_speed_value.value
         )
         # TODO : correction temporaire pour ALL_LEDS
@@ -239,8 +239,8 @@ def execute_scenario(
             capture_raw_to_file(
                 raw_file_path,
                 shutterspeed_value=effective_shutter_speed,
-                iso_value=float(cam.iso_value),
-                aperture_value=float(cam.aperture_value),
+                iso_value=float(cam.iso_value.value),
+                aperture_value=float(cam.aperture_value.value),
             )
             write_jpeg_preview_from_raw(raw_file_path, preview_file_path)
         else:

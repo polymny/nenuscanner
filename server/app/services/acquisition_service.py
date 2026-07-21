@@ -37,6 +37,10 @@ def acquisition_images_load_options():
     )
 
 
+def acquisition_camera_settings_load_options():
+    return (joinedload(Acquisition.camera_settings),)
+
+
 def acquisition_scenario_load_options():
     return (
         joinedload(Acquisition.scenario).joinedload(Scenario.leds).joinedload(ScenarioLED.led_power_value),
