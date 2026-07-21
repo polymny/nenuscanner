@@ -34,8 +34,6 @@ class AcquisitionImage(Base):
     effective_shutter_speed_value_id: Mapped[int] = mapped_column(
         ForeignKey('absolute_shutter_speed_value.id', ondelete='RESTRICT'),
         nullable=False,
-        default=1,
-        server_default='1',
         index=True,
     )
 

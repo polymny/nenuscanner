@@ -22,17 +22,17 @@ class CameraSettings(Base):
 
     aperture_value_id: Mapped[int | None] = mapped_column(
         ForeignKey('aperture_value.id', ondelete='RESTRICT'),
-        nullable=True,
+        nullable=False,
         index=True,
     )
     iso_value_id: Mapped[int | None] = mapped_column(
         ForeignKey('iso_value.id', ondelete='RESTRICT'),
-        nullable=True,
+        nullable=False,
         index=True,
     )
     absolute_shutter_speed_value_id: Mapped[int | None] = mapped_column(
         ForeignKey('absolute_shutter_speed_value.id', ondelete='RESTRICT'),
-        nullable=True,
+        nullable=False,
         index=True,
     )
 

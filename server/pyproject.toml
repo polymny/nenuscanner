@@ -23,7 +23,6 @@ ruff = "^0.15.11"
 [tool.poetry.scripts]
 nenuscanner = "server.__main__:main"
 db_init = "server.db:main"
-backfill_camera_settings_fks = "server.backfill_camera_settings_fks:main"
 
 [build-system]
 requires = ["poetry-core>=1.8.0"]
