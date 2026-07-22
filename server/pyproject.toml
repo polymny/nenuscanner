@@ -16,6 +16,7 @@ flask-cors = "^6.0.2"
 flask-smorest = "^0.47.0"
 emoji = "*"
 pyserial = "^3.5"
+pyyaml = "^6.0.3"
 
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.15.11"
