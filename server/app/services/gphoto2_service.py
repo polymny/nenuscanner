@@ -160,7 +160,7 @@ def _get_config(config_name: str) -> dict:
     return parse_gphoto2_config_output(_run_gphoto2_get_config(config_name))
 
 
-def get_camera_settings() -> dict:
+def get_gphoto2_camera_settings() -> dict:
     settings: dict = {}
     SETTING_RESPONSE_KEYS: dict[str, tuple[str, str]] = {
         'shutterspeed': ('shutterSpeedValues', 'currentShutterSpeedValue'),

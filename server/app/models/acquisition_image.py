@@ -3,6 +3,7 @@ from __future__ import annotations
 from sqlalchemy import ForeignKey, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
+from .absolute_shutter_speed_value import AbsoluteShutterSpeedValue
 from .acquisition import Acquisition
 from .scenario import ScenarioLED, ScenarioShutterSpeed
 from ...db import Base
@@ -30,10 +31,16 @@ class AcquisitionImage(Base):
         nullable=True,
         index=True,
     )
+    effective_shutter_speed_value_id: Mapped[int] = mapped_column(
+        ForeignKey('absolute_shutter_speed_value.id', ondelete='RESTRICT'),
+        nullable=False,
+        index=True,
+    )
 
     acquisition: Mapped[Acquisition] = relationship(back_populates='images')
     scenario_shutter_speed: Mapped[ScenarioShutterSpeed | None] = relationship()
     scenario_led: Mapped[ScenarioLED | None] = relationship()
+    effective_shutter_speed_value: Mapped[AbsoluteShutterSpeedValue] = relationship()
 
     def __repr__(self) -> str:
         return (

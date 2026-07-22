@@ -24,6 +24,7 @@ from ..services.acquisition_download_service import (
     copy_acquisitions_data_to_disk,
 )
 from ..services.acquisition_service import (
+    acquisition_camera_settings_load_options,
     acquisition_images_load_options,
     acquisition_scenario_load_options,
     acquisition_size_bytes,
@@ -80,9 +81,9 @@ def _acquisition_to_dto(
         'withPoseAutofocus': acquisition.with_pose_autofocus,
         'automaticPoseChange': acquisition.automatic_pose_change,
         'status': acquisition.status,
-        'isoValue': camera_settings.iso_value,
-        'absoluteShutterSpeedValue': camera_settings.absolute_shutter_speed_value,
-        'apertureValue': camera_settings.aperture_value,
+        'isoValue': camera_settings.iso_value.value,
+        'absoluteShutterSpeedValue': camera_settings.absolute_shutter_speed_value.value,
+        'apertureValue': camera_settings.aperture_value.value,
         'isCalibration': acquisition.is_calibration,
         'createdAt': acquisition.created_at,
         'updatedAt': acquisition.updated_at,
@@ -112,6 +113,7 @@ class AcquisitionController(MethodView):
             .options(
                 *acquisition_images_load_options(),
                 *acquisition_scenario_load_options(),
+                *acquisition_camera_settings_load_options(),
                 joinedload(Acquisition.rig_configuration),
             )
             .join(Acquisition.rig_configuration)
@@ -208,6 +210,7 @@ class CalibrationController(MethodView):
             .options(
                 *acquisition_images_load_options(),
                 *acquisition_scenario_load_options(),
+                *acquisition_camera_settings_load_options(),
                 joinedload(Acquisition.rig_configuration),
             )
             .filter(Acquisition.is_calibration.is_(True))
@@ -325,7 +328,11 @@ class AcquisitionByIdController(MethodView):
         """Détail d'une acquisition avec ses photos."""
         acquisition = (
             db_session.query(Acquisition)
-            .options(*acquisition_images_load_options(), *acquisition_scenario_load_options())
+            .options(
+                *acquisition_images_load_options(),
+                *acquisition_scenario_load_options(),
+                *acquisition_camera_settings_load_options(),
+            )
             .filter(Acquisition.id == acquisition_id)
             .one_or_none()
         )
