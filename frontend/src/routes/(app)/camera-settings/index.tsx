@@ -20,7 +20,7 @@ export const Route = createFileRoute('/(app)/camera-settings/')({
 function RouteComponent() {
   const playerUrl = useMemo(() => buildMediamtxPlayerUrl(), []);
   const { data, error, isPending, isError } = useGetCameraSettings();
-  const { mutate: changeCamera, isPending: isChangingCamera } = useChangeCamera({
+  const { mutate: changeCamera } = useChangeCamera({
     onSuccess: () => {
       toast.success('Caméra mise à jour.');
     },
@@ -46,7 +46,7 @@ function RouteComponent() {
     <div className="bg-gray-25 flex h-full w-full flex-col items-start gap-6 px-20 py-8">
       <div className="flex w-full items-center justify-between gap-6">
         <h2 className="font-semibold text-gray-950">Réglages caméra</h2>
-        <Button disabled={isChangingCamera} onClick={() => changeCamera()} size="sm" type="button" variant="outline">
+        <Button disabled={true} onClick={() => changeCamera()} size="sm" type="button" variant="outline">
           <Camera className="size-4" />
           Changer de caméra
         </Button>
