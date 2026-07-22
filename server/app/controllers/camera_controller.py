@@ -28,7 +28,10 @@ class CameraSettingsController(MethodView):
     @blp.response(200, CameraSettingsSchema)
     def get(self):
         """Retourne les réglages ISO, temps de pose et ouverture de la caméra."""
-        return get_camera_settings(db_session)
+        try:
+            return get_camera_settings(db_session)
+        except ValueError as error:
+            abort(400, message=str(error))
 
     @blp.arguments(CameraSettingUpdateSchema)
     @blp.response(204)
@@ -55,6 +58,9 @@ class CameraChangeController(MethodView):
         try:
             refresh_available_camera_values(db_session)
             db_session.commit()
+        except ValueError as error:
+            db_session.rollback()
+            abort(400, message=str(error))
         except Exception:
             db_session.rollback()
             raise
@@ -82,10 +88,13 @@ class CameraCalibrationCaptureController(MethodView):
     @blp.response(200)
     def post(self):
         """Capture une photo pour chaque temps de pose disponible sur la caméra."""
-        if config.CAMERA == 'dummy':
+        if config.CAMERA != 'real':
             abort(400, 'camera-not-available')
 
-        settings = get_camera_settings(db_session)
+        try:
+            settings = get_camera_settings(db_session)
+        except ValueError as error:
+            abort(400, message=str(error))
         shutter_speeds = settings['shutterSpeedValues']
         iso_value = float(settings['currentIsoValue'])
         aperture_value = float(settings['currentApertureValue'])

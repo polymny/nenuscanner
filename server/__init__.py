@@ -16,14 +16,9 @@ from .app.controllers.relative_shutter_speed_value_controller import blp as rela
 from .app.controllers.rig_configuration_controller import blp as rig_configuration_blp
 from .app.controllers.scenario_controller import blp as scenario_blp
 from .app.controllers.web_controller import blueprint as web_blueprint
-from .app.services.camera_settings_service import fill_available_camera_values
 from .db import db_session
 
 app = Flask(__name__)
-
-# Remplit les tables de valeurs caméra disponibles au démarrage (no-op si déjà remplies / dummy).
-fill_available_camera_values(db_session)
-db_session.commit()
 
 # Allow the frontend dev server to call the Flask API during development.
 # (CORS headers are also needed for preflight OPTIONS requests.)

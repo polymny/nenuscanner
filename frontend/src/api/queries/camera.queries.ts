@@ -19,5 +19,6 @@ export const useGetCameraSettings = (): UseQueryResult<CameraSettings> => {
     queryKey: cameraKeyFactory.settings(),
     queryFn: getCameraSettings,
     staleTime: QUERY_STALE_TIME,
+    retry: false,
   });
 };

@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useFormContext, useWatch } from 'react-hook-form';
 import { toast } from 'sonner';
 import { parseLedValueFromInspectModeTarget, useScenarioInspectMode } from './scenario-inspect-mode-context';
@@ -13,14 +13,21 @@ import {
   useSetInspectModeShutterSpeed,
   useTurnInspectModePose,
 } from '@/api/mutations/inspect-mode.mutations';
+import InitializeCameraDialog, { isCameraNotInitialized } from '@/components/initialize-camera-dialog';
 
 const ScenarioInspectModeSync = () => {
   const { activeInspectMode, shutterSpeedPreviewValue, clearInspectMode } = useScenarioInspectMode();
   const { control } = useFormContext<UpsertScenarioPayload>();
   const leds = useWatch({ control, name: 'leds' });
   const posesCount = useWatch({ control, name: 'posesCount' });
+  const [showInitializeDialog, setShowInitializeDialog] = useState(false);
 
   const handleInspectModeError = (message: string) => (error: AxiosError<ApiError>) => {
+    if (isCameraNotInitialized(error)) {
+      setShowInitializeDialog(true);
+      clearInspectMode();
+      return;
+    }
     if (error.response?.status === 409) {
       toast.error('Mode inspect indisponible : une acquisition est en cours.');
     } else {
@@ -85,7 +92,7 @@ const ScenarioInspectModeSync = () => {
     };
   }, []);
 
-  return null;
+  return <InitializeCameraDialog open={showInitializeDialog} onInitialized={() => setShowInitializeDialog(false)} />;
 };
 
 export default ScenarioInspectModeSync;

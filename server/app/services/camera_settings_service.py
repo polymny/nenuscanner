@@ -13,7 +13,7 @@ from ... import config
 def _nearest_value_id(session: Session, model: type, value: float) -> int:
     rows = session.query(model).all()
     if not rows:
-        raise ValueError(f'no-{model.__tablename__}-rows')
+        raise ValueError('camera-not-initialized')
     nearest = min(rows, key=lambda row: abs(float(row.value) - float(value)))
     return int(nearest.id)
 
@@ -91,36 +91,21 @@ def snapshot_current_camera_settings(session: Session) -> CameraSettings:
     return snapshot
 
 
-def fill_available_camera_values(session: Session) -> None:
-    """Remplit aperture/iso/shutter si vides."""
-    if config.CAMERA != 'real':
-        return
-
-    tables = (
-        (ApertureValue, 'apertureValues'),
-        (IsoValue, 'isoValues'),
-        (AbsoluteShutterSpeedValue, 'shutterSpeedValues'),
-    )
-    empty_models = [model for model, _key in tables if session.query(model).count() == 0]
-    if not empty_models:
-        return
-
-    settings = get_gphoto2_camera_settings()
-
-    for model, values_key in tables:
-        if model not in empty_models:
-            continue
-        for index, value in enumerate(settings.get(values_key, [])):
-            session.add(model(value=float(value), api_key=str(index + 1)))
-
-
 def refresh_available_camera_values(session: Session) -> None:
-    """Vide puis remplit les tables de valeurs caméra."""
+    """Vide puis remplit les tables de valeurs caméra depuis l'appareil réel."""
     if config.CAMERA != 'real':
-        return
+        raise ValueError('not-real-camera')
 
     session.query(ApertureValue).delete()
     session.query(IsoValue).delete()
     session.query(AbsoluteShutterSpeedValue).delete()
     session.flush()
-    fill_available_camera_values(session)
+
+    settings = get_gphoto2_camera_settings()
+    for model, values_key in (
+        (ApertureValue, 'apertureValues'),
+        (IsoValue, 'isoValues'),
+        (AbsoluteShutterSpeedValue, 'shutterSpeedValues'),
+    ):
+        for index, value in enumerate(settings.get(values_key, [])):
+            session.add(model(value=float(value), api_key=str(index + 1)))
