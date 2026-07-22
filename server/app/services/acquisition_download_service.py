@@ -19,6 +19,20 @@ from ...archive import ZipSender
 EXTERNAL_DISK_PATH = Path('/home/pi/mnt/T9_B')
 
 
+class _DescriptorYamlDumper(yaml.SafeDumper):
+    """Force les ids numériques (ex. 00008) en chaînes quotées — sinon YAML 1.1 les lit en float."""
+
+
+def _represent_descriptor_str(dumper: yaml.SafeDumper, data: str):
+    # Les ids zero-paddés doivent rester des strings ; 00008/00009 deviennent sinon des floats.
+    if data.isdigit():
+        return dumper.represent_scalar('tag:yaml.org,2002:str', data, style="'")
+    return dumper.represent_scalar('tag:yaml.org,2002:str', data)
+
+
+_DescriptorYamlDumper.add_representer(str, _represent_descriptor_str)
+
+
 class _AcquisitionDownloadZipSender(ZipSender):
     """Envoi zip qui supprime les fichiers de métadonnées temporaires après écriture de l'archive."""
 
@@ -210,22 +224,22 @@ def _build_acquisitions_archive(acquisitions: list[Acquisition]) -> ZipSender:
         'leds': {},
         'led_powers': {},
         'rig_configurations': {},
+        'poses': {},
         'artifacts': {},
         'acquisitions': {},
         'images': {},
     }
 
-    next_pose_index = 1
+    next_pose_number = 1
 
     for acquisition in acquisitions:
-        acquisition_key = acquisition_ids.setdefault(acquisition.id, f'id_{len(acquisition_ids) + 1}')
+        acquisition_key = acquisition_ids.setdefault(acquisition.id, f'{len(acquisition_ids) + 1:05d}')
 
         profile_key = None
         profile = acquisition.profile
         if profile is not None:
-            profile_key = profile_ids.setdefault(profile.id, f'id_{len(profile_ids) + 1}')
+            profile_key = profile_ids.setdefault(profile.id, f'{len(profile_ids) + 1:05d}')
             descriptor['profiles'][profile_key] = {
-                'id': profile_key,
                 'name': profile.name,
                 'author_name': profile.owner_name,
                 'employer': profile.employer,
@@ -236,25 +250,25 @@ def _build_acquisitions_archive(acquisitions: list[Acquisition]) -> ZipSender:
         camera_settings = acquisition.camera_settings
         iso = camera_settings.iso_value
         aperture = camera_settings.aperture_value
-        iso_key = iso_ids.setdefault(iso.id, f'id_{len(iso_ids) + 1}')
-        aperture_key = aperture_ids.setdefault(aperture.id, f'id_{len(aperture_ids) + 1}')
+        iso_key = iso_ids.setdefault(iso.id, f'{len(iso_ids) + 1:05d}')
+        aperture_key = aperture_ids.setdefault(aperture.id, f'{len(aperture_ids) + 1:05d}')
         iso_value = int(iso.value) if float(iso.value).is_integer() else iso.value
         aperture_value = int(aperture.value) if float(aperture.value).is_integer() else aperture.value
         descriptor['isos'][iso_key] = {'value': iso_value, 'unit': ''}
         descriptor['apertures'][aperture_key] = {'value': aperture_value, 'unit': ''}
 
         rig = acquisition.rig_configuration
-        rig_key = rig_configuration_ids.setdefault(rig.id, f'id_{len(rig_configuration_ids) + 1}')
+        rig_key = rig_configuration_ids.setdefault(rig.id, f'{len(rig_configuration_ids) + 1:05d}')
         descriptor['rig_configurations'][rig_key] = {}
 
         artifact_key = None
         if acquisition.artifact is not None:
-            artifact_key = artifact_ids.setdefault(acquisition.artifact.id, f'id_{len(artifact_ids) + 1}')
+            artifact_key = artifact_ids.setdefault(acquisition.artifact.id, f'{len(artifact_ids) + 1:05d}')
             descriptor['artifacts'][artifact_key] = {'name': acquisition.artifact.name}
 
         calibration_key = None
         if acquisition.calibration_id is not None:
-            calibration_key = acquisition_ids.setdefault(acquisition.calibration_id, f'id_{len(acquisition_ids) + 1}')
+            calibration_key = acquisition_ids.setdefault(acquisition.calibration_id, f'{len(acquisition_ids) + 1:05d}')
 
         descriptor['acquisitions'][acquisition_key] = {
             'name': acquisition.name,
@@ -270,22 +284,34 @@ def _build_acquisitions_archive(acquisitions: list[Acquisition]) -> ZipSender:
 
         local_pose_indices = sorted({image.pose_index for image in acquisition.images})
         local_to_global_pose = {
-            local_pose: next_pose_index + offset for offset, local_pose in enumerate(local_pose_indices)
+            local_pose: f'{next_pose_number + offset:05d}' for offset, local_pose in enumerate(local_pose_indices)
         }
-        next_pose_index += len(local_pose_indices)
+        next_pose_number += len(local_pose_indices)
+
+        for pose_key in local_to_global_pose.values():
+            descriptor['poses'][pose_key] = {}
 
         for image in acquisition.images:
-            image_key = image_ids.setdefault(image.id, f'id_{len(image_ids) + 1}')
-            disk_path = SERVER_ROOT / image.raw_path
-            if not disk_path.is_file():
+            image_key = image_ids.setdefault(image.id, f'{len(image_ids) + 1:05d}')
+            raw_disk_path = SERVER_ROOT / image.raw_path
+            if not raw_disk_path.is_file():
                 continue
 
-            archive_path = f'{acquisition_key}/{disk_path.name}'
-            if archive_path not in zip_sender.files:
-                zip_sender.add_file(archive_path, str(disk_path))
+            acquisition_folder = f'acquisition_{acquisition_key}'
+            raw_archive_path = f'{acquisition_folder}/image_{image_key}{raw_disk_path.suffix}'
+            if raw_archive_path not in zip_sender.files:
+                zip_sender.add_file(raw_archive_path, str(raw_disk_path))
+
+            preview_disk_path = SERVER_ROOT / image.preview_path
+            preview_path_value = None
+            if preview_disk_path.is_file():
+                preview_archive_path = f'{acquisition_folder}/image_{image_key}{preview_disk_path.suffix}'
+                if preview_archive_path not in zip_sender.files:
+                    zip_sender.add_file(preview_archive_path, str(preview_disk_path))
+                preview_path_value = f'/{preview_archive_path}'
 
             shutter = image.effective_shutter_speed_value
-            shutter_key = shutter_speed_ids.setdefault(shutter.id, f'id_{len(shutter_speed_ids) + 1}')
+            shutter_key = shutter_speed_ids.setdefault(shutter.id, f'{len(shutter_speed_ids) + 1:05d}')
             shutter_value = int(shutter.value) if float(shutter.value).is_integer() else shutter.value
             descriptor['shutter_speeds'][shutter_key] = {'value': shutter_value, 'unit': 's'}
 
@@ -293,18 +319,19 @@ def _build_acquisitions_archive(acquisitions: list[Acquisition]) -> ZipSender:
             led_power_key = None
             led = image.scenario_led
             if led is not None:
-                led_key = led_ids.setdefault(led.led_value, f'id_{len(led_ids) + 1}')
+                led_key = led_ids.setdefault(led.led_value, f'{len(led_ids) + 1:05d}')
                 descriptor['leds'][led_key] = {'value': led.led_value}
                 led_power = led.led_power_value
-                led_power_key = led_power_ids.setdefault(led_power.id, f'id_{len(led_power_ids) + 1}')
+                led_power_key = led_power_ids.setdefault(led_power.id, f'{len(led_power_ids) + 1:05d}')
                 led_power_percent = float(led_power.value) * 100
                 led_power_value = int(led_power_percent) if led_power_percent.is_integer() else led_power_percent
                 descriptor['led_powers'][led_power_key] = {'value': led_power_value, 'unit': '%'}
 
             descriptor['images'][image_key] = {
-                'path': f'/{archive_path}',
+                'raw_path': f'/{raw_archive_path}',
+                'preview_path': preview_path_value,
                 'acquisition_id': acquisition_key,
-                'pose_index': local_to_global_pose[image.pose_index],
+                'pose_id': local_to_global_pose[image.pose_index],
                 'shutter_speed_id': shutter_key,
                 'led_id': led_key,
                 'led_power_id': led_power_key,
@@ -312,7 +339,7 @@ def _build_acquisitions_archive(acquisitions: list[Acquisition]) -> ZipSender:
 
     descriptor_file = temp_path / 'descriptor.yaml'
     descriptor_file.write_text(
-        yaml.safe_dump(descriptor, sort_keys=False, allow_unicode=True),
+        yaml.dump(descriptor, Dumper=_DescriptorYamlDumper, sort_keys=False, allow_unicode=True),
         encoding='utf-8',
     )
     zip_sender.add_file('descriptor.yaml', str(descriptor_file))
