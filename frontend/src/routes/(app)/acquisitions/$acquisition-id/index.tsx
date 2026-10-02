@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { Camera, Loader2 } from 'lucide-react';
-import AcquisitionPhotoCard from './-components/acquisition-photo-card';
+import AcquisitionImageCard from './-components/acquisition-image-card';
 import ScenarioProgressWidget from './-components/scenario-progress-widget';
 import { toAbsoluteImageUrl, useGetAcquisitionById } from '@/api/queries/acquisition.queries';
 import { useAcquisitionRun } from '@/hooks/use-acquisition-run';
@@ -37,13 +37,9 @@ function RouteComponent() {
     return null;
   }
 
-  const lastPhoto = acquisition.photos.at(-1);
-  const displayImageUrl = lastImageUrl ?? (lastPhoto ? toAbsoluteImageUrl(lastPhoto.imageUrl) : null);
-  const rotationRadiansList = [
-    ...new Set(
-      acquisition.photos.map((photo) => photo.rotationRadians).filter((radians): radians is number => radians !== null)
-    ),
-  ].sort((a, b) => a - b);
+  const lastImage = acquisition.images.at(-1);
+  const displayImageUrl = lastImageUrl ?? (lastImage ? toAbsoluteImageUrl(lastImage.imageUrl) : null);
+  const poseTotal = acquisition.scenario.posesCount;
 
   return (
     <div className="bg-gray-25 flex h-full flex-col gap-6 px-20 py-8">
@@ -82,9 +78,7 @@ function RouteComponent() {
             </div>
           ) : (
             <>
-              {progress && (
-                <ScenarioProgressWidget progress={progress} manualRotations={acquisition.withManualRotations} />
-              )}
+              {progress && <ScenarioProgressWidget progress={progress} />}
               {acquisition.status === 'RUNNING' && (
                 <div className="absolute top-4 left-4 z-10">
                   <Button
@@ -131,7 +125,7 @@ function RouteComponent() {
                     <div className="flex flex-col gap-2 text-center">
                       <h2 className="text-lg font-semibold text-gray-950">L&apos;acquisition est en pause</h2>
                       <p className="text-sm leading-relaxed text-gray-600">
-                        Effectuez une rotation manuelle de l'objet, puis reprenez l&apos;acquisition lorsque vous êtes
+                        Changez la pose de l'objet manuellement, puis reprenez l&apos;acquisition lorsque vous êtes
                         prêt.
                       </p>
                     </div>
@@ -157,24 +151,13 @@ function RouteComponent() {
 
       {runError && <p className="text-error-700 text-sm">{runError}</p>}
 
-      {acquisition.status === 'COMPLETED' && acquisition.photos.length > 0 && (
+      {acquisition.status === 'COMPLETED' && acquisition.images.length > 0 && (
         <div className="flex w-full flex-col gap-4">
-          <h2 className="font-medium text-gray-900">Galerie ({acquisition.photos.length} photos)</h2>
+          <h2 className="font-medium text-gray-900">Galerie ({acquisition.images.length} photos)</h2>
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
-            {acquisition.photos.map((photo) => {
-              const rotationIndex =
-                photo.rotationRadians !== null ? rotationRadiansList.indexOf(photo.rotationRadians) + 1 : undefined;
-
-              return (
-                <AcquisitionPhotoCard
-                  key={photo.id}
-                  manualRotations={acquisition.withManualRotations}
-                  photo={photo}
-                  rotationIndex={rotationIndex}
-                  rotationTotal={rotationRadiansList.length || undefined}
-                />
-              );
-            })}
+            {acquisition.images.map((image) => (
+              <AcquisitionImageCard key={image.id} image={image} poseTotal={poseTotal} />
+            ))}
           </div>
         </div>
       )}

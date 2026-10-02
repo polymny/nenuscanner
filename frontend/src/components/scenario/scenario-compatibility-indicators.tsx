@@ -40,7 +40,7 @@ export default function ScenarioCompatibilityIndicators({
       <CompatibilityIndicator matches={compatibility.sameShutterSpeeds} title="Mêmes temps de pose">
         <Hourglass className="size-4" />
       </CompatibilityIndicator>
-      <CompatibilityIndicator matches={compatibility.sameRotationsCount} title="Même nombre de rotations">
+      <CompatibilityIndicator matches={compatibility.samePosesCount} title="Même nombre de poses">
         <RotateCw className="size-4" />
       </CompatibilityIndicator>
     </div>

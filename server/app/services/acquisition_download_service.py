@@ -5,17 +5,32 @@ import tempfile
 from datetime import datetime
 from pathlib import Path
 
+import yaml
 from flask import Response
 from sqlalchemy.orm import Session, joinedload
 
-from .acquisition_service import acquisition_photos_load_options
+from .acquisition_service import acquisition_camera_settings_load_options, acquisition_images_load_options
 from ..models.acquisition import Acquisition
-from ..models.acquisition_photo import AcquisitionPhoto
+from ..models.acquisition_image import AcquisitionImage
 from ..paths import SERVER_ROOT
 from ...archive import ZipSender
 
 # TODO(temp): disque externe Samsung T9 (label T9_B), monté dans le home de pi
 EXTERNAL_DISK_PATH = Path('/home/pi/mnt/T9_B')
+
+
+class _DescriptorYamlDumper(yaml.SafeDumper):
+    """Force les ids numériques (ex. 00008) en chaînes quotées — sinon YAML 1.1 les lit en float."""
+
+
+def _represent_descriptor_str(dumper: yaml.SafeDumper, data: str):
+    # Les ids zero-paddés doivent rester des strings ; 00008/00009 deviennent sinon des floats.
+    if data.isdigit():
+        return dumper.represent_scalar('tag:yaml.org,2002:str', data, style="'")
+    return dumper.represent_scalar('tag:yaml.org,2002:str', data)
+
+
+_DescriptorYamlDumper.add_representer(str, _represent_descriptor_str)
 
 
 class _AcquisitionDownloadZipSender(ZipSender):
@@ -43,26 +58,25 @@ def _folder_name(acquisition: Acquisition) -> str:
     return name.encode('ascii', 'ignore').decode('ascii') or str(acquisition.id)
 
 
-def _photo_leaf_path(photo: AcquisitionPhoto) -> str:
-    rotation = photo.scenario_rotation
-    led = photo.scenario_led
-    shutter = photo.scenario_shutter_speed
-    rotation_name = 'rotation_0' if rotation is None else f'rotation_{rotation.radians_value:g}'
+def _image_leaf_path(image: AcquisitionImage) -> str:
+    led = image.scenario_led
+    shutter = image.scenario_shutter_speed
+    pose_name = f'pose_{image.pose_index}'
     led_name = 'led_unknown' if led is None else f'led_{led.led_value}'
-    shutter_name = 'shutter_unknown' if shutter is None else f'shutter_{shutter.shutter_speed_value.value:g}'
-    return f'{rotation_name}/{led_name}/{shutter_name}'
+    shutter_name = 'shutter_unknown' if shutter is None else f'shutter_{shutter.relative_shutter_speed_value.value:g}'
+    return f'{pose_name}/{led_name}/{shutter_name}'
 
 
-def _add_photos_to_zip(
+def _add_images_to_zip(
     zip_sender: ZipSender,
     *,
     section: str,
     folder_name: str,
-    photos: list[AcquisitionPhoto],
+    images: list[AcquisitionImage],
 ) -> None:
-    for photo in photos:
-        folder_path = f'data/{section}/{folder_name}/{_photo_leaf_path(photo)}'
-        for relative_path in (photo.raw_path, photo.preview_path):
+    for image in images:
+        folder_path = f'data/{section}/{folder_name}/{_image_leaf_path(image)}'
+        for relative_path in (image.raw_path, image.preview_path):
             disk_path = SERVER_ROOT / relative_path
             if not disk_path.is_file():
                 continue
@@ -78,11 +92,11 @@ def _build_acquisitions_zip(acquisitions: list[Acquisition], calibrations: list[
     calibration_by_id = {calibration.id: calibration for calibration in calibrations}
 
     for calibration in calibrations:
-        _add_photos_to_zip(
+        _add_images_to_zip(
             zip_sender,
             section='calibrations',
             folder_name=_folder_name(calibration),
-            photos=list(calibration.photos),
+            images=list(calibration.images),
         )
 
     for acquisition in acquisitions:
@@ -97,11 +111,11 @@ def _build_acquisitions_zip(acquisitions: list[Acquisition], calibrations: list[
         metadata_file = temp_path / f'metadata_{acquisition.id}.yaml'
         metadata_file.write_text(metadata_content, encoding='utf-8')
         zip_sender.add_file(f'data/acquisitions/{folder_name}/metadata.yaml', str(metadata_file))
-        _add_photos_to_zip(
+        _add_images_to_zip(
             zip_sender,
             section='acquisitions',
             folder_name=folder_name,
-            photos=list(acquisition.photos),
+            images=list(acquisition.images),
         )
 
     return zip_sender
@@ -110,38 +124,239 @@ def _build_acquisitions_zip(acquisitions: list[Acquisition], calibrations: list[
 def _load_acquisitions_for_download(
     session: Session, acquisitions: list[Acquisition]
 ) -> tuple[list[Acquisition], list[Acquisition]]:
-    acquisition_ids = [acquisition.id for acquisition in acquisitions]
-    acquisitions_with_photos = (
-        session.query(Acquisition)
-        .options(*acquisition_photos_load_options(), joinedload(Acquisition.calibration))
-        .filter(Acquisition.id.in_(acquisition_ids))
-        .all()
-    )
+    acquisition_ids = [acquisition.id for acquisition in acquisitions if not acquisition.is_calibration]
+    calibration_ids_direct = {acquisition.id for acquisition in acquisitions if acquisition.is_calibration}
 
-    calibration_ids = list({row.calibration_id for row in acquisitions_with_photos if row.calibration_id is not None})
+    acquisitions: list[Acquisition] = []
+    if acquisition_ids:
+        acquisitions = (
+            session.query(Acquisition)
+            .options(*acquisition_images_load_options(), joinedload(Acquisition.calibration))
+            .filter(Acquisition.id.in_(acquisition_ids))
+            .all()
+        )
+
+    calibration_ids = list(
+        {row.calibration_id for row in acquisitions if row.calibration_id is not None} | calibration_ids_direct
+    )
     calibrations: list[Acquisition] = []
     if calibration_ids:
         calibrations = (
             session.query(Acquisition)
-            .options(*acquisition_photos_load_options())
+            .options(*acquisition_images_load_options())
             .filter(Acquisition.id.in_(calibration_ids))
             .all()
         )
 
-    return acquisitions_with_photos, calibrations
+    return acquisitions, calibrations
+
+
+# ---------------------------------------------------------------------------
+# Nouvelle architecture d'archive :
+# - un descripteur YAML à la racine (structure proche de la DB)
+# - un dossier par acquisition (les calibrations sont des acquisitions)
+# - pose_index global, croissant d'une acquisition à la suivante
+# ---------------------------------------------------------------------------
+
+
+def _load_acquisitions_for_archive(session: Session, acquisitions: list[Acquisition]) -> list[Acquisition]:
+    selected_ids = [acquisition.id for acquisition in acquisitions]
+    selected = (
+        session.query(Acquisition)
+        .options(
+            *acquisition_images_load_options(),
+            *acquisition_camera_settings_load_options(),
+            joinedload(Acquisition.images).joinedload(AcquisitionImage.effective_shutter_speed_value),
+            joinedload(Acquisition.profile),
+            joinedload(Acquisition.artifact),
+            joinedload(Acquisition.rig_configuration),
+            joinedload(Acquisition.calibration),
+        )
+        .filter(Acquisition.id.in_(selected_ids))
+        .all()
+    )
+
+    calibration_ids = {acquisition.id for acquisition in selected if acquisition.is_calibration} | {
+        acquisition.calibration_id for acquisition in selected if acquisition.calibration_id is not None
+    }
+    missing_calibration_ids = calibration_ids - {acquisition.id for acquisition in selected}
+    if missing_calibration_ids:
+        selected.extend(
+            session.query(Acquisition)
+            .options(
+                *acquisition_images_load_options(),
+                *acquisition_camera_settings_load_options(),
+                joinedload(Acquisition.images).joinedload(AcquisitionImage.effective_shutter_speed_value),
+                joinedload(Acquisition.profile),
+                joinedload(Acquisition.artifact),
+                joinedload(Acquisition.rig_configuration),
+                joinedload(Acquisition.calibration),
+            )
+            .filter(Acquisition.id.in_(missing_calibration_ids))
+            .all()
+        )
+
+    calibrations = sorted((a for a in selected if a.is_calibration), key=lambda a: a.id)
+    non_calibrations = sorted((a for a in selected if not a.is_calibration), key=lambda a: a.id)
+    return calibrations + non_calibrations
+
+
+def _build_acquisitions_archive(acquisitions: list[Acquisition]) -> ZipSender:
+    temp_path = Path(tempfile.mkdtemp())
+    zip_sender = _AcquisitionDownloadZipSender(temp_path)
+
+    profile_ids: dict[int, str] = {}
+    shutter_speed_ids: dict[int, str] = {}
+    aperture_ids: dict[int, str] = {}
+    iso_ids: dict[int, str] = {}
+    led_ids: dict[str, str] = {}
+    led_power_ids: dict[int, str] = {}
+    rig_configuration_ids: dict[int, str] = {}
+    artifact_ids: dict[int, str] = {}
+    acquisition_ids: dict[int, str] = {}
+    image_ids: dict[int, str] = {}
+
+    descriptor: dict = {
+        'profiles': {},
+        'shutter_speeds': {},
+        'apertures': {},
+        'isos': {},
+        'leds': {},
+        'led_powers': {},
+        'rig_configurations': {},
+        'poses': {},
+        'artifacts': {},
+        'acquisitions': {},
+        'images': {},
+    }
+
+    next_pose_number = 1
+
+    for acquisition in acquisitions:
+        acquisition_key = acquisition_ids.setdefault(acquisition.id, f'{len(acquisition_ids) + 1:05d}')
+
+        profile_key = None
+        profile = acquisition.profile
+        if profile is not None:
+            profile_key = profile_ids.setdefault(profile.id, f'{len(profile_ids) + 1:05d}')
+            descriptor['profiles'][profile_key] = {
+                'name': profile.name,
+                'author_name': profile.owner_name,
+                'employer': profile.employer,
+                'contact': profile.contact,
+                'project': profile.project,
+            }
+
+        camera_settings = acquisition.camera_settings
+        iso = camera_settings.iso_value
+        aperture = camera_settings.aperture_value
+        iso_key = iso_ids.setdefault(iso.id, f'{len(iso_ids) + 1:05d}')
+        aperture_key = aperture_ids.setdefault(aperture.id, f'{len(aperture_ids) + 1:05d}')
+        iso_value = int(iso.value) if float(iso.value).is_integer() else iso.value
+        aperture_value = int(aperture.value) if float(aperture.value).is_integer() else aperture.value
+        descriptor['isos'][iso_key] = {'value': iso_value, 'unit': ''}
+        descriptor['apertures'][aperture_key] = {'value': aperture_value, 'unit': ''}
+
+        rig = acquisition.rig_configuration
+        rig_key = rig_configuration_ids.setdefault(rig.id, f'{len(rig_configuration_ids) + 1:05d}')
+        descriptor['rig_configurations'][rig_key] = {}
+
+        artifact_key = None
+        if acquisition.artifact is not None:
+            artifact_key = artifact_ids.setdefault(acquisition.artifact.id, f'{len(artifact_ids) + 1:05d}')
+            descriptor['artifacts'][artifact_key] = {'name': acquisition.artifact.name}
+
+        calibration_key = None
+        if acquisition.calibration_id is not None:
+            calibration_key = acquisition_ids.setdefault(acquisition.calibration_id, f'{len(acquisition_ids) + 1:05d}')
+
+        descriptor['acquisitions'][acquisition_key] = {
+            'name': acquisition.name,
+            'artifact_id': artifact_key,
+            'calibration_id': calibration_key,
+            'rig_configuration_id': rig_key,
+            'profile_id': profile_key,
+            'iso_id': iso_key,
+            'aperture_id': aperture_key,
+            'is_calibration': acquisition.is_calibration,
+            'automatic_pose_change': acquisition.automatic_pose_change,
+        }
+
+        local_pose_indices = sorted({image.pose_index for image in acquisition.images})
+        local_to_global_pose = {
+            local_pose: f'{next_pose_number + offset:05d}' for offset, local_pose in enumerate(local_pose_indices)
+        }
+        next_pose_number += len(local_pose_indices)
+
+        for pose_key in local_to_global_pose.values():
+            descriptor['poses'][pose_key] = {}
+
+        for image in acquisition.images:
+            image_key = image_ids.setdefault(image.id, f'{len(image_ids) + 1:05d}')
+            raw_disk_path = SERVER_ROOT / image.raw_path
+            if not raw_disk_path.is_file():
+                continue
+
+            acquisition_folder = f'acquisition_{acquisition_key}'
+            raw_archive_path = f'{acquisition_folder}/image_{image_key}{raw_disk_path.suffix}'
+            if raw_archive_path not in zip_sender.files:
+                zip_sender.add_file(raw_archive_path, str(raw_disk_path))
+
+            preview_disk_path = SERVER_ROOT / image.preview_path
+            preview_path_value = None
+            if preview_disk_path.is_file():
+                preview_archive_path = f'{acquisition_folder}/image_{image_key}{preview_disk_path.suffix}'
+                if preview_archive_path not in zip_sender.files:
+                    zip_sender.add_file(preview_archive_path, str(preview_disk_path))
+                preview_path_value = f'/{preview_archive_path}'
+
+            shutter = image.effective_shutter_speed_value
+            shutter_key = shutter_speed_ids.setdefault(shutter.id, f'{len(shutter_speed_ids) + 1:05d}')
+            shutter_value = int(shutter.value) if float(shutter.value).is_integer() else shutter.value
+            descriptor['shutter_speeds'][shutter_key] = {'value': shutter_value, 'unit': 's'}
+
+            led_key = None
+            led_power_key = None
+            led = image.scenario_led
+            if led is not None:
+                led_key = led_ids.setdefault(led.led_value, f'{len(led_ids) + 1:05d}')
+                descriptor['leds'][led_key] = {'value': led.led_value}
+                led_power = led.led_power_value
+                led_power_key = led_power_ids.setdefault(led_power.id, f'{len(led_power_ids) + 1:05d}')
+                led_power_percent = float(led_power.value) * 100
+                led_power_value = int(led_power_percent) if led_power_percent.is_integer() else led_power_percent
+                descriptor['led_powers'][led_power_key] = {'value': led_power_value, 'unit': '%'}
+
+            descriptor['images'][image_key] = {
+                'raw_path': f'/{raw_archive_path}',
+                'preview_path': preview_path_value,
+                'acquisition_id': acquisition_key,
+                'pose_id': local_to_global_pose[image.pose_index],
+                'shutter_speed_id': shutter_key,
+                'led_id': led_key,
+                'led_power_id': led_power_key,
+            }
+
+    descriptor_file = temp_path / 'descriptor.yaml'
+    descriptor_file.write_text(
+        yaml.dump(descriptor, Dumper=_DescriptorYamlDumper, sort_keys=False, allow_unicode=True),
+        encoding='utf-8',
+    )
+    zip_sender.add_file('descriptor.yaml', str(descriptor_file))
+    return zip_sender
 
 
 def download_acquisitions_data(session: Session, acquisitions: list[Acquisition]) -> Response:
     """Construit une archive zip avec les données d'acquisition et d'étalonnage associées."""
-    acquisitions_with_photos, calibrations = _load_acquisitions_for_download(session, acquisitions)
-    zip_sender = _build_acquisitions_zip(acquisitions_with_photos, calibrations)
+    acquisitions_for_archive = _load_acquisitions_for_archive(session, acquisitions)
+    zip_sender = _build_acquisitions_archive(acquisitions_for_archive)
     return zip_sender.response()
 
 
 def copy_acquisitions_data_to_disk(session: Session, acquisitions: list[Acquisition]) -> Path:
     """Construit une archive zip et la copie sur le disque externe au lieu de la streamer."""
-    acquisitions_with_photos, calibrations = _load_acquisitions_for_download(session, acquisitions)
-    zip_sender = _build_acquisitions_zip(acquisitions_with_photos, calibrations)
+    acquisitions_for_archive = _load_acquisitions_for_archive(session, acquisitions)
+    zip_sender = _build_acquisitions_archive(acquisitions_for_archive)
 
     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
     dest_path = EXTERNAL_DISK_PATH / f'acquisitions_{timestamp}.zip'

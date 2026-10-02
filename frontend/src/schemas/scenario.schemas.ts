@@ -18,8 +18,8 @@ export const upsertScenarioSchema = vine.create(
         })
       )
       .minLength(1),
-    rotationsCount: vine.number().withoutDecimals().min(0).max(12),
-    shutterSpeedIds: vine.array(vine.number().withoutDecimals().positive()).minLength(1),
+    posesCount: vine.number().withoutDecimals().min(1).max(12),
+    relativeShutterSpeedIds: vine.array(vine.number().withoutDecimals().positive()).minLength(1),
   })
 );
 

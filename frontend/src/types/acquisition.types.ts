@@ -1,5 +1,5 @@
 import type { VariantProps } from 'class-variance-authority';
-import type { ArmsPositionEmojis } from './arms-position.types';
+import type { RigConfigurationEmojis } from './rig-configuration.types';
 import type { LedValue } from './led.types';
 import type { ScenarioSummary } from './scenario.types';
 import type { badgeVariants } from '@/components/ui/badge';
@@ -25,34 +25,34 @@ export interface Acquisition {
   artifactId: number | null;
   scenario: ScenarioSummary;
   calibrationId: number | null;
-  armsPositionId: number;
-  armsPosition: ArmsPositionEmojis;
-  withRotationAutofocus: boolean;
-  withManualRotations: boolean;
+  rigConfigurationId: number;
+  rigConfiguration: RigConfigurationEmojis;
+  withPoseAutofocus: boolean;
+  automaticPoseChange: boolean;
   status: AcquisitionStatus;
   isoValue: number;
   absoluteShutterSpeedValue: number;
   apertureValue: number;
   isCalibration: boolean;
   acquisitions?: Array<{ id: number; name: string }>;
-  photosCount: number;
+  imagesCount: number;
   sizeBytes: number;
   createdAt: string;
   updatedAt: string;
 }
 
-export interface AcquisitionPhoto {
+export interface AcquisitionImage {
   id: number;
   imageUrl: string;
   acquisitionId: number;
-  rotationRadians: number | null;
+  poseIndex: number;
   ledValue: LedValue | null;
   ledPower: number | null;
   shutterSpeedRelative: number | null;
 }
 
 export interface AcquisitionDetail extends Acquisition {
-  photos: Array<AcquisitionPhoto>;
+  images: Array<AcquisitionImage>;
 }
 
 export interface AcquisitionRunStartOrResumeResponse {
@@ -64,10 +64,9 @@ export interface ScenarioProgressEvent {
   total: number;
   imageUrl?: string;
   step: number;
-  rotationIndex: number;
-  rotationTotal: number;
-  hasRotations: boolean;
-  rotationRadians: number | null;
+  poseIndex: number;
+  poseTotal: number;
+  hasMultiplePoses: boolean;
   ledIndex: number;
   ledTotal: number;
   ledValue: LedValue;

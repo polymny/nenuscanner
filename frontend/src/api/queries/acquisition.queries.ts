@@ -20,7 +20,7 @@ export const acquisitionsKeyFactory = {
 };
 
 export interface GetCalibrationsParams {
-  onlyCurrentArmsPosition?: boolean;
+  onlyCurrentRigConfiguration?: boolean;
   status?: AcquisitionStatus;
 }
 

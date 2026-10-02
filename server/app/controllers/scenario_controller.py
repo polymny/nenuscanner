@@ -17,7 +17,7 @@ from ..services.scenario_service import (
     duplicate_scenario,
     scenario_summary_dto,
 )
-from ...sa_db import db_session
+from ...db import db_session
 
 blp = Blueprint('scenario', __name__, description='Gestion des scénarios')
 
@@ -66,7 +66,7 @@ class ScenarioController(MethodView):
                 Acquisition.id,
                 Acquisition.name,
                 Acquisition.scenario_id,
-                Acquisition.arms_position_id,
+                Acquisition.rig_configuration_id,
                 Acquisition.status,
             )
             .filter(
@@ -76,9 +76,9 @@ class ScenarioController(MethodView):
             .order_by(Acquisition.id.asc())
             .all()
         )
-        for cal_id, cal_name, scenario_id, arms_position_id, status in cal_rows:
+        for cal_id, cal_name, scenario_id, rig_configuration_id, status in cal_rows:
             calibrations_by_scenario_id[scenario_id].append(
-                {'id': cal_id, 'name': cal_name, 'armsPositionId': arms_position_id, 'status': status}
+                {'id': cal_id, 'name': cal_name, 'rigConfigurationId': rig_configuration_id, 'status': status}
             )
 
         return [
@@ -93,7 +93,7 @@ class ScenarioController(MethodView):
     @blp.arguments(ScenarioCreateSchema)
     @blp.response(204)
     def post(self, payload):
-        """Crée un scénario (avec LEDs, temps de pose, rotations)."""
+        """Crée un scénario (avec LEDs, temps de pose, poses)."""
         scenario = Scenario(name=payload['name'], is_custom=True)
         apply_scenario_payload(scenario, payload)
         db_session.add(scenario)

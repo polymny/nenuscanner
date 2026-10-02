@@ -1,0 +1,28 @@
+from __future__ import annotations
+
+from datetime import datetime
+
+from sqlalchemy import DateTime, String, func
+from sqlalchemy.orm import Mapped, mapped_column
+
+from ...db import Base
+
+
+class RigConfiguration(Base):
+    __tablename__ = 'rig_configuration'
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    index: Mapped[int] = mapped_column(nullable=False, index=True)
+    emoji_left: Mapped[str] = mapped_column(String(16), nullable=False)
+    emoji_right: Mapped[str] = mapped_column(String(16), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+    )
+
+    def __repr__(self) -> str:
+        return (
+            f'RigConfiguration(id={self.id!r}, index={self.index!r}, '
+            f'emoji_left={self.emoji_left!r}, emoji_right={self.emoji_right!r})'
+        )

@@ -45,7 +45,7 @@ export function useAcquisitionRun(acquisitionId: number, status?: AcquisitionSta
         void queryClient.invalidateQueries({ queryKey: scenariosKeyFactory.base() });
       });
 
-      es.addEventListener('photo_ready', (event) => {
+      es.addEventListener('image_ready', (event) => {
         const data = JSON.parse(event.data) as ScenarioProgressEvent;
         setProgress(data);
         if (data.imageUrl) setLastImageUrl(toAbsoluteImageUrl(data.imageUrl));

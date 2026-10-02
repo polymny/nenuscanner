@@ -10,13 +10,13 @@ export interface ScenarioSummary {
   id: number;
   name: string;
   leds: Array<ScenarioLed>;
-  rotationsCount: number;
-  shutterSpeedIds: Array<number>;
+  posesCount: number;
+  relativeShutterSpeedIds: Array<number>;
 }
 
 export interface Scenario extends ScenarioSummary {
   acquisitions: Array<{ id: number; name: string }>;
-  calibrations: Array<{ id: number; name: string; armsPositionId: number; status: AcquisitionStatus }>;
+  calibrations: Array<{ id: number; name: string; rigConfigurationId: number; status: AcquisitionStatus }>;
   updatedAt: string;
 }
 
@@ -24,5 +24,5 @@ export interface ScenarioCompatibility {
   id: number;
   sameLedPowerValues: boolean;
   sameShutterSpeeds: boolean;
-  sameRotationsCount: boolean;
+  samePosesCount: boolean;
 }

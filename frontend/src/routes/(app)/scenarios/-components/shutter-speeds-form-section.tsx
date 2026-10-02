@@ -6,33 +6,33 @@ import type { UpsertScenarioPayload } from '@/schemas/scenario.schemas';
 import { FormLabel } from '@/components/ui/form';
 import { Slider } from '@/components/ui/slider';
 import { cn, formatNumberAsFractionOrDecimal } from '@/lib/utils';
-import { useGetShutterSpeedValues } from '@/api/queries/shutter-speed-value.queries';
-import { SHUTTER_SPEED_REFERENCE } from '@/types/shutter-speed-value.types';
+import { useGetRelativeShutterSpeedValues } from '@/api/queries/relative-shutter-speed-value.queries';
+import { RELATIVE_SHUTTER_SPEED_REFERENCE } from '@/types/relative-shutter-speed-value.types';
 
 interface ShutterSpeedsFormSectionProps {
   disabled?: boolean;
 }
 
 const ShutterSpeedsFormSection = ({ disabled = false }: ShutterSpeedsFormSectionProps) => {
-  const { data: options = [], isLoading } = useGetShutterSpeedValues();
+  const { data: options = [], isLoading } = useGetRelativeShutterSpeedValues();
   const { setShutterSpeedPreviewValue } = useScenarioInspectMode();
   const { isInspectMode, toggleInspectMode } = useScenarioInspectModeTarget('shutter-speeds');
   const prevIsInspectMode = useRef(isInspectMode);
 
   const referenceIndex = Math.max(
     0,
-    options.findIndex((option) => option.value === SHUTTER_SPEED_REFERENCE)
+    options.findIndex((option) => option.value === RELATIVE_SHUTTER_SPEED_REFERENCE)
   );
   const [inspectIndex, setInspectIndex] = useState(referenceIndex);
 
   const form = useFormContext<UpsertScenarioPayload>();
-  const shutterSpeedIdsWatch = useWatch({
+  const relativeShutterSpeedIdsWatch = useWatch({
     control: form.control,
-    name: 'shutterSpeedIds',
+    name: 'relativeShutterSpeedIds',
   });
 
   const valueById = useMemo(() => new Map(options.map((option) => [option.id, option.value])), [options]);
-  const sortShutterSpeedIdsByValue = (ids: Array<number>) =>
+  const sortRelativeShutterSpeedIdsByValue = (ids: Array<number>) =>
     [...ids].filter((id) => valueById.has(id)).sort((a, b) => (valueById.get(a) ?? 0) - (valueById.get(b) ?? 0));
 
   useEffect(() => {
@@ -46,17 +46,17 @@ const ShutterSpeedsFormSection = ({ disabled = false }: ShutterSpeedsFormSection
   const toggleShutterSpeed = (id: number) => {
     if (disabled) return;
 
-    if (shutterSpeedIdsWatch.includes(id)) {
-      if (shutterSpeedIdsWatch.length <= 1) return;
+    if (relativeShutterSpeedIdsWatch.includes(id)) {
+      if (relativeShutterSpeedIdsWatch.length <= 1) return;
       form.setValue(
-        'shutterSpeedIds',
-        shutterSpeedIdsWatch.filter((currentId) => currentId !== id),
+        'relativeShutterSpeedIds',
+        relativeShutterSpeedIdsWatch.filter((currentId) => currentId !== id),
         { shouldValidate: true, shouldDirty: true, shouldTouch: true }
       );
       return;
     }
 
-    form.setValue('shutterSpeedIds', sortShutterSpeedIdsByValue([...shutterSpeedIdsWatch, id]), {
+    form.setValue('relativeShutterSpeedIds', sortRelativeShutterSpeedIdsByValue([...relativeShutterSpeedIdsWatch, id]), {
       shouldValidate: true,
       shouldDirty: true,
       shouldTouch: true,
@@ -108,7 +108,7 @@ const ShutterSpeedsFormSection = ({ disabled = false }: ShutterSpeedsFormSection
           aria-label="Temps de pose disponibles"
         >
           {options.map((option, index) => {
-            const isSelected = shutterSpeedIdsWatch.includes(option.id);
+            const isSelected = relativeShutterSpeedIdsWatch.includes(option.id);
             const isInspectPreview = isInspectMode && inspectIndex === index;
 
             return (

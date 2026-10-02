@@ -6,15 +6,15 @@ from typing import TYPE_CHECKING
 from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, event, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from .arms_position import ArmsPosition
 from .camera_settings import CameraSettings
+from .rig_configuration import RigConfiguration
 
 if TYPE_CHECKING:
-    from .acquisition_photo import AcquisitionPhoto
+    from .acquisition_image import AcquisitionImage
 from .artifact import Artifact
 from .profile import Profile
 from .scenario import Scenario
-from ...sa_db import Base
+from ...db import Base
 
 
 class AcquisitionStatus:
@@ -26,7 +26,7 @@ class AcquisitionStatus:
 
 
 class Acquisition(Base):
-    __tablename__ = 'artifact_acquisition'
+    __tablename__ = 'acquisition'
 
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(255), nullable=False)
@@ -41,12 +41,12 @@ class Acquisition(Base):
         index=True,
     )
     calibration_id: Mapped[int | None] = mapped_column(
-        ForeignKey('artifact_acquisition.id', ondelete='SET NULL'),
+        ForeignKey('acquisition.id', ondelete='SET NULL'),
         nullable=True,
         index=True,
     )
-    arms_position_id: Mapped[int] = mapped_column(
-        ForeignKey('arms_position.id', ondelete='RESTRICT'),
+    rig_configuration_id: Mapped[int] = mapped_column(
+        ForeignKey('rig_configuration.id', ondelete='RESTRICT'),
         nullable=False,
         index=True,
     )
@@ -60,8 +60,8 @@ class Acquisition(Base):
         nullable=False,
         index=True,
     )
-    with_rotation_autofocus: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
-    with_manual_rotations: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    with_pose_autofocus: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    automatic_pose_change: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
     current_step: Mapped[int | None] = mapped_column(Integer, nullable=True)
     status: Mapped[str] = mapped_column(String(255), nullable=False)
     is_calibration: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
@@ -83,17 +83,17 @@ class Acquisition(Base):
         remote_side=[id],
         foreign_keys=[calibration_id],
     )
-    arms_position: Mapped[ArmsPosition] = relationship()
+    rig_configuration: Mapped[RigConfiguration] = relationship()
     profile: Mapped[Profile | None] = relationship()
     camera_settings: Mapped[CameraSettings] = relationship(
         cascade='all, delete-orphan',
         single_parent=True,
     )
-    photos: Mapped[list['AcquisitionPhoto']] = relationship(
-        'AcquisitionPhoto',
+    images: Mapped[list['AcquisitionImage']] = relationship(
+        'AcquisitionImage',
         back_populates='acquisition',
         cascade='all, delete-orphan',
-        order_by='AcquisitionPhoto.id',
+        order_by='AcquisitionImage.id',
     )
 
     def __repr__(self) -> str:

@@ -48,3 +48,20 @@ export const useSetCameraFocusArea = (
     mutationFn: setCameraFocusArea,
   });
 };
+
+const changeCamera = async () => {
+  await client.post('/camera/change');
+};
+
+export const useChangeCamera = (options?: UseMutationOtherOptions<void, AxiosError<ApiError>, void>) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    ...options,
+    mutationFn: changeCamera,
+    onSuccess: (data, vars, result, ctx) => {
+      void queryClient.invalidateQueries({ queryKey: cameraKeyFactory.settings() });
+      options?.onSuccess?.(data, vars, result, ctx);
+    },
+  });
+};

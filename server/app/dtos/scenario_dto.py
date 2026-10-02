@@ -20,8 +20,8 @@ class ScenarioSummarySchema(Schema):
     id = fields.Integer(required=True)
     name = fields.String(required=True)
     leds = fields.List(fields.Nested(ScenarioLEDSchema), required=True)
-    rotationsCount = fields.Integer(required=True)
-    shutterSpeedIds = fields.List(fields.Integer(), required=True)
+    posesCount = fields.Integer(required=True)
+    relativeShutterSpeedIds = fields.List(fields.Integer(), required=True)
 
 
 class ScenarioLinkedAcquisitionSchema(Schema):
@@ -38,7 +38,7 @@ class ScenarioLinkedCalibrationSchema(Schema):
 
     id = fields.Integer(required=True)
     name = fields.String(required=True)
-    armsPositionId = fields.Integer(required=True)
+    rigConfigurationId = fields.Integer(required=True)
     status = fields.String(required=True, validate=validate.OneOf(ACQUISITION_STATUSES))
 
 
@@ -50,8 +50,8 @@ class ScenarioReadSchema(Schema):
     name = fields.String(required=True)
     updatedAt = fields.DateTime(required=True)
     leds = fields.List(fields.Nested(ScenarioLEDSchema), required=True)
-    rotationsCount = fields.Integer(required=True)
-    shutterSpeedIds = fields.List(fields.Integer(), required=True)
+    posesCount = fields.Integer(required=True)
+    relativeShutterSpeedIds = fields.List(fields.Integer(), required=True)
     acquisitions = fields.List(fields.Nested(ScenarioLinkedAcquisitionSchema), required=True)
     calibrations = fields.List(fields.Nested(ScenarioLinkedCalibrationSchema), required=True)
 
@@ -63,8 +63,8 @@ class ScenarioCreateSchema(Schema):
 
     name = fields.String(required=True, validate=NAME_VALIDATE, pre_load=str.strip)
     leds = fields.List(fields.Nested(ScenarioLEDSchema), required=True, validate=validate.Length(min=1))
-    rotationsCount = fields.Integer(required=True, validate=validate.Range(min=0, max=12))
-    shutterSpeedIds = fields.List(
+    posesCount = fields.Integer(required=True, validate=validate.Range(min=1, max=12))
+    relativeShutterSpeedIds = fields.List(
         fields.Integer(validate=validate.Range(min=1)),
         required=True,
         validate=validate.Length(min=1),
@@ -93,7 +93,7 @@ class ScenarioCompatibilitySchema(Schema):
     id = fields.Integer(required=True)
     sameLedPowerValues = fields.Boolean(required=True)
     sameShutterSpeeds = fields.Boolean(required=True)
-    sameRotationsCount = fields.Boolean(required=True)
+    samePosesCount = fields.Boolean(required=True)
 
 
 class CompatibleScenariosSchema(Schema):

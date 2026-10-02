@@ -26,7 +26,7 @@ export const useSetInspectModeLed = (
 };
 
 export interface InspectModeShutterSpeedPayload {
-  value: number;
+  relative_value: number;
 }
 
 export const setInspectModeShutterSpeed = async (payload: InspectModeShutterSpeedPayload) => {
@@ -46,6 +46,25 @@ export const useSetInspectModeShutterSpeed = (
 
 export const leaveInspectMode = async () => {
   await client.post('/inspect-mode/leave');
+};
+
+export interface InspectModePosePayload {
+  posesCount: number;
+}
+
+export const turnInspectModePose = async (payload: InspectModePosePayload) => {
+  await client.post('/inspect-mode/pose', payload);
+};
+
+export const useTurnInspectModePose = (
+  options?: UseMutationOtherOptions<void, AxiosError<ApiError>, InspectModePosePayload>
+) => {
+  return useMutation({
+    ...options,
+    mutationFn: async (payload) => {
+      await turnInspectModePose(payload);
+    },
+  });
 };
 
 export const useLeaveInspectMode = (options?: UseMutationOtherOptions<void, AxiosError<ApiError>, void>) => {

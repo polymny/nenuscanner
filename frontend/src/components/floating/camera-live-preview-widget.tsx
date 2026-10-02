@@ -1,5 +1,6 @@
+import { useLocation } from '@tanstack/react-router';
 import { Video, X } from 'lucide-react';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import DraggableWrapper from '@/components/floating/draggable-wrapper';
 import { Button } from '@/components/ui/button';
@@ -7,6 +8,7 @@ import { buildMediamtxPlayerUrl } from '@/lib/mediamtx';
 
 const STORAGE_KEY = 'nenu-camera-live-preview';
 const CLOSED_STORAGE_KEY = 'nenu-camera-live-preview-closed';
+const SCENARIO_DETAIL_PATH = /^\/scenarios\/\d+$/;
 
 function readClosed(): boolean {
   try {
@@ -25,8 +27,16 @@ function writeClosed(closed: boolean) {
 }
 
 const CameraLivePreviewWidget = () => {
+  const pathname = useLocation({ select: (location) => location.pathname });
   const [isClosed, setIsClosed] = useState(readClosed);
   const playerUrl = useMemo(() => buildMediamtxPlayerUrl(), []);
+
+  // Reopen the widget if the user navigates to a scenario detail page
+  useEffect(() => {
+    if (!SCENARIO_DETAIL_PATH.test(pathname) || !readClosed()) return;
+    setIsClosed(false);
+    writeClosed(false);
+  }, [pathname]);
 
   const handleClose = useCallback(() => {
     setIsClosed(true);

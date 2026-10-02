@@ -44,7 +44,7 @@ export default function AcquisitionCard({
       const compatibility = compatibilityById.get(scenario.id);
       if (!compatibility) return false;
 
-      return compatibility.sameLedPowerValues || compatibility.sameShutterSpeeds || compatibility.sameRotationsCount;
+      return compatibility.sameLedPowerValues || compatibility.sameShutterSpeeds || compatibility.samePosesCount;
     })
     .sort((a, b) => a.name.localeCompare(b.name));
   const hasCompatibleScenarios = acquisition.isCalibration && otherScenarios.length > 0;
@@ -155,9 +155,9 @@ export default function AcquisitionCard({
               </Badge>
             )
           )}
-          <span className="flex items-center gap-1 rounded-lg bg-white p-1 text-xs" title="Position des bras">
-            <span>{acquisition.armsPosition.emojiLeft}</span>
-            <span>{acquisition.armsPosition.emojiRight}</span>
+          <span className="flex items-center gap-1 rounded-lg bg-white p-1 text-xs" title="Rig">
+            <span>{acquisition.rigConfiguration.emojiLeft}</span>
+            <span>{acquisition.rigConfiguration.emojiRight}</span>
           </span>
         </div>
         <div
@@ -177,7 +177,7 @@ export default function AcquisitionCard({
                 ·
               </span>
               <span className="flex items-center gap-0.5">
-                {acquisition.photosCount}
+                {acquisition.imagesCount}
                 <Camera className="size-3" />
               </span>
             </>

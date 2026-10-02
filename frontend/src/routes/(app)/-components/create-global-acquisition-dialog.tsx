@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Camera } from 'lucide-react';
 import type {
   CreateAcquisitionStep,
   CreateCalibrationStep,
@@ -26,11 +27,8 @@ const CreateGlobalAcquisitionDialog = () => {
   return (
     <Dialog onOpenChange={setOpen} open={open}>
       <DialogTrigger asChild>
-        <Button
-          className="border-white/30 bg-white/10 text-white hover:bg-white/20 hover:text-white"
-          size="sm"
-          variant="outline"
-        >
+        <Button className="text-brand-600 border-white bg-white hover:bg-white/90" size="sm">
+          <Camera className="size-4" />
           Créer une acquisition
         </Button>
       </DialogTrigger>

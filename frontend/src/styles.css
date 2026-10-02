@@ -1,13 +1,14 @@
-@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&display=swap');
 @import 'tailwindcss';
 @import 'tw-animate-css';
 
-body {
-  @apply m-0;
+@font-face {
   font-family: 'Manrope';
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  src: url('./assets/fonts/Manrope-VariableFont_wght.ttf') format('truetype');
+  font-weight: 200 800;
+  font-style: normal;
+  font-display: swap;
 }
+
 
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
@@ -19,7 +20,7 @@ code {
   }
 
   body {
-    @apply bg-background text-gray-900;
+    @apply m-0 bg-background font-sans text-gray-900 antialiased;
   }
 
   h1 {
@@ -53,6 +54,8 @@ code {
 }
 
 @theme {
+  --font-sans: 'Manrope', ui-sans-serif, system-ui, sans-serif;
+
   --text-4xl: 48px;
   --text-4xl--line-height: 62px;
   --text-3xl: 32px;

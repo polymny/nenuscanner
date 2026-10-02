@@ -2,7 +2,7 @@ import { createContext, useContext, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 import type { LedValue } from '@/types/led.types';
 
-export type ScenarioInspectModeTarget = 'shutter-speeds' | 'rotations' | `led:${LedValue}`;
+export type ScenarioInspectModeTarget = 'shutter-speeds' | 'poses' | `led:${LedValue}`;
 
 export const ledInspectModeTarget = (ledValue: LedValue): ScenarioInspectModeTarget => `led:${ledValue}`;
 

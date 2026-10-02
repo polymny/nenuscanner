@@ -22,13 +22,13 @@ const CameraSettingsForm = memo(function CameraSettingsForm({ isPending, isError
   const { mutate: setLedMutation } = useSetInspectModeLed();
 
   const { mutate: updateSetting, isPending: isUpdatingSetting } = useUpdateCameraSetting({
-    onSuccess: (_data, variables) => {
+    onSuccess: (_data, _variables) => {
       toast.success('Réglage appliqué.');
 
       // TODO : comportement temporaire de patch pour réappliquer le temps de pose à 1/12 après chaque changement
-      if (variables.setting === 'shutterspeed') {
-        setLedMutation({ value: 'ALL_LEDS', powerId: 1 });
-      }
+      // if (variables.setting === 'shutterspeed') {
+      //   setLedMutation({ value: 'ALL_LEDS', powerId: 1 });
+      // }
     },
     onError: () => {
       toast.error('Impossible de modifier ce réglage.');

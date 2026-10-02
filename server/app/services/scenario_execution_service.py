@@ -11,18 +11,19 @@ from .exiftool_service import write_jpeg_preview_from_raw
 from .gphoto2_service import capture_raw_to_file
 from .sse_job_runner import JobCancelled, SseJobContext
 from ..constants.leds import LEDS_COUNT
+from ..models.absolute_shutter_speed_value import AbsoluteShutterSpeedValue
 from ..models.acquisition import Acquisition, AcquisitionStatus
-from ..models.acquisition_photo import AcquisitionPhoto
-from ..models.scenario import Scenario, ScenarioLED, ScenarioRotation, ScenarioShutterSpeed
+from ..models.acquisition_image import AcquisitionImage
+from ..models.scenario import Scenario, ScenarioLED, ScenarioShutterSpeed
 from ..paths import SERVER_ROOT
-from ... import config, leds
+from ... import config, leds, turntable
 
 STEP_DELAY_SECONDS = 1
 POC_IMAGE_SIZE = '800/600'
 
 
 class AcquisitionPaused(Exception):
-    """Levée lorsqu'une acquisition avec rotations manuelles est mise en pause."""
+    """Levée lorsqu'une acquisition avec poses manuelles est mise en pause."""
 
 
 @dataclass
@@ -76,30 +77,29 @@ def _apply_led_value(gpio_leds: leds.Leds, led_value: str, state: _LedState) -> 
 @dataclass(frozen=True)
 class ScenarioCaptureStep:
     step_index: int
-    rotation: ScenarioRotation | None
+    pose_index: int
+    pose_total: int
     led: ScenarioLED
     shutter_speed: ScenarioShutterSpeed
-    rotation_index: int
-    rotation_total: int
     led_index: int
     led_total: int
     shutter_speed_index: int
     shutter_speed_total: int
 
     @property
-    def has_rotations(self) -> bool:
-        return self.rotation_total > 0
+    def has_multiple_poses(self) -> bool:
+        return self.pose_total > 1
 
 
 def build_scenario_capture_steps(scenario: Scenario) -> list[ScenarioCaptureStep]:
     """
-    Ordre : pour chaque rotation (ou une position fixe si aucune), pour chaque LED, pour chaque temps de pose.
+    Ordre : pour chaque pose, pour chaque LED, pour chaque temps de pose.
 
     Les LEDs sont appliquées dans l'ordre NO_LED, puis les valeurs numériques croissantes, puis ALL_LEDS.
     Les temps de pose sont appliqués par valeur relative croissante.
     """
-    rotations = sorted(scenario.rotations, key=lambda row: row.radians_value)
-    rotation_slots = rotations if rotations else [None]
+    pose_total = scenario.poses_count
+    pose_slots = list(range(1, pose_total + 1))
     leds = sorted(
         scenario.leds,
         key=lambda led: (
@@ -107,28 +107,26 @@ def build_scenario_capture_steps(scenario: Scenario) -> list[ScenarioCaptureStep
             0 if led.led_value in ('NO_LED', 'ALL_LEDS') else int(led.led_value),
         ),
     )
-    shutter_speeds = sorted(scenario.shutter_speeds, key=lambda ss: ss.shutter_speed_value.value)
+    shutter_speeds = sorted(scenario.shutter_speeds, key=lambda ss: ss.relative_shutter_speed_value.value)
     if not leds or not shutter_speeds:
         raise ValueError('scenario-missing-leds-or-shutter-speeds')
 
-    rotation_total = len(rotations)
     led_total = len(leds)
     shutter_total = len(shutter_speeds)
 
     steps: list[ScenarioCaptureStep] = []
     step_index = 0
-    for rotation_index, rotation in enumerate(rotation_slots):
+    for pose_index in pose_slots:
         for led_index, led in enumerate(leds):
             for shutter_speed_index, shutter_speed in enumerate(shutter_speeds):
                 step_index += 1
                 steps.append(
                     ScenarioCaptureStep(
                         step_index=step_index,
-                        rotation=rotation,
+                        pose_index=pose_index,
+                        pose_total=pose_total,
                         led=led,
                         shutter_speed=shutter_speed,
-                        rotation_index=rotation_index + 1 if rotation_total > 0 else 0,
-                        rotation_total=rotation_total,
                         led_index=led_index + 1,
                         led_total=led_total,
                         shutter_speed_index=shutter_speed_index + 1,
@@ -139,27 +137,23 @@ def build_scenario_capture_steps(scenario: Scenario) -> list[ScenarioCaptureStep
 
 
 def _scenario_progress_payload(step: ScenarioCaptureStep) -> dict:
-    rotation = step.rotation
     return {
         'step': step.step_index,
-        'rotationIndex': step.rotation_index,
-        'rotationTotal': step.rotation_total,
-        'hasRotations': step.has_rotations,
-        'rotationRadians': rotation.radians_value if rotation is not None else None,
+        'poseIndex': step.pose_index,
+        'poseTotal': step.pose_total,
+        'hasMultiplePoses': step.has_multiple_poses,
         'ledIndex': step.led_index,
         'ledTotal': step.led_total,
         'ledValue': step.led.led_value,
         'ledPower': step.led.led_power_value.value,
         'shutterSpeedIndex': step.shutter_speed_index,
         'shutterSpeedTotal': step.shutter_speed_total,
-        'shutterSpeedRelative': step.shutter_speed.shutter_speed_value.value,
+        'shutterSpeedRelative': step.shutter_speed.relative_shutter_speed_value.value,
     }
 
 
-def _should_pause_for_manual_rotation(step: ScenarioCaptureStep, acquisition: Acquisition) -> bool:
-    if not acquisition.with_manual_rotations or not step.has_rotations:
-        return False
-    if step.rotation_index >= step.rotation_total:
+def _is_end_of_pose_block(step: ScenarioCaptureStep) -> bool:
+    if not step.has_multiple_poses or step.pose_index >= step.pose_total:
         return False
     return step.led_index == step.led_total and step.shutter_speed_index == step.shutter_speed_total
 
@@ -177,19 +171,18 @@ def execute_scenario(
     session: Session,
     acquisition: Acquisition,
     *,
-    photo_relative_path: Callable[[int, str], str],
-    photo_path_to_url: Callable[[str], str],
+    image_relative_path: Callable[[int, str], str],
+    image_path_to_url: Callable[[str], str],
 ) -> list[str]:
     """
     Exécute toutes les étapes du scénario ;
-    persiste les photos et émet des événements SSE. Retourne les URLs des images.
+    persiste les photos et émet des événements SSE. Retourne les URLs des photos.
     """
     scenario = (
         session.query(Scenario)
         .options(
             joinedload(Scenario.leds).joinedload(ScenarioLED.led_power_value),
-            joinedload(Scenario.shutter_speeds).joinedload(ScenarioShutterSpeed.shutter_speed_value),
-            joinedload(Scenario.rotations),
+            joinedload(Scenario.shutter_speeds).joinedload(ScenarioShutterSpeed.relative_shutter_speed_value),
         )
         .filter(Scenario.id == acquisition.scenario_id)
         .one()
@@ -214,6 +207,7 @@ def execute_scenario(
     gpio_leds = leds.get()
     led_state = _LedState()
     gpio_leds.off()
+    plate = turntable.get()
 
     # TODO : déclenchement autofocus temporaire au démarrage de l'acquisition
     # gpio_leds.on()
@@ -226,62 +220,63 @@ def execute_scenario(
 
         _apply_led_value(gpio_leds, step.led.led_value, led_state)
 
-        base = (
-            f'photo-r{step.rotation.id if step.rotation else 0}'
-            f'-l{step.led.id}-s{step.shutter_speed.id}-{step.step_index:04d}'
-        )
-        preview_relative_path = photo_relative_path(acquisition_id, f'{base}.jpg')
+        base = f'image-r{step.pose_index}-l{step.led.id}-s{step.shutter_speed.id}-{step.step_index:04d}'
+        preview_relative_path = image_relative_path(acquisition_id, f'{base}.jpg')
         raw_ext = getattr(config, 'CAMERA_RAW_EXTENSION', 'nef')  # repli sur l'extension RAW Nikon
-        raw_relative_path = photo_relative_path(acquisition_id, f'{base}.{raw_ext}')
+        raw_relative_path = image_relative_path(acquisition_id, f'{base}.{raw_ext}')
+
+        cam = acquisition.camera_settings
+        effective_shutter_speed = float(cam.absolute_shutter_speed_value.value) * float(
+            step.shutter_speed.relative_shutter_speed_value.value
+        )
+        # TODO : correction temporaire pour ALL_LEDS
+        if step.led.led_value == 'ALL_LEDS':
+            effective_shutter_speed /= LEDS_COUNT
 
         if config.CAMERA == 'real':
-            cam = acquisition.camera_settings
-            target_shutter_speed = float(cam.absolute_shutter_speed_value) * float(
-                step.shutter_speed.shutter_speed_value.value
-            )
-            # TODO : correction temporaire pour ALL_LEDS
-            if step.led.led_value == 'ALL_LEDS':
-                target_shutter_speed /= LEDS_COUNT
             raw_file_path = str(SERVER_ROOT / raw_relative_path)
             preview_file_path = str(SERVER_ROOT / preview_relative_path)
             capture_raw_to_file(
                 raw_file_path,
-                shutterspeed_value=target_shutter_speed,
-                iso_value=float(cam.iso_value),
-                aperture_value=float(cam.aperture_value),
+                shutterspeed_value=effective_shutter_speed,
+                iso_value=float(cam.iso_value.value),
+                aperture_value=float(cam.aperture_value.value),
             )
             write_jpeg_preview_from_raw(raw_file_path, preview_file_path)
         else:
-            seed = (
-                f'nenuscanner-{acquisition_id}-r{step.rotation.id if step.rotation else 0}'
-                f'-l{step.led.id}-s{step.shutter_speed.id}'
-            )
+            seed = f'nenuscanner-{acquisition_id}-r{step.pose_index}-l{step.led.id}-s{step.shutter_speed.id}'
             source_url = f'https://picsum.photos/seed/{seed}/{POC_IMAGE_SIZE}'
             urllib.request.urlretrieve(source_url, SERVER_ROOT / preview_relative_path)
             raw_relative_path = preview_relative_path
 
-        photo = AcquisitionPhoto(
+        nearest_shutter = min(
+            session.query(AbsoluteShutterSpeedValue).all(),
+            key=lambda row: abs(float(row.value) - effective_shutter_speed),
+        )
+
+        image = AcquisitionImage(
             preview_path=preview_relative_path,
             raw_path=raw_relative_path,
             acquisition_id=acquisition_id,
-            scenario_rotation_id=step.rotation.id if step.rotation is not None else None,
+            pose_index=step.pose_index,
             scenario_shutter_speed_id=step.shutter_speed.id,
             scenario_led_id=step.led.id,
+            effective_shutter_speed_value_id=nearest_shutter.id,
         )
-        session.add(photo)
+        session.add(image)
         session.flush()
 
         context.emit(
-            'photo_ready',
+            'image_ready',
             {
                 'total': total,
-                'imageUrl': photo_path_to_url(preview_relative_path),
+                'imageUrl': image_path_to_url(preview_relative_path),
                 **_scenario_progress_payload(step),
             },
         )
         session.commit()
 
-        if _should_pause_for_manual_rotation(step, acquisition):
+        if _is_end_of_pose_block(step) and not acquisition.automatic_pose_change:
             gpio_leds.off()
             acquisition.status = AcquisitionStatus.PAUSED
             acquisition.current_step = step.step_index + 1
@@ -289,6 +284,12 @@ def execute_scenario(
             time.sleep(0.7)
             context.emit('paused', {'acquisitionId': acquisition.id})
             raise AcquisitionPaused()
+
+        if _is_end_of_pose_block(step) and acquisition.automatic_pose_change:
+            plate.turn(round(360 / scenario.poses_count))
+            if not plate.is_dummy():
+                time.sleep(30)  # TODO : temporaire, pas d'ACK de la part du plateau pour l'instant
+                plate.disable()
 
         if step.step_index < total and config.CAMERA != 'real':
             time.sleep(STEP_DELAY_SECONDS)

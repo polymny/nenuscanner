@@ -31,11 +31,9 @@ const step = (index?: number, total?: number) =>
   index !== undefined && total !== undefined ? `${index}/${total}` : undefined;
 
 interface ScenarioMetadataProps {
-  rotation?: {
-    index?: number;
-    total?: number;
-    radians: number | null;
-    hasRotations?: boolean;
+  pose?: {
+    index: number;
+    total: number;
   };
   led?: {
     index?: number;
@@ -49,46 +47,31 @@ interface ScenarioMetadataProps {
     relative: number | null;
   };
   showProgress?: boolean;
-  manualRotations?: boolean;
   className?: string;
 }
 
 export default function ScenarioMetadata({
-  rotation,
+  pose,
   led,
   shutter,
   showProgress = false,
-  manualRotations = false,
   className,
 }: ScenarioMetadataProps) {
   const ledPower =
     led?.value && led.value !== 'NO_LED' && led.power !== null ? `${Math.round(led.power * 100)} %` : undefined;
 
-  const rotationValue = (() => {
-    if (showProgress && !rotation?.hasRotations) return 'Sans rotation';
-    if (manualRotations && rotation?.hasRotations && rotation.index !== undefined && rotation.total !== undefined) {
-      return `Rotation ${rotation.index}/${rotation.total}`;
-    }
-    if (rotation?.radians !== null && rotation?.radians !== undefined) {
-      return `${rotation.radians.toFixed(2)} rad`;
-    }
-    if (rotation?.hasRotations === false) return 'Sans rotation';
-    return '—';
-  })();
+  const hasMultiplePoses = (pose?.total ?? 1) > 1;
+  const poseValue = hasMultiplePoses ? `Pose ${pose?.index ?? 0}/${pose?.total ?? 0}` : 'Pose unique';
 
   return (
     <div className={cn('flex flex-col gap-1.5 text-xs', className)}>
-      {rotation && (
+      {pose && (
         <MetadataRow
           icon={<RotateCw className="size-4 shrink-0 text-violet-600" />}
-          title="Rotation"
-          progress={
-            showProgress && rotation.hasRotations && !manualRotations
-              ? step(rotation.index, rotation.total)
-              : undefined
-          }
-          value={rotationValue}
-          muted={rotation.radians === null && !manualRotations}
+          title="Pose"
+          progress={showProgress && hasMultiplePoses ? step(pose.index, pose.total) : undefined}
+          value={poseValue}
+          muted={!hasMultiplePoses}
         />
       )}
       {led && (
