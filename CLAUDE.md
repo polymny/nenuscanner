@@ -82,8 +82,7 @@ cd frontend && npm run dev   # http://localhost:3000
 ```
 
 In dev, `environment.ts` targets `127.0.0.1:5000` (API) and `127.0.0.1:8889` (MediaMTX); the API has CORS enabled.
-**Everything hits real data**: downloads can be tens of GB, deletions are real. `.claude/launch.json` defines the
-`frontend` dev server for the desktop app's preview.
+**Everything hits real data**: downloads can be tens of GB, deletions are real.
 
 Backend changes cannot be tested locally with real data: temporarily copy the changed files into the Pi's checkout
 (`scp`), restart the service, test, then `git restore` them before the real `git pull`.
