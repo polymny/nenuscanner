@@ -1,26 +1,39 @@
-import { createFileRoute } from '@tanstack/react-router';
-import { useState } from 'react';
-import { Amphora } from 'lucide-react';
+import { createFileRoute, useNavigate } from '@tanstack/react-router';
+import { useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import UpsertArtifactDialog from './-components/upsert-artifact-dialog';
 import { useDeleteArtifact } from '@/api/mutations/artifact.mutations';
+import { useDownloadAcquisitions } from '@/api/mutations/acquisition.mutations';
 import { useGetArtifacts } from '@/api/queries/artifact.queries';
-import { ComponentCard, ComponentCardSkeleton } from '@/components/component-card';
-import { Button } from '@/components/ui/button';
+import ArtifactCard from '@/components/artifact/artifact-card';
+import CreateAcquisitionCard from '@/components/acquisition/create-acquisition-card';
+import SelectionHeader from '@/components/acquisition/selection-header';
+import { ComponentCardSkeleton } from '@/components/component-card';
 import ConfirmActionDialog from '@/components/confirm-action-dialog';
 import { useMinimumLoadingDuration } from '@/hooks/use-minimum-loading-duration';
+import { useSelection } from '@/hooks/use-selection';
+import { pluralize } from '@/lib/utils';
 
 export const Route = createFileRoute('/(app)/artifacts/')({
   component: RouteComponent,
 });
 
 function RouteComponent() {
+  const navigate = useNavigate();
   const { data: artifacts, isPending } = useGetArtifacts();
   const showSkeleton = useMinimumLoadingDuration(isPending);
   const [upsertMode, setUpsertMode] = useState<'create' | 'update'>('create');
   const [openUpsertDialog, setOpenUpsertDialog] = useState(false);
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [selectedArtifactId, setSelectedArtifactId] = useState<null | number>(null);
+
+  // Only artifacts with something to download can be selected.
+  const selectableIds = useMemo(
+    () => (artifacts ?? []).filter((artifact) => artifact.completedAcquisitionIds.length > 0).map(({ id }) => id),
+    [artifacts]
+  );
+  const selection = useSelection(selectableIds);
+  const selectedCount = selection.selectedIds.length;
 
   const { mutate: deleteArtifact } = useDeleteArtifact({
     onSuccess: () => {
@@ -31,64 +44,70 @@ function RouteComponent() {
     },
   });
 
+  const { mutate: downloadAcquisitions, isPending: isDownloading } = useDownloadAcquisitions({
+    onError: () => {
+      toast.error('Le téléchargement a échoué.');
+    },
+  });
+
+  const downloadArtifacts = (artifactIds: Array<number>) =>
+    downloadAcquisitions({
+      acquisitionIds: (artifacts ?? [])
+        .filter((artifact) => artifactIds.includes(artifact.id))
+        .flatMap((artifact) => artifact.completedAcquisitionIds),
+    });
+
+  const openUpsert = (mode: 'create' | 'update', artifactId: number | null) => {
+    setUpsertMode(mode);
+    setSelectedArtifactId(artifactId);
+    setOpenUpsertDialog(true);
+  };
+
   return (
-    <div className="bg-gray-25 flex h-full flex-col items-center gap-6 px-20 py-8">
+    <div className="bg-gray-25 flex h-full flex-col items-start gap-6 px-20 py-8">
       <div className="flex w-full flex-col gap-4">
-        <div className="flex items-start justify-between">
-          <h2 className="font-semibold text-gray-950">Objets</h2>
-          {!showSkeleton && !!artifacts?.length && (
-            <Button
-              onClick={() => {
-                setUpsertMode('create');
-                setSelectedArtifactId(null);
-                setOpenUpsertDialog(true);
-              }}
-            >
-              Créer un objet
-            </Button>
-          )}
-        </div>
+        <SelectionHeader
+          downloading={isDownloading}
+          onDownload={() => downloadArtifacts(selection.selectedIds)}
+          selectedText={`${selectedCount} ${pluralize(selectedCount, 'objet')} ${pluralize(selectedCount, 'sélectionné')}`}
+          selection={selection}
+          title="Objets"
+          total={selectableIds.length}
+        />
         {showSkeleton ? (
-          <div className="grid grid-cols-3 gap-5">
+          <div className="grid grid-cols-4 items-start gap-x-6 gap-y-8">
             <ComponentCardSkeleton />
             <ComponentCardSkeleton />
             <ComponentCardSkeleton />
             <ComponentCardSkeleton />
           </div>
-        ) : isPending ? null : !artifacts?.length ? (
-          <div className="flex justify-center">
-            <div className="mt-8 flex flex-col items-center gap-4">
-              <div className="size-max rounded-full border border-gray-200 bg-white p-3">
-                <Amphora className="text-brand-600 size-6" />
-              </div>
-              <h4 className="font-semibold">Aucun objet trouvé</h4>
-              <Button
-                onClick={() => {
-                  setUpsertMode('create');
-                  setSelectedArtifactId(null);
-                  setOpenUpsertDialog(true);
-                }}
-              >
-                Créer un objet
-              </Button>
-            </div>
-          </div>
-        ) : (
-          <div className="grid grid-cols-3 gap-5">
-            {artifacts.map((artifact) => (
-              <ComponentCard
-                name={artifact.name}
+        ) : isPending ? null : (
+          <div className="grid grid-cols-4 items-start gap-x-6 gap-y-8">
+            <CreateAcquisitionCard
+              description="Créer un objet"
+              label="Nouvel objet"
+              onClick={() => openUpsert('create', null)}
+            />
+            {artifacts?.map((artifact) => (
+              <ArtifactCard
+                artifact={artifact}
                 key={artifact.id}
-                onClickPath={`/artifacts/${artifact.id}`}
                 onDelete={() => {
                   setSelectedArtifactId(artifact.id);
                   setOpenDeleteDialog(true);
                 }}
-                onUpdate={() => {
-                  setSelectedArtifactId(artifact.id);
-                  setUpsertMode('update');
-                  setOpenUpsertDialog(true);
-                }}
+                onDownload={
+                  artifact.completedAcquisitionIds.length > 0 ? () => downloadArtifacts([artifact.id]) : undefined
+                }
+                onOpen={() => void navigate({ to: `/artifacts/${artifact.id}` })}
+                onRename={() => openUpsert('update', artifact.id)}
+                onSelect={
+                  selectableIds.includes(artifact.id)
+                    ? (selected) => selection.toggle(artifact.id, selected)
+                    : undefined
+                }
+                selected={selection.selectedIds.includes(artifact.id)}
+                selectionMode={selectedCount > 0}
               />
             ))}
           </div>
