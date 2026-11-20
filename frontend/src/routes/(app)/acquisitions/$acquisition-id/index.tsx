@@ -44,7 +44,7 @@ function RouteComponent() {
   const poseTotal = acquisition.scenario.posesCount;
 
   return (
-    <div className="bg-gray-25 flex h-full flex-col gap-6 px-20 py-8">
+    <div className="bg-gray-25 flex flex-1 flex-col gap-6 px-20 py-8">
       <CustomBreadcrumb
         backPageName={`Revenir aux ${acquisition.isCalibration ? 'étalonnages' : 'acquisitions'}`}
         backPagePath={
@@ -65,7 +65,7 @@ function RouteComponent() {
       </div>
 
       {(acquisition.status === 'PENDING' || acquisition.status === 'RUNNING' || acquisition.status === 'PAUSED') && (
-        <div className="bg-brand-50 relative flex min-h-[420px] w-full max-w-4xl flex-col items-center justify-center overflow-hidden rounded-xl border-2 border-dashed border-gray-300">
+        <div className="bg-brand-50 relative flex min-h-[420px] w-full flex-1 flex-col items-center justify-center overflow-hidden rounded-xl border-2 border-dashed border-gray-300">
           {acquisition.status === 'PENDING' ? (
             <div className="flex flex-col items-center gap-4 p-12">
               <div className="rounded-full border border-gray-200 bg-white p-4">
