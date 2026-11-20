@@ -15,6 +15,9 @@ import {
 } from '@/api/mutations/inspect-mode.mutations';
 import InitializeCameraDialog, { isCameraNotInitialized } from '@/components/initialize-camera-dialog';
 
+/** How long each pose stays still before the next turn in pose inspect mode. */
+const POSE_DWELL_MS = 3000;
+
 const ScenarioInspectModeSync = () => {
   const { activeInspectMode, shutterSpeedPreviewValue, clearInspectMode } = useScenarioInspectMode();
   const { control } = useFormContext<UpsertScenarioPayload>();
@@ -65,10 +68,24 @@ const ScenarioInspectModeSync = () => {
   useEffect(() => {
     if (activeInspectMode !== 'poses' || posesCount <= 1) return;
 
-    const turn = () => turnPoseMutation({ posesCount });
+    // The request returns once the rotation is over: chain the turns so that each pose stays still for the same time,
+    // whatever the plate speed, and requests never overlap.
+    let cancelled = false;
+    let timeoutId: number | undefined;
+    const turn = () =>
+      turnPoseMutation(
+        { posesCount },
+        {
+          onSettled: () => {
+            if (!cancelled) timeoutId = window.setTimeout(turn, POSE_DWELL_MS);
+          },
+        }
+      );
     turn();
-    const intervalId = window.setInterval(turn, 30_000);
-    return () => window.clearInterval(intervalId);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timeoutId);
+    };
   }, [activeInspectMode, posesCount, turnPoseMutation]);
 
   useEffect(() => {
