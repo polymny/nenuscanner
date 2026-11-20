@@ -6,8 +6,8 @@ After=network.target mediamtx.service
 [Service]
 RestartSec=2s
 Type=simple
+Environment=FLASK_RUN_PORT=80
 WorkingDirectory=/home/pi/nenuscanner/server
-ExecStartPre=/home/pi/nenuscanner/prevent-saving.sh
 ExecStart=/home/pi/.local/bin/poetry run nenuscanner
 Restart=always
 
