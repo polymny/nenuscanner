@@ -5,6 +5,7 @@ import type { ApiError, UseMutationOtherOptions } from '@/lib/api-types';
 import type { AxiosError } from 'axios';
 import type { CreateAcquisitionPayload, CreateCalibrationPayload } from '@/schemas/acquisition.schemas';
 import { client } from '@/lib/client';
+import { API_URL } from '@/lib/environment';
 // import { downloadBlobResponse } from '@/lib/download-blob';
 
 const createAcquisition = async (payload: CreateAcquisitionPayload) => {
@@ -69,7 +70,8 @@ const downloadAcquisitions = async (payload: DownloadAcquisitionsPayload) => {
   const form = document.createElement('form');
 
   form.method = 'POST';
-  form.action = '/acquisition/download';
+  // Absolute so that it also targets the API in dev, where the frontend runs on another port.
+  form.action = `${API_URL}/acquisition/download`;
   form.style.display = 'none';
 
   payload.acquisitionIds.forEach((id) => {
@@ -85,7 +87,7 @@ const downloadAcquisitions = async (payload: DownloadAcquisitionsPayload) => {
   document.body.appendChild(form);
   form.submit();
   form.remove();
-}
+};
 
 export const useDownloadAcquisitions = (
   options?: UseMutationOtherOptions<void, AxiosError<ApiError>, DownloadAcquisitionsPayload>
