@@ -1,10 +1,11 @@
 import { useLocation } from '@tanstack/react-router';
 import { Video, X } from 'lucide-react';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import DraggableWrapper from '@/components/floating/draggable-wrapper';
+import RestartStreamButton from '@/components/restart-stream-button';
 import { Button } from '@/components/ui/button';
-import { buildMediamtxPlayerUrl } from '@/lib/mediamtx';
+import { useMediamtxPlayerUrl } from '@/lib/mediamtx';
 
 const STORAGE_KEY = 'nenu-camera-live-preview';
 const CLOSED_STORAGE_KEY = 'nenu-camera-live-preview-closed';
@@ -29,7 +30,7 @@ function writeClosed(closed: boolean) {
 const CameraLivePreviewWidget = () => {
   const pathname = useLocation({ select: (location) => location.pathname });
   const [isClosed, setIsClosed] = useState(readClosed);
-  const playerUrl = useMemo(() => buildMediamtxPlayerUrl(), []);
+  const playerUrl = useMediamtxPlayerUrl();
 
   // Reopen the widget if the user navigates to a scenario detail page
   useEffect(() => {
@@ -68,16 +69,19 @@ const CameraLivePreviewWidget = () => {
       className="bg-background w-full"
       defaultAnchor="bottom-right"
       headerActions={
-        <Button
-          aria-label="Fermer le flux live"
-          onClick={handleClose}
-          size="icon"
-          type="button"
-          variant="ghost"
-          className="mr-0 pr-0"
-        >
-          <X className="size-4" />
-        </Button>
+        <>
+          <RestartStreamButton />
+          <Button
+            aria-label="Fermer le flux live"
+            onClick={handleClose}
+            size="icon"
+            type="button"
+            variant="ghost"
+            className="mr-0 pr-0"
+          >
+            <X className="size-4" />
+          </Button>
+        </>
       }
       height="280px"
       storageKey={STORAGE_KEY}

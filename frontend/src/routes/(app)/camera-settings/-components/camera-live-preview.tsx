@@ -2,6 +2,7 @@ import { memo, useCallback } from 'react';
 import { toast } from 'sonner';
 import type { MouseEvent } from 'react';
 import { useSetCameraFocusArea } from '@/api/mutations/camera.mutations';
+import RestartStreamButton from '@/components/restart-stream-button';
 import { FOCUS_AREA_CROP_X, FOCUS_AREA_NORM_HEIGHT, FOCUS_AREA_NORM_WIDTH } from '@/types/camera.types';
 
 interface CameraLivePreviewProps {
@@ -39,7 +40,10 @@ const CameraLivePreview = memo(function CameraLivePreview({ playerUrl }: CameraL
 
   return (
     <div className="flex w-full flex-col gap-2">
-      <p className="text-sm text-gray-600">Cliquez sur l&apos;aperçu pour choisir le point de mise au point.</p>
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-sm text-gray-600">Cliquez sur l&apos;aperçu pour choisir le point de mise au point.</p>
+        <RestartStreamButton />
+      </div>
       <div className="relative aspect-video w-full overflow-hidden rounded-md bg-gray-100">
         <iframe
           allow="autoplay; fullscreen"

@@ -5,6 +5,7 @@ import type { ApiError, UseMutationOtherOptions } from '@/lib/api-types';
 import type { CameraFocusAreaPayload } from '@/types/camera.types';
 import type { UpdateCameraSettingPayload } from '@/schemas/camera.schemas';
 import { client } from '@/lib/client';
+import { reloadPlayersWhenStreamIsBack } from '@/lib/mediamtx';
 
 const updateCameraSetting = async (payload: UpdateCameraSettingPayload) => {
   await client.patch('/camera/settings', payload);
@@ -68,9 +69,10 @@ export const useChangeCamera = (options?: UseMutationOtherOptions<void, AxiosErr
 
 const restartStream = async () => {
   await client.post('/camera/restart-stream');
+  await reloadPlayersWhenStreamIsBack();
 };
 
-/** Restarts MediaMTX, which serves the camera live stream. */
+/** Restarts MediaMTX, which serves the camera live stream, and reloads the players once it is back. */
 export const useRestartStream = (options?: UseMutationOtherOptions<void, AxiosError<ApiError>, void>) => {
   return useMutation({
     ...options,
