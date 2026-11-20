@@ -9,16 +9,13 @@ interface AcquisitionImageCardProps {
 
 export default function AcquisitionImageCard({ image, poseTotal }: AcquisitionImageCardProps) {
   return (
-    <div className="flex h-[250px] flex-col overflow-hidden rounded-lg border border-gray-200 bg-white">
-      <div
-        className="w-full flex-1 bg-origin-content p-5"
-        style={{
-          backgroundImage: `url(${toAbsoluteImageUrl(image.imageUrl)})`,
-          backgroundSize: 'contain',
-          backgroundPosition: 'center',
-          backgroundRepeat: 'no-repeat',
-          backgroundColor: 'rgba(236, 240, 250, 1)',
-        }}
+    <div className="flex flex-col overflow-hidden rounded-lg border border-gray-200 bg-white">
+      {/* Camera previews are 3:2: the image spans the whole card width, contain only matters for other ratios. */}
+      <img
+        alt=""
+        className="bg-brand-50 aspect-[3/2] w-full object-contain"
+        loading="lazy"
+        src={toAbsoluteImageUrl(image.imageUrl)}
       />
       <div className="border-t border-gray-100 p-3">
         <ScenarioMetadata
