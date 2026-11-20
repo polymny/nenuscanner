@@ -3,23 +3,28 @@ import { artifactsKeyFactory } from '../queries/artifact.queries';
 import type { ApiError, UseMutationOtherOptions } from '@/lib/api-types';
 import type { UpsertArtifactPayload } from '@/schemas/artifact.schemas';
 import type { AxiosError } from 'axios';
+import type { Artifact } from '@/types/artifact.types';
 import { client } from '@/lib/client';
 
+type UpsertedArtifact = Pick<Artifact, 'id' | 'name'>;
+
 const upsertArtifact = async (payload: UpsertArtifactPayload, mode: 'create' | 'update') => {
-  return mode === 'create' ? await client.post('/artifact/', payload) : await client.patch('/artifact/', payload);
+  const { data } =
+    mode === 'create'
+      ? await client.post<UpsertedArtifact>('/artifact/', payload)
+      : await client.patch<UpsertedArtifact>('/artifact/', payload);
+  return data;
 };
 
 export const useUpsertArtifact = (
   mode: 'create' | 'update',
-  options?: UseMutationOtherOptions<void, AxiosError<ApiError>, UpsertArtifactPayload>
+  options?: UseMutationOtherOptions<UpsertedArtifact, AxiosError<ApiError>, UpsertArtifactPayload>
 ) => {
   const queryClient = useQueryClient();
 
   return useMutation({
     ...options,
-    mutationFn: async (payload) => {
-      await upsertArtifact(payload, mode);
-    },
+    mutationFn: (payload) => upsertArtifact(payload, mode),
     onSuccess: (data, vars, result, ctx) => {
       void queryClient.invalidateQueries({ queryKey: artifactsKeyFactory.base() });
       options?.onSuccess?.(data, vars, result, ctx);
