@@ -65,3 +65,15 @@ export const useChangeCamera = (options?: UseMutationOtherOptions<void, AxiosErr
     },
   });
 };
+
+const restartStream = async () => {
+  await client.post('/camera/restart-stream');
+};
+
+/** Restarts MediaMTX, which serves the camera live stream. */
+export const useRestartStream = (options?: UseMutationOtherOptions<void, AxiosError<ApiError>, void>) => {
+  return useMutation({
+    ...options,
+    mutationFn: restartStream,
+  });
+};

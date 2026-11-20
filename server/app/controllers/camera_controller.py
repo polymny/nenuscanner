@@ -1,3 +1,5 @@
+import logging
+import subprocess
 from datetime import datetime
 
 from flask.views import MethodView
@@ -19,6 +21,8 @@ from ..services.gphoto2_service import (
 )
 from ... import config
 from ...db import db_session
+
+logger = logging.getLogger(__name__)
 
 blp = Blueprint('camera', __name__, description='Réglages caméra')
 
@@ -132,3 +136,20 @@ class CameraCalibrationCaptureController(MethodView):
             'directory': str(session_dir.relative_to(SERVER_ROOT)),
             'images': images,
         }
+
+
+@blp.route('/restart-stream')
+class CameraRestartStreamController(MethodView):
+    @blp.response(204)
+    def post(self):
+        """Redémarre MediaMTX, qui diffuse le flux live de la caméra."""
+        try:
+            result = subprocess.run(
+                ['systemctl', '--user', 'restart', 'mediamtx'], capture_output=True, text=True, timeout=30
+            )
+        except (OSError, subprocess.TimeoutExpired) as error:
+            logger.error('MediaMTX restart failed: %s', error)
+            abort(500, message='stream-restart-failed')
+        if result.returncode != 0:
+            logger.error('MediaMTX restart failed: %s', result.stderr.strip())
+            abort(500, message='stream-restart-failed')
