@@ -1,5 +1,6 @@
 import { Link } from '@tanstack/react-router';
 import { memo } from 'react';
+import PowerButton from './power-button';
 import ProfileMenuWidget from './profile-menu-widget';
 import CreateGlobalAcquisitionDialog from './create-global-acquisition-dialog';
 import IncreaseRigConfigurationDialog from './increase-rig-configuration-dialog';
@@ -70,6 +71,7 @@ const AppNavbar = memo(function AppNavbar({ pathname }: AppNavbarProps) {
         <div className="flex items-center gap-2">
           <AppNavLinks pathname={pathname} />
           <ProfileMenuWidget />
+          <PowerButton />
         </div>
       </div>
     </div>

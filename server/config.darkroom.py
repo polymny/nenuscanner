@@ -8,6 +8,8 @@ GPIO_CHIP = 'gpiochip0'
 LEDS_UUIDS = [17, 27, 22, 5, 6, 13, 19, 26, 21, 20, 16, 12]
 TURNTABLE_SERIAL_PORT = '/dev/ttyAMA0'
 CAMERA = 'real'
+# Lets the UI power the machine off (POST /system/shutdown). Leave unset on development machines.
+ALLOW_SHUTDOWN = True
 CAMERA_RAW_EXTENSION = 'nef'
 # Largeur du repère AF Nikon (changeafarea), capteur FX 3:2.
 CAMERA_FOCUS_AREA_WIDTH = 8256
