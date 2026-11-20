@@ -23,6 +23,7 @@ class SseJob:
     status: str = 'PENDING'
     events: Queue = field(default_factory=Queue)
     cancel_requested: bool = False
+    pause_requested: bool = False
 
 
 class SseJobContext:
@@ -40,6 +41,9 @@ class SseJobContext:
 
     def is_cancelled(self) -> bool:
         return self._job.cancel_requested
+
+    def is_pause_requested(self) -> bool:
+        return self._job.pause_requested
 
 
 class SseJobRegistry:
@@ -74,6 +78,14 @@ class SseJobRegistry:
             if job is None or job.status != 'RUNNING':
                 return False
             job.cancel_requested = True
+            return True
+
+    def request_pause(self, job_id: str) -> bool:
+        with self._lock:
+            job = self._jobs.get(job_id)
+            if job is None or job.status != 'RUNNING':
+                return False
+            job.pause_requested = True
             return True
 
     def _run_task(self, job_id: str, task: JobTask) -> None:

@@ -1,4 +1,4 @@
-from flask import Response, stream_with_context, request
+from flask import Response, request, stream_with_context
 from flask.views import MethodView
 from flask_smorest import Blueprint, abort
 from sqlalchemy.orm import joinedload
@@ -21,8 +21,7 @@ from ..models.rig_configuration import RigConfiguration
 from ..models.scenario import Scenario
 from ..services.acquisition_download_service import (
     EXTERNAL_DISK_PATH,
-    copy_acquisitions_data_to_disk,
-    download_acquisitions_data
+    download_acquisitions_data,
 )
 from ..services.acquisition_service import (
     acquisition_camera_settings_load_options,
@@ -308,17 +307,15 @@ class AcquisitionDownloadController(MethodView):
             payload = AcquisitionDownloadSchema().load(request.get_json())
         else:
             acquisition_ids = request.form.getlist('acquisitionIds')
-            payload = AcquisitionDownloadSchema().load({
-                'acquisitionIds': [int(id) for id in acquisition_ids],
-            })
+            payload = AcquisitionDownloadSchema().load(
+                {
+                    'acquisitionIds': [int(id) for id in acquisition_ids],
+                }
+            )
 
         unique_ids = list(dict.fromkeys(payload['acquisitionIds']))
 
-        acquisitions = (
-            db_session.query(Acquisition)
-            .filter(Acquisition.id.in_(unique_ids))
-            .all()
-        )
+        acquisitions = db_session.query(Acquisition).filter(Acquisition.id.in_(unique_ids)).all()
 
         if len(acquisitions) != len(unique_ids):
             abort(404, message='acquisition-not-found')
@@ -334,7 +331,6 @@ class AcquisitionDownloadController(MethodView):
         # return {'path': str(dest_path)}
 
         return download_acquisitions_data(db_session, acquisitions)
-
 
 
 @blp.route('/<int:acquisition_id>')
@@ -408,6 +404,19 @@ class AcquisitionRunCancelController(MethodView):
             abort(404, message='job-not-found')
         if not sse_job_registry.request_cancel(job_id):
             abort(409, message='job-not-cancellable')
+
+        return {'jobId': job_id}
+
+
+@blp.route('/run/<string:job_id>/pause')
+class AcquisitionRunPauseController(MethodView):
+    @blp.response(202, AcquisitionRunCancelSchema)
+    def post(self, job_id):
+        """Met en pause un job d'exécution en cours, après la photo en cours (reprise via start-or-resume)."""
+        if sse_job_registry.get(job_id) is None:
+            abort(404, message='job-not-found')
+        if not sse_job_registry.request_pause(job_id):
+            abort(409, message='job-not-pausable')
 
         return {'jobId': job_id}
 

@@ -83,6 +83,11 @@ export const cancelAcquisitionRun = async (jobId: string): Promise<{ jobId: stri
   return data;
 };
 
+export const pauseAcquisitionRun = async (jobId: string): Promise<{ jobId: string }> => {
+  const { data } = await client.post<{ jobId: string }>(`/acquisition/run/${jobId}/pause`);
+  return data;
+};
+
 export const acquisitionRunEventsUrl = (jobId: string) => `${API_URL}/acquisition/run/${jobId}/events`;
 
 export const toAbsoluteImageUrl = (imageUrl: string) =>

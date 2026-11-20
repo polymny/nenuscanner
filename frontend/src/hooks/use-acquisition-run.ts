@@ -5,6 +5,7 @@ import {
   acquisitionRunEventsUrl,
   acquisitionsKeyFactory,
   cancelAcquisitionRun,
+  pauseAcquisitionRun,
   startOrResumeAcquisitionRun,
   toAbsoluteImageUrl,
 } from '@/api/queries/acquisition.queries';
@@ -20,6 +21,7 @@ export function useAcquisitionRun(acquisitionId: number, status?: AcquisitionSta
   const [lastImageUrl, setLastImageUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isCancelling, setIsCancelling] = useState(false);
+  const [isPausing, setIsPausing] = useState(false);
 
   const clearStoredJob = useCallback(() => {
     localStorage.removeItem(jobStorageKey(acquisitionId));
@@ -53,6 +55,7 @@ export function useAcquisitionRun(acquisitionId: number, status?: AcquisitionSta
 
       es.addEventListener('paused', () => {
         jobEndedRef.current = true;
+        setIsPausing(false);
         clearStoredJob();
         closeEventSource();
         void queryClient.invalidateQueries({ queryKey: acquisitionsKeyFactory.base() });
@@ -72,6 +75,7 @@ export function useAcquisitionRun(acquisitionId: number, status?: AcquisitionSta
         setError(data.message);
         jobEndedRef.current = true;
         setIsCancelling(false);
+        setIsPausing(false);
         clearStoredJob();
         closeEventSource();
         void queryClient.invalidateQueries({ queryKey: acquisitionsKeyFactory.base() });
@@ -81,6 +85,7 @@ export function useAcquisitionRun(acquisitionId: number, status?: AcquisitionSta
       es.addEventListener('cancelled', () => {
         jobEndedRef.current = true;
         setIsCancelling(false);
+        setIsPausing(false);
         setProgress(null);
         setLastImageUrl(null);
         clearStoredJob();
@@ -111,6 +116,7 @@ export function useAcquisitionRun(acquisitionId: number, status?: AcquisitionSta
     closeEventSource();
     setError(null);
     setIsCancelling(false);
+    setIsPausing(false);
     setLastImageUrl(null);
     setProgress(null);
 
@@ -139,5 +145,22 @@ export function useAcquisitionRun(acquisitionId: number, status?: AcquisitionSta
     }
   }, [acquisitionId]);
 
-  return { startOrResume, cancel, progress, lastImageUrl, error, isCancelling };
+  /** Takes effect after the current photo (or rotation): the job then emits `paused`. */
+  const pause = useCallback(async () => {
+    const jobId = localStorage.getItem(jobStorageKey(acquisitionId));
+    if (!jobId) {
+      setError("Impossible de mettre l'acquisition en pause.");
+      return;
+    }
+
+    setIsPausing(true);
+    try {
+      await pauseAcquisitionRun(jobId);
+    } catch {
+      setIsPausing(false);
+      setError("Impossible de mettre l'acquisition en pause.");
+    }
+  }, [acquisitionId]);
+
+  return { startOrResume, cancel, pause, progress, lastImageUrl, error, isCancelling, isPausing };
 }

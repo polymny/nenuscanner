@@ -152,6 +152,19 @@ def _scenario_progress_payload(step: ScenarioCaptureStep) -> dict:
     }
 
 
+def _pause(
+    context: SseJobContext, session: Session, acquisition: Acquisition, gpio_leds: leds.Leds, *, next_step_index: int
+) -> None:
+    """Stores the step to resume from, switches the LEDs off and ends the job (resumed by start-or-resume)."""
+    gpio_leds.off()
+    acquisition.status = AcquisitionStatus.PAUSED
+    acquisition.current_step = next_step_index
+    session.commit()
+    time.sleep(0.7)
+    context.emit('paused', {'acquisitionId': acquisition.id})
+    raise AcquisitionPaused()
+
+
 def _pose_step_degrees(pose_index: int, poses_count: int) -> int:
     """Integer rotation from pose `pose_index` (1-based) to the next one, rounded on the cumulative angle so that the
     steps add up to exactly 360° (7 poses: 51 or 52°, instead of 7 × 51 = 357°)."""
@@ -223,6 +236,8 @@ def execute_scenario(
     for step in steps_to_run:
         if context.is_cancelled():
             raise JobCancelled()
+        if context.is_pause_requested():
+            _pause(context, session, acquisition, gpio_leds, next_step_index=step.step_index)
 
         _apply_led_value(gpio_leds, step.led.led_value, led_state)
 
@@ -283,13 +298,7 @@ def execute_scenario(
         session.commit()
 
         if _is_end_of_pose_block(step) and not acquisition.automatic_pose_change:
-            gpio_leds.off()
-            acquisition.status = AcquisitionStatus.PAUSED
-            acquisition.current_step = step.step_index + 1
-            session.commit()
-            time.sleep(0.7)
-            context.emit('paused', {'acquisitionId': acquisition.id})
-            raise AcquisitionPaused()
+            _pause(context, session, acquisition, gpio_leds, next_step_index=step.step_index + 1)
 
         if _is_end_of_pose_block(step) and acquisition.automatic_pose_change:
             plate.turn(_pose_step_degrees(step.pose_index, scenario.poses_count))

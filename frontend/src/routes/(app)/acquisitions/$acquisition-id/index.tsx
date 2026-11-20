@@ -22,10 +22,12 @@ function RouteComponent() {
   const {
     startOrResume,
     cancel,
+    pause,
     progress,
     lastImageUrl,
     error: runError,
     isCancelling,
+    isPausing,
   } = useAcquisitionRun(acquisitionId, acquisition?.status);
 
   const progressPercent = progress && progress.total > 0 ? Math.round((progress.step / progress.total) * 100) : 0;
@@ -80,11 +82,20 @@ function RouteComponent() {
             <>
               {progress && <ScenarioProgressWidget progress={progress} />}
               {acquisition.status === 'RUNNING' && (
-                <div className="absolute top-4 left-4 z-10">
+                <div className="absolute top-4 left-4 z-10 flex gap-2">
                   <Button
                     type="button"
                     size="sm"
-                    disabled={isCancelling}
+                    disabled={isPausing || isCancelling}
+                    onClick={() => void pause()}
+                    variant="outline"
+                  >
+                    {isPausing ? 'Mise en pause…' : 'Mettre en pause'}
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    disabled={isCancelling || isPausing}
                     onClick={() => void cancel()}
                     variant="destructive"
                   >
@@ -125,8 +136,9 @@ function RouteComponent() {
                     <div className="flex flex-col gap-2 text-center">
                       <h2 className="text-lg font-semibold text-gray-950">L&apos;acquisition est en pause</h2>
                       <p className="text-sm leading-relaxed text-gray-600">
-                        Changez la pose de l'objet manuellement, puis reprenez l&apos;acquisition lorsque vous êtes
-                        prêt.
+                        {!acquisition.automaticPoseChange &&
+                          "Si c'est la fin d'une pose, changez la pose de l'objet manuellement. "}
+                        Reprenez l&apos;acquisition lorsque vous êtes prêt.
                       </p>
                     </div>
                     <Button onClick={() => void startOrResume()} size="lg">
