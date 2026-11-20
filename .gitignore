@@ -1,3 +1,6 @@
 # VSCode
 .vscode/
 configCamera.json
+
+# Claude Code local config (desktop app preview, local settings)
+.claude/
