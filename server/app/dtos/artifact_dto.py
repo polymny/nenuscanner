@@ -9,6 +9,12 @@ class ArtifactReadSchema(Schema):
 
     id = fields.Integer(required=True)
     name = fields.String(required=True)
+    # Summary of the artifact's acquisitions, only filled by the list endpoint.
+    acquisitionsCount = fields.Integer()
+    completedAcquisitionIds = fields.List(fields.Integer())
+    lastAcquisitionAt = fields.DateTime(allow_none=True)
+    sizeBytes = fields.Integer()
+    thumbnail = fields.String(allow_none=True)
 
 
 class ArtifactCreateSchema(Schema):
