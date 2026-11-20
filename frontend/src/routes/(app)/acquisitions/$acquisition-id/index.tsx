@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
-import { Camera, Loader2 } from 'lucide-react';
+import { Camera, Loader2, Pause, Play, Square } from 'lucide-react';
 import AcquisitionImageCard from './-components/acquisition-image-card';
 import ScenarioProgressWidget from './-components/scenario-progress-widget';
 import { toAbsoluteImageUrl, useGetAcquisitionById } from '@/api/queries/acquisition.queries';
@@ -84,22 +84,30 @@ function RouteComponent() {
               {acquisition.status === 'RUNNING' && (
                 <div className="absolute top-4 left-4 z-10 flex gap-2">
                   <Button
-                    type="button"
-                    size="sm"
+                    aria-label={isPausing ? 'Mise en pause…' : 'Mettre en pause'}
                     disabled={isPausing || isCancelling}
                     onClick={() => void pause()}
+                    size="icon"
+                    title={isPausing ? 'Mise en pause…' : 'Mettre en pause'}
+                    type="button"
                     variant="outline"
                   >
-                    {isPausing ? 'Mise en pause…' : 'Mettre en pause'}
+                    {isPausing ? <Loader2 className="size-5 animate-spin" /> : <Pause className="size-5" />}
                   </Button>
                   <Button
-                    type="button"
-                    size="sm"
+                    aria-label={isCancelling ? 'Annulation en cours…' : 'Annuler'}
                     disabled={isCancelling || isPausing}
                     onClick={() => void cancel()}
+                    size="icon"
+                    title={isCancelling ? 'Annulation en cours…' : 'Annuler'}
+                    type="button"
                     variant="destructive"
                   >
-                    {isCancelling ? 'Annulation en cours…' : 'Annuler'}
+                    {isCancelling ? (
+                      <Loader2 className="size-5 animate-spin" />
+                    ) : (
+                      <Square className="size-5 fill-current" />
+                    )}
                   </Button>
                 </div>
               )}
@@ -141,8 +149,14 @@ function RouteComponent() {
                         Reprenez l&apos;acquisition lorsque vous êtes prêt.
                       </p>
                     </div>
-                    <Button onClick={() => void startOrResume()} size="lg">
-                      Reprendre
+                    <Button
+                      aria-label="Reprendre"
+                      className="self-center"
+                      onClick={() => void startOrResume()}
+                      size="lg"
+                      title="Reprendre"
+                    >
+                      <Play className="size-6 fill-current" />
                     </Button>
                   </div>
                 </div>
