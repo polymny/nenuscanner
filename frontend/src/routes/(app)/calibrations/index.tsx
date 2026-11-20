@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import CreateCalibrationDialog from './-components/create-calibration-dialog';
 import DeleteCalibrationDialog from './-components/delete-calibration-dialog';
@@ -9,8 +9,10 @@ import { ComponentCardSkeleton } from '@/components/component-card';
 import { useGetCalibrations } from '@/api/queries/acquisition.queries';
 import { useGetLastRigConfiguration } from '@/api/queries/rig-configuration.queries';
 import { useDownloadAcquisitions } from '@/api/mutations/acquisition.mutations';
-import { Button } from '@/components/ui/button';
+import SelectionHeader from '@/components/acquisition/selection-header';
 import { useMinimumLoadingDuration } from '@/hooks/use-minimum-loading-duration';
+import { useSelection } from '@/hooks/use-selection';
+import { pluralize } from '@/lib/utils';
 
 export const Route = createFileRoute('/(app)/calibrations/')({
   component: RouteComponent,
@@ -24,7 +26,12 @@ function RouteComponent() {
 
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [selectedCalibrationId, setSelectedCalibrationId] = useState<null | number>(null);
-  const [multiSelectedCalibrationIds, setMultiSelectedCalibrationIds] = useState<Array<number>>([]);
+  const selectableIds = useMemo(
+    () => (calibrations ?? []).filter((calibration) => calibration.status === 'COMPLETED').map(({ id }) => id),
+    [calibrations]
+  );
+  const selection = useSelection(selectableIds);
+  const selectedCount = selection.selectedIds.length;
 
   const { mutate: downloadAcquisitions, isPending: isDownloadingCalibrations } = useDownloadAcquisitions({
     onSuccess: () => {
@@ -38,12 +45,6 @@ function RouteComponent() {
   const [openCreateCalibrationDialog, setOpenCreateCalibrationDialog] = useState(false);
   const selectedCalibration = calibrations?.find((calibration) => calibration.id === selectedCalibrationId) ?? null;
 
-  const handleCalibrationSelect = useCallback((calibrationId: number, selected: boolean) => {
-    setMultiSelectedCalibrationIds((previous) =>
-      selected ? [...previous, calibrationId] : previous.filter((id) => id !== calibrationId)
-    );
-  }, []);
-
   const handleCalibrationDownload = useCallback(
     (calibrationId: number) => {
       downloadAcquisitions({ acquisitionIds: [calibrationId] });
@@ -54,18 +55,14 @@ function RouteComponent() {
   return (
     <div className="bg-gray-25 flex h-full flex-col items-start gap-6 px-20 py-8">
       <div className="flex w-full flex-col gap-4">
-        <div className="flex items-start justify-between">
-          <h2 className="font-semibold text-gray-950">Étalonnages</h2>
-          {!showSkeleton && (
-            <Button
-              disabled={multiSelectedCalibrationIds.length === 0 || isDownloadingCalibrations}
-              onClick={() => downloadAcquisitions({ acquisitionIds: multiSelectedCalibrationIds })}
-              variant="outline"
-            >
-              Télécharger les étalonnages
-            </Button>
-          )}
-        </div>
+        <SelectionHeader
+          downloading={isDownloadingCalibrations}
+          onDownload={() => downloadAcquisitions({ acquisitionIds: selection.selectedIds })}
+          selectedText={`${selectedCount} ${pluralize(selectedCount, 'étalonnage')} ${pluralize(selectedCount, 'sélectionné')}`}
+          selection={selection}
+          title="Étalonnages"
+          total={selectableIds.length}
+        />
         {showSkeleton ? (
           <div className="grid grid-cols-4 items-start gap-x-6 gap-y-8">
             <ComponentCardSkeleton />
@@ -97,10 +94,11 @@ function RouteComponent() {
                 }
                 onSelect={
                   calibration.status === 'COMPLETED'
-                    ? (selected) => handleCalibrationSelect(calibration.id, selected)
+                    ? (selected) => selection.toggle(calibration.id, selected)
                     : undefined
                 }
-                selected={multiSelectedCalibrationIds.includes(calibration.id)}
+                selected={selection.selectedIds.includes(calibration.id)}
+                selectionMode={selectedCount > 0}
               />
             ))}
           </div>

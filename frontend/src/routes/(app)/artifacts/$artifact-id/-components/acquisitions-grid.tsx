@@ -46,6 +46,7 @@ const AcquisitionsGrid = memo(function AcquisitionsGrid({
               : undefined
           }
           selected={multiSelectedAcquisitionIds.includes(acquisition.id)}
+          selectionMode={multiSelectedAcquisitionIds.length > 0}
         />
       ))}
     </div>

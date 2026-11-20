@@ -5,7 +5,9 @@ import AcquisitionsGrid from './-components/acquisitions-grid';
 import CreateAcquisitionDialog from './-components/create-acquisition/create-acquisition-dialog';
 import { useGetArtifacts } from '@/api/queries/artifact.queries';
 import CustomBreadcrumb from '@/components/ui/custom-breadcrumb';
-import { Button } from '@/components/ui/button';
+import SelectionHeader from '@/components/acquisition/selection-header';
+import { useSelection } from '@/hooks/use-selection';
+import { pluralize } from '@/lib/utils';
 import { useGetAcquisitionsByArtifactId } from '@/api/queries/acquisition.queries';
 import { ComponentCardSkeleton } from '@/components/component-card';
 import { useDeleteAcquisition, useDownloadAcquisitions } from '@/api/mutations/acquisition.mutations';
@@ -29,7 +31,12 @@ function RouteComponent() {
 
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [selectedAcquisitionId, setSelectedAcquisitionId] = useState<null | number>(null);
-  const [multiSelectedAcquisitionIds, setMultiSelectedAcquisitionIds] = useState<Array<number>>([]);
+  const selectableIds = useMemo(
+    () => (acquisitions ?? []).filter((acquisition) => acquisition.status === 'COMPLETED').map(({ id }) => id),
+    [acquisitions]
+  );
+  const selection = useSelection(selectableIds);
+  const selectedCount = selection.selectedIds.length;
 
   const { mutate: deleteAcquisition } = useDeleteAcquisition({
     onSuccess: () => {
@@ -63,12 +70,6 @@ function RouteComponent() {
     setOpenDeleteDialog(true);
   }, []);
 
-  const handleAcquisitionSelect = useCallback((acquisitionId: number, selected: boolean) => {
-    setMultiSelectedAcquisitionIds((previous) =>
-      selected ? [...previous, acquisitionId] : previous.filter((id) => id !== acquisitionId)
-    );
-  }, []);
-
   const handleAcquisitionDownload = useCallback(
     (acquisitionId: number) => {
       downloadAcquisitions({ acquisitionIds: [acquisitionId] });
@@ -91,18 +92,14 @@ function RouteComponent() {
         currentPageName={existingArtifact.name}
       />
       <div className="flex w-full flex-col gap-4">
-        <div className="flex items-start justify-between">
-          <h2 className="font-semibold text-gray-950">{`Acquisitions de ${existingArtifact.name}`}</h2>
-          {!showSkeleton && (
-            <Button
-              disabled={multiSelectedAcquisitionIds.length === 0 || isDownloadingAcquisitions}
-              onClick={() => downloadAcquisitions({ acquisitionIds: multiSelectedAcquisitionIds })}
-              variant="outline"
-            >
-              Télécharger les acquisitions
-            </Button>
-          )}
-        </div>
+        <SelectionHeader
+          downloading={isDownloadingAcquisitions}
+          onDownload={() => downloadAcquisitions({ acquisitionIds: selection.selectedIds })}
+          selectedText={`${selectedCount} ${pluralize(selectedCount, 'acquisition')} ${pluralize(selectedCount, 'sélectionnée')}`}
+          selection={selection}
+          title={`Acquisitions de ${existingArtifact.name}`}
+          total={selectableIds.length}
+        />
         {showSkeleton ? (
           <div className="grid grid-cols-4 items-start gap-x-6 gap-y-8">
             <ComponentCardSkeleton />
@@ -119,8 +116,8 @@ function RouteComponent() {
             onDelete={handleAcquisitionDelete}
             onDownloadAcquisition={handleAcquisitionDownload}
             onNavigate={handleAcquisitionNavigate}
-            onSelectAcquisition={handleAcquisitionSelect}
-            multiSelectedAcquisitionIds={multiSelectedAcquisitionIds}
+            onSelectAcquisition={selection.toggle}
+            multiSelectedAcquisitionIds={selection.selectedIds}
           />
         )}
       </div>

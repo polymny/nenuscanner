@@ -1,5 +1,5 @@
 import { useNavigate } from '@tanstack/react-router';
-import { Camera, ChevronDown, Download, Ellipsis, Trash } from 'lucide-react';
+import { ArrowRight, Camera, ChevronDown, Download, Ellipsis, Trash } from 'lucide-react';
 import type { Acquisition } from '@/types/acquisition.types';
 import { acquisitionStatusBadges } from '@/types/acquisition.types';
 import { toAbsoluteImageUrl } from '@/api/queries/acquisition.queries';
@@ -18,6 +18,8 @@ interface AcquisitionCardProps {
   onDownload?: () => void;
   onSelect?: (selected: boolean) => void;
   selected?: boolean;
+  /** While something is selected, clicking a card toggles it instead of opening it. */
+  selectionMode?: boolean;
   dimmed?: boolean;
 }
 
@@ -28,9 +30,14 @@ export default function AcquisitionCard({
   onDownload,
   onSelect,
   selected = false,
+  selectionMode = false,
   dimmed = false,
 }: AcquisitionCardProps) {
   const navigate = useNavigate();
+  const handleClick = () => {
+    if (!selectionMode) onClick();
+    else onSelect?.(!selected);
+  };
   const { data: compatibleScenarios = [] } = useGetCompatibleScenarios(
     acquisition.scenario.id,
     acquisition.isCalibration
@@ -52,11 +59,14 @@ export default function AcquisitionCard({
   return (
     <div
       className={cn(
-        'hover:bg-brand-50 flex cursor-pointer flex-col gap-1 rounded-lg border border-transparent p-3 transition-colors',
+        'flex cursor-pointer flex-col gap-1 rounded-lg border border-transparent p-3 transition-colors',
+        !selectionMode && 'hover:bg-brand-50',
+        selectionMode && !selected && 'hover:border-brand-300 opacity-80 hover:border-dashed hover:opacity-100',
+        selectionMode && !onSelect && 'cursor-default',
         dimmed && 'opacity-75 saturate-[0.9]',
         selected && 'border-brand-600 bg-brand-50'
       )}
-      onClick={onClick}
+      onClick={handleClick}
     >
       <div className="flex items-center justify-between gap-8 px-2">
         <div className="flex items-center gap-2 overflow-hidden">
@@ -70,6 +80,15 @@ export default function AcquisitionCard({
           <div
             title={acquisition.name}
             className={cn('flex-1 truncate text-lg font-semibold', dimmed ? 'text-gray-500' : 'text-gray-950')}
+            onClick={
+              onSelect
+                ? (event) => {
+                    // The name extends the tiny checkbox's hit area.
+                    event.stopPropagation();
+                    onSelect(!selected);
+                  }
+                : undefined
+            }
           >
             {acquisition.name}
           </div>
@@ -88,6 +107,17 @@ export default function AcquisitionCard({
           </PopoverTrigger>
           <PopoverContent className="w-[180px]">
             <div className="flex flex-col gap-3">
+              <Button
+                className="w-full justify-start text-sm text-gray-700"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  onClick();
+                }}
+                variant="link"
+              >
+                <ArrowRight size={20} />
+                Ouvrir
+              </Button>
               {onDownload && (
                 <Button
                   className="w-full justify-start text-sm text-gray-700"
