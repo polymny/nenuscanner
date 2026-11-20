@@ -74,8 +74,8 @@ function RouteComponent() {
               <p className="text-center text-gray-600">
                 {acquisition.isCalibration ? 'Étalonnage prêt à être lancé' : 'Acquisition prête à être lancée'}
               </p>
-              <Button onClick={() => void startOrResume()} size="lg">
-                Démarrer
+              <Button aria-label="Démarrer" onClick={() => void startOrResume()} size="lg" title="Démarrer">
+                <Play className="size-6 fill-current" />
               </Button>
             </div>
           ) : (
