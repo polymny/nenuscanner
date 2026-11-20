@@ -5,7 +5,7 @@ import type { ApiError, UseMutationOtherOptions } from '@/lib/api-types';
 import type { AxiosError } from 'axios';
 import type { CreateAcquisitionPayload, CreateCalibrationPayload } from '@/schemas/acquisition.schemas';
 import { client } from '@/lib/client';
-import { downloadBlobResponse } from '@/lib/download-blob';
+// import { downloadBlobResponse } from '@/lib/download-blob';
 
 const createAcquisition = async (payload: CreateAcquisitionPayload) => {
   const { data } = await client.post<{ id: number }>('/acquisition/', payload);
@@ -62,9 +62,30 @@ export type DownloadAcquisitionsPayload = {
 };
 
 const downloadAcquisitions = async (payload: DownloadAcquisitionsPayload) => {
-  const response = await client.post<Blob>('/acquisition/download', payload, { responseType: 'blob' });
-  downloadBlobResponse(response);
-};
+  // const response = await client.post<Blob>('/acquisition/download', payload, { responseType: 'blob' });
+  // downloadBlobResponse(response);
+
+  // Directly download files
+  const form = document.createElement('form');
+
+  form.method = 'POST';
+  form.action = '/acquisition/download';
+  form.style.display = 'none';
+
+  payload.acquisitionIds.forEach((id) => {
+    const input = document.createElement('input');
+
+    input.type = 'hidden';
+    input.name = 'acquisitionIds';
+    input.value = String(id);
+
+    form.appendChild(input);
+  });
+
+  document.body.appendChild(form);
+  form.submit();
+  form.remove();
+}
 
 export const useDownloadAcquisitions = (
   options?: UseMutationOtherOptions<void, AxiosError<ApiError>, DownloadAcquisitionsPayload>

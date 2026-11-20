@@ -1,4 +1,4 @@
-from flask import Response, stream_with_context
+from flask import Response, stream_with_context, request
 from flask.views import MethodView
 from flask_smorest import Blueprint, abort
 from sqlalchemy.orm import joinedload
@@ -22,6 +22,7 @@ from ..models.scenario import Scenario
 from ..services.acquisition_download_service import (
     EXTERNAL_DISK_PATH,
     copy_acquisitions_data_to_disk,
+    download_acquisitions_data
 )
 from ..services.acquisition_service import (
     acquisition_camera_settings_load_options,
@@ -300,11 +301,25 @@ class CalibrationController(MethodView):
 
 @blp.route('/download')
 class AcquisitionDownloadController(MethodView):
-    @blp.arguments(AcquisitionDownloadSchema)
-    def post(self, payload):
+    def post(self):
         """Télécharge les données des acquisitions sélectionnées."""
+
+        if request.is_json:
+            payload = AcquisitionDownloadSchema().load(request.get_json())
+        else:
+            acquisition_ids = request.form.getlist('acquisitionIds')
+            payload = AcquisitionDownloadSchema().load({
+                'acquisitionIds': [int(id) for id in acquisition_ids],
+            })
+
         unique_ids = list(dict.fromkeys(payload['acquisitionIds']))
-        acquisitions = db_session.query(Acquisition).filter(Acquisition.id.in_(unique_ids)).all()
+
+        acquisitions = (
+            db_session.query(Acquisition)
+            .filter(Acquisition.id.in_(unique_ids))
+            .all()
+        )
+
         if len(acquisitions) != len(unique_ids):
             abort(404, message='acquisition-not-found')
 
@@ -315,10 +330,11 @@ class AcquisitionDownloadController(MethodView):
         if not EXTERNAL_DISK_PATH.is_dir():
             abort(503, message='external-disk-not-mounted')
 
-        dest_path = copy_acquisitions_data_to_disk(db_session, acquisitions)
-        return {'path': str(dest_path)}
+        # dest_path = copy_acquisitions_data_to_disk(db_session, acquisitions)
+        # return {'path': str(dest_path)}
 
-        # return download_acquisitions_data(db_session, acquisitions)
+        return download_acquisitions_data(db_session, acquisitions)
+
 
 
 @blp.route('/<int:acquisition_id>')
