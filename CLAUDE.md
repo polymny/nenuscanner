@@ -48,8 +48,12 @@ logic with a minimal Flask app, or test on the Pi.
 - **Node trap**: node/npm come from nvm, which is only loaded in the interactive part of `~/.bashrc`. A
   non-interactive `ssh pi@nenuscanner.fr 'cmd'` does not see `node` (`bash -lc` does not help either). Prefix with
   `. ~/.nvm/nvm.sh &&`. A colleague once hand-edited `frontend/dist` because of this: always rebuild instead.
-- `server/turntable.py` has an intentional, uncommitted local change on the Pi (`disable()` is a no-op): keep it, and
-  never `git checkout`/`stash` it away.
+- Turntable (`server/turntable.py`, `/dev/ttyAMA0`, 9600 bauds): Arduino firmware, text commands with the integer
+  value glued to the name (`TURN30`, `FAN100`), answers end with `\r\n`. Probed on 2026-11-20: `CONN`→`OK`,
+  `MOV?`→`MOV0/1`, `SPEED?`→`SPEED5` (rpm), `FAN?`→`FAN10`, `TEMP?`→`TEMP21`; `FAN0`..`FAN100` (else
+  `ERR_MIN`/`ERR_MAX`); `TURN` while the driver is off → `ERR_ENA`. Avoid toggles (`FANX`, old `E`): their state cannot
+  be read back. `turn()` powers driver and fan (100 %) on, waits for `MOV0`, then powers both off, because they vibrate
+  during shots. The service holds the serial port: stop it before probing the plate by hand.
 - Services: `systemctl --user {status,restart} nenuscanner|mediamtx`, logs with `journalctl --user -u <unit>`.
   The backend also restarts MediaMTX via `POST /camera/restart-stream`.
 - Clock: no RTC battery and the network blocks NTP (UDP 123). `htpdate` syncs over HTTP (servers in

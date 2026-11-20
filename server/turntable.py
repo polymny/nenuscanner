@@ -1,8 +1,13 @@
+"""Turntable driven by an Arduino over serial: one text command per line, answers end with \\r\\n.
+
+Protocol (firmware "nenu360"): CONN, DRV0/DRV1 (driver), TURN<degrees> in [-360, 360], MOV? (MOV0/MOV1),
+SPEED<rpm>/SPEED?, STOP, FAN<percent>/FANX/FAN?, TEMP?. Values are integers glued to the command name.
+"""
+
 import atexit
 import logging
-import queue
 import threading
-from time import sleep
+import time
 
 from serial import Serial
 
@@ -11,20 +16,19 @@ from . import config
 logger = logging.getLogger(__name__)
 
 COMMAND_TIMEOUT_SECONDS = 2.0
-MAX_COMMAND_RETRIES = 5
+MAX_COMMAND_RETRIES = 3
+TURN_TIMEOUT_SECONDS = 120.0
+MOVE_POLL_SECONDS = 0.2
+# Fan speed while the driver is on (percent). The fan is off the rest of the time (noise, vibrations during shots),
+# so it blows at full speed during the short rotations.
+DEFAULT_FAN_SPEED = 100
 
 
 class Turntable:
-    def is_dummy(self) -> bool:
+    def power_off(self) -> None:
         pass
 
-    def enable(self) -> None:
-        pass
-
-    def disable(self) -> None:
-        pass
-
-    def turn(self, degrees: float) -> None:
+    def turn(self, degrees: int) -> None:
         pass
 
     def close(self) -> None:
@@ -32,132 +36,77 @@ class Turntable:
 
 
 class DummyTurntable(Turntable):
-    def is_dummy(self) -> bool:
-        return True
+    def power_off(self) -> None:
+        logger.info('DummyTurntable: DRV0, FAN0')
 
-    def enable(self) -> None:
-        logger.info('DummyTurntable: enable (TURN0, E if ERR_ENA)')
-
-    def disable(self) -> None:
-        logger.info('DummyTurntable: disable (TURN0, E if not ERR_ENA)')
-
-    def turn(self, degrees: float) -> None:
-        self.enable()
-        logger.info('DummyTurntable: TURN%d', round(degrees))
+    def turn(self, degrees: int) -> None:
+        logger.info('DummyTurntable: TURN%d', degrees)
 
 
 class SerialTurntable(Turntable):
-    """Plateau tournant piloté en série (commandes texte, une ligne par instruction)."""
-
     def __init__(self, port: str):
         self._lock = threading.Lock()
-        self._running = True
-        self._tx_queue: queue.Queue[str | None] = queue.Queue()
-        self._rx_queue: queue.Queue[str] = queue.Queue()
-        self._ser = Serial(port=port, baudrate=9600, dsrdtr=False, rtscts=False)
-        self._rx_thread = threading.Thread(target=self._rx_loop, name='turntable-rx', daemon=True)
-        self._tx_thread = threading.Thread(target=self._tx_loop, name='turntable-tx', daemon=True)
-        self._rx_thread.start()
-        self._tx_thread.start()
-
-    def _rx_loop(self) -> None:
-        buffer = ''
-        while self._running:
-            try:
-                waiting = self._ser.in_waiting
-                if waiting > 0:
-                    buffer += self._ser.read(waiting).decode('utf-8')
-                    lines = buffer.split('\n')
-                    buffer = lines[-1]
-                    for line in lines[:-1]:
-                        stripped = line.strip()
-                        if stripped:
-                            self._rx_queue.put(stripped)
-                            logger.warning('Turntable RX: %s', stripped)
-            except UnicodeDecodeError as exc:
-                logger.warning('Turntable RX decode error: %s', exc)
-            sleep(0.01)
-
-    def _tx_loop(self) -> None:
-        while self._running:
-            try:
-                command = self._tx_queue.get(timeout=0.1)
-            except queue.Empty:
-                continue
-            if command is None:
-                break
-            payload = command if command.endswith('\n') else f'{command}\n'
-            self._ser.write(payload.encode('utf-8'))
-            logger.warning('Turntable TX: %s', command.strip())
-
-    def _drain_rx_queue(self) -> None:
-        while True:
-            try:
-                self._rx_queue.get_nowait()
-            except queue.Empty:
-                return
+        self._fan_speed = getattr(config, 'TURNTABLE_FAN_SPEED', DEFAULT_FAN_SPEED)
+        self._ser = Serial(port=port, baudrate=9600, dsrdtr=False, rtscts=False, timeout=COMMAND_TIMEOUT_SECONDS)
+        try:
+            self._command('CONN')
+            self.power_off()
+        except RuntimeError:
+            # Do not prevent the server from starting: turns will fail loudly instead.
+            logger.exception('Turntable not responding on %s', port)
 
     def _send(self, command: str) -> str | None:
-        self._drain_rx_queue()
-        self._tx_queue.put(command)
-        try:
-            response = self._rx_queue.get(timeout=COMMAND_TIMEOUT_SECONDS)
-            logger.warning('Turntable %s -> %s', command, response)
-            return response
-        except queue.Empty:
-            logger.warning('Turntable timeout waiting for response to %s', command)
-            return None
+        self._ser.reset_input_buffer()
+        self._ser.write(f'{command}\n'.encode())
+        response = self._ser.readline().decode(errors='replace').strip()
+        logger.debug('Turntable %s -> %r', command, response)
+        return response or None
 
-    def _set_enabled(self, enabled: bool) -> None:
-        for attempt in range(1, MAX_COMMAND_RETRIES + 1):
-            response = self._send('TURN0')
-            if response == 'ERR_ENA':
-                if not enabled:
-                    return
-                self._send('E')
-                continue
-            if response == 'OK':
-                if enabled:
-                    return
-                self._send('E')
-                continue
-            if response is not None:
-                logger.warning(
-                    'Turntable unexpected response %r for TURN0 (attempt %d/%d)',
-                    response,
-                    attempt,
-                    MAX_COMMAND_RETRIES,
-                )
-        raise RuntimeError(f'turntable-{"enable" if enabled else "disable"}-failed')
+    def _command(self, command: str, expected_prefix: str = 'OK') -> str:
+        """Sends an idempotent command, retrying on timeout or unexpected answer."""
+        response = None
+        for _ in range(MAX_COMMAND_RETRIES):
+            response = self._send(command)
+            if response is not None and response.startswith(expected_prefix):
+                return response
+            logger.warning('Turntable: unexpected answer %r to %s', response, command)
+        raise RuntimeError(f'turntable-command-failed:{command}:{response}')
 
-    def is_dummy(self) -> bool:
-        return False
+    def _set_power(self, on: bool) -> None:
+        self._command('DRV1' if on else 'DRV0')
+        self._command(f'FAN{self._fan_speed if on else 0}')
 
-    def enable(self) -> None:
+    def _wait_until_stopped(self) -> None:
+        deadline = time.monotonic() + TURN_TIMEOUT_SECONDS
+        while time.monotonic() < deadline:
+            time.sleep(MOVE_POLL_SECONDS)
+            if self._command('MOV?', 'MOV') == 'MOV0':
+                return
+        self._command('STOP')
+        raise RuntimeError('turntable-turn-timeout')
+
+    def power_off(self) -> None:
         with self._lock:
-            self._set_enabled(True)
+            self._set_power(False)
 
-    def disable(self) -> None:
+    def turn(self, degrees: int) -> None:
+        """Rotates and waits for the end of the move, then powers the driver and fan off: they vibrate, and nothing
+        must move during shots."""
         with self._lock:
-            self._set_enabled(False)
-
-    def turn(self, degrees: float) -> None:
-        with self._lock:
-            self._set_enabled(True)
-            turn_command = f'TURN{round(degrees)}'
-            response = self._send(turn_command)
-            if response != 'OK':
-                raise RuntimeError(f'turntable-command-failed:{turn_command}')
+            self._set_power(True)
+            try:
+                # Not retried: if the OK got lost, a retry would turn the plate twice.
+                response = self._send(f'TURN{degrees}')
+                if response != 'OK':
+                    raise RuntimeError(f'turntable-turn-failed:{response}')
+                self._wait_until_stopped()
+            finally:
+                self._set_power(False)
 
     def close(self) -> None:
         with self._lock:
-            if not self._running:
-                return
-            self._running = False
-            self._tx_queue.put(None)
-            self._tx_thread.join(timeout=1.0)
-            self._rx_thread.join(timeout=1.0)
-            self._ser.close()
+            if self._ser.is_open:
+                self._ser.close()
 
 
 def _build_turntable() -> Turntable:

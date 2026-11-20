@@ -152,6 +152,12 @@ def _scenario_progress_payload(step: ScenarioCaptureStep) -> dict:
     }
 
 
+def _pose_step_degrees(pose_index: int, poses_count: int) -> int:
+    """Integer rotation from pose `pose_index` (1-based) to the next one, rounded on the cumulative angle so that the
+    steps add up to exactly 360° (7 poses: 51 or 52°, instead of 7 × 51 = 357°)."""
+    return round(pose_index * 360 / poses_count) - round((pose_index - 1) * 360 / poses_count)
+
+
 def _is_end_of_pose_block(step: ScenarioCaptureStep) -> bool:
     if not step.has_multiple_poses or step.pose_index >= step.pose_total:
         return False
@@ -286,10 +292,7 @@ def execute_scenario(
             raise AcquisitionPaused()
 
         if _is_end_of_pose_block(step) and acquisition.automatic_pose_change:
-            plate.turn(round(360 / scenario.poses_count))
-            if not plate.is_dummy():
-                time.sleep(30)  # TODO : temporaire, pas d'ACK de la part du plateau pour l'instant
-                plate.disable()
+            plate.turn(_pose_step_degrees(step.pose_index, scenario.poses_count))
 
         if step.step_index < total and config.CAMERA != 'real':
             time.sleep(STEP_DELAY_SECONDS)
