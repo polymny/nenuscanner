@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
-import { Camera, Loader2, Pause, Play, Square } from 'lucide-react';
+import { Camera, Loader2, Pause, Play, RotateCcw, Square } from 'lucide-react';
 import AcquisitionImageCard from './-components/acquisition-image-card';
 import ScenarioProgressWidget from './-components/scenario-progress-widget';
 import { toAbsoluteImageUrl, useGetAcquisitionById } from '@/api/queries/acquisition.queries';
@@ -169,8 +169,14 @@ function RouteComponent() {
       {acquisition.status === 'FAILED' && (
         <div className="flex flex-col items-center gap-4 rounded-xl border border-gray-200 bg-white p-8 text-center">
           <p className="text-error-700">{runError ?? "L'acquisition a échoué."}</p>
-          <Button onClick={() => void startOrResume()} variant="outline">
-            Réessayer
+          <Button
+            aria-label="Réessayer"
+            onClick={() => void startOrResume()}
+            size="lg"
+            title="Réessayer"
+            variant="outline"
+          >
+            <RotateCcw className="size-6" />
           </Button>
         </div>
       )}
