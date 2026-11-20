@@ -4,6 +4,7 @@ from flask import Flask, send_file, send_from_directory
 from flask_cors import CORS
 from flask_smorest import Api, abort
 from sqlalchemy.exc import OperationalError, SQLAlchemyError
+from werkzeug.exceptions import NotFound
 
 from . import config
 from .app.controllers.acquisition_controller import blp as acquisition_blp
@@ -77,8 +78,13 @@ def send_data(path):
     return send_from_directory(config.DATA_DIR, path)
 
 
-# If still nothing has been reached, send index.html
+# If still nothing has been reached, send the file from the frontend build (favicons, manifest... copied from
+# frontend/public), or index.html so that the frontend router handles the path.
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>')
 def default(path):
-    return send_file('../frontend/dist/index.html')
+    dist = os.path.join(app.root_path, '..', 'frontend', 'dist')
+    try:
+        return send_from_directory(dist, path)
+    except NotFound:
+        return send_file(os.path.join(dist, 'index.html'))
