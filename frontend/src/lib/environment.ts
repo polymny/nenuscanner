@@ -5,7 +5,7 @@ const PROD_API_URL = window.location.origin;
 
 export const API_URL = import.meta.env.DEV ? LOCAL_API_URL : PROD_API_URL;
 
-const LOCAL_MEDIAMTX_STREAM_URL = 'http://127.0.0.100:8889/cam';
+const LOCAL_MEDIAMTX_STREAM_URL = 'http://127.0.0.1:8889/cam';
 const PROD_MEDIAMTX_STREAM_URL = `${window.location.protocol}//${window.location.hostname}:8889/cam`;
 
 /** MediaMTX WebRTC player URL. */
